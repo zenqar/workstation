@@ -10,14 +10,19 @@ import { createClient } from '@supabase/supabase-js';
  * This client bypasses RLS. Use with extreme care.
  */
 export function createAdminClient() {
-  const url  = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // In Cloudflare Workers, env variables might be in process.env or a global context
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url) {
-    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
+    console.error('Environment Diagnostic: NEXT_PUBLIC_SUPABASE_URL is missing');
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL. Please ensure it is set in Cloudflare Variables.');
   }
+  
   if (!key) {
-    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
+    console.error('Environment Diagnostic: SUPABASE_SERVICE_ROLE_KEY is missing');
+    // Provide a more detailed error to help the user find the right setting
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY. Check your Worker (not Pages) settings in Cloudflare.');
   }
 
   return createClient(url, key, {
