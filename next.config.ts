@@ -16,7 +16,11 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ['localhost:3000'],
+      allowedOrigins: [
+        'localhost:3000',
+        'workstation.info-zenqar.workers.dev',
+        'workstation.pages.dev'
+      ],
     },
   },
 };
