@@ -27,64 +27,69 @@ const SignInSchema = z.object({
 // ============================================================
 
 export async function signUp(formData: FormData): Promise<ActionResult> {
-  const raw = {
-    email:        formData.get('email') as string,
-    password:     formData.get('password') as string,
-    fullName:     formData.get('fullName') as string,
-    businessName: formData.get('businessName') as string,
-  };
+  try {
+    const raw = {
+      email:        formData.get('email') as string,
+      password:     formData.get('password') as string,
+      fullName:     formData.get('fullName') as string,
+      businessName: formData.get('businessName') as string,
+    };
 
-  const parsed = SignUpSchema.safeParse(raw);
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
-  }
+    const parsed = SignUpSchema.safeParse(raw);
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0].message };
+    }
 
-  const supabase = await createClient();
-  const admin    = createAdminClient();
+    const supabase = await createClient();
+    const admin    = createAdminClient();
 
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email:    parsed.data.email,
-    password: parsed.data.password,
-    options:  {
-      data: { full_name: parsed.data.fullName },
-    },
-  });
-
-  if (authError) {
-    return { error: authError.message };
-  }
-
-  const userId = authData.user?.id;
-  if (!userId) {
-    return { error: 'Failed to create user account' };
-  }
-
-  // Create business (use admin client to bypass RLS on insert before membership exists)
-  const { data: business, error: bizError } = await admin
-    .from('businesses')
-    .insert({
-      name:       parsed.data.businessName,
-      created_by: userId,
-    })
-    .select()
-    .single();
-
-  if (bizError || !business) {
-    return { error: 'Failed to create business' };
-  }
-
-  // Create owner membership
-  const { error: memberError } = await admin
-    .from('business_memberships')
-    .insert({
-      business_id: business.id,
-      user_id:     userId,
-      role:        'owner',
-      status:      'active',
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email:    parsed.data.email,
+      password: parsed.data.password,
+      options:  {
+        data: { full_name: parsed.data.fullName },
+      },
     });
 
-  if (memberError) {
-    return { error: 'Failed to set up business membership' };
+    if (authError) {
+      return { error: authError.message };
+    }
+
+    const userId = authData.user?.id;
+    if (!userId) {
+      return { error: 'Failed to create user account' };
+    }
+
+    // Create business (use admin client to bypass RLS on insert before membership exists)
+    const { data: business, error: bizError } = await admin
+      .from('businesses')
+      .insert({
+        name:       parsed.data.businessName,
+        created_by: userId,
+      })
+      .select()
+      .single();
+
+    if (bizError || !business) {
+      return { error: `Failed to create business: ${bizError?.message || 'Unknown error'}` };
+    }
+
+    // Create owner membership
+    const { error: memberError } = await admin
+      .from('business_memberships')
+      .insert({
+        business_id: business.id,
+        user_id:     userId,
+        role:        'owner',
+        status:      'active',
+      });
+
+    if (memberError) {
+      return { error: `Failed to set up business membership: ${memberError.message}` };
+    }
+  } catch (e: any) {
+    if (e?.message === 'NEXT_REDIRECT') throw e;
+    return { error: e?.message || 'An unexpected error occurred during signup' };
   }
 
   redirect('/app/dashboard');
