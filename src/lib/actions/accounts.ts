@@ -29,7 +29,7 @@ export async function createAccount(businessId: string, data: z.infer<typeof Acc
   if (!['owner', 'admin', 'accountant'].includes(role)) return { error: 'Permission denied' };
 
   const parsed = AccountSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const { data: account, error } = await supabase.from('accounts').insert({
     business_id: businessId, created_by: user.id, ...parsed.data,
@@ -45,7 +45,7 @@ export async function updateAccount(businessId: string, accountId: string, data:
   if (!['owner', 'admin', 'accountant'].includes(role)) return { error: 'Permission denied' };
 
   const parsed = AccountSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const { error } = await supabase.from('accounts').update(parsed.data)
     .eq('id', accountId).eq('business_id', businessId);

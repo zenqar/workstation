@@ -14,6 +14,7 @@ const config: Config = {
         arabic: ['var(--font-noto-kufi)', 'system-ui', 'sans-serif'],
       },
       colors: {
+        border: 'hsl(var(--border))',
         // Zenqar brand palette
         zenqar: {
           50:  '#f0f4ff',

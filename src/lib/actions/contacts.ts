@@ -40,7 +40,7 @@ export async function createContact(
   if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) return { error: 'Permission denied' };
 
   const parsed = ContactSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const d = parsed.data;
   const { data: contact, error } = await supabase
@@ -76,7 +76,7 @@ export async function updateContact(
   if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) return { error: 'Permission denied' };
 
   const parsed = ContactSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const d = parsed.data;
   const { error } = await supabase

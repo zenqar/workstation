@@ -78,7 +78,7 @@ export async function createInvoice(
 
   const parsed = InvoiceSchema.safeParse(data);
   if (!parsed.success) {
-    return { error: parsed.error.errors[0].message };
+    return { error: parsed.error.issues[0].message };
   }
 
   const d = parsed.data;
@@ -171,7 +171,7 @@ export async function updateInvoice(
   if (existing.status !== 'draft') return { error: 'Only draft invoices can be edited' };
 
   const parsed = InvoiceSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const d = parsed.data;
   const { subtotal, discountAmount, taxAmount, total } = calculateTotals(
@@ -305,7 +305,7 @@ export async function recordPayment(
   }
 
   const parsed = PaymentSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const d = parsed.data;
   const { data: paymentId, error } = await supabase.rpc(

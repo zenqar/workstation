@@ -66,7 +66,7 @@ export async function updateBusiness(businessId: string, data: z.infer<typeof Bu
   if (!mem || !['owner', 'admin'].includes(mem.role)) return { error: 'Permission denied' };
 
   const parsed = BusinessUpdateSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const { error } = await supabase.from('businesses').update({ ...parsed.data, email: parsed.data.email || null })
     .eq('id', businessId);
@@ -101,7 +101,7 @@ export async function updateBusinessSettings(businessId: string, data: z.infer<t
   if (!mem || !['owner', 'admin'].includes(mem.role)) return { error: 'Permission denied' };
 
   const parsed = SettingsSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const { error } = await supabase.from('business_settings').update(parsed.data).eq('business_id', businessId);
   if (error) return { error: 'Failed to update settings' };

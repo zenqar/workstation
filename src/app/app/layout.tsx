@@ -26,7 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <AppShell
       user={user}
       profile={profile}
-      businesses={businesses}
+      businesses={businesses as any}
     >
       {children}
     </AppShell>

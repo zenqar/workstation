@@ -36,7 +36,7 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
 
   const parsed = SignUpSchema.safeParse(raw);
   if (!parsed.success) {
-    return { error: parsed.error.errors[0].message };
+    return { error: parsed.error.issues[0].message };
   }
 
   const supabase = await createClient();

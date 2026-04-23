@@ -43,7 +43,7 @@ export async function createExpense(
   }
 
   const parsed = ExpenseSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.errors[0].message };
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const d = parsed.data;
   const { data: expenseId, error } = await supabase.rpc('record_expense', {
