@@ -25,7 +25,13 @@ export const metadata: Metadata = {
   },
   description: 'Zenqar is a modern, multilingual bookkeeping and invoicing platform for Iraqi and Kurdish businesses. Manage invoices, track payments, and monitor your cash flow.',
   keywords: ['invoicing', 'bookkeeping', 'Iraq', 'Kurdistan', 'IQD', 'accounting', 'Zenqar'],
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://zenqar.com'),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL
+      ? process.env.NEXT_PUBLIC_APP_URL.startsWith('http')
+        ? process.env.NEXT_PUBLIC_APP_URL
+        : `https://${process.env.NEXT_PUBLIC_APP_URL}`
+      : 'https://zenqar.com'
+  ),
   openGraph: {
     type: 'website',
     siteName: 'Zenqar',
