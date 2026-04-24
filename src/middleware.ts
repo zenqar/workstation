@@ -3,6 +3,8 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { routing } from './i18n/routing';
 
+import { getSupabaseUrl, getSupabaseAnonKey, getAdminSecret } from './lib/env/server';
+
 const intlMiddleware = createMiddleware(routing);
 
 // Routes that don't require authentication
@@ -45,8 +47,8 @@ export async function middleware(request: NextRequest) {
   });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getSupabaseUrl()!,
+    getSupabaseAnonKey()!,
     {
       cookies: {
         getAll() {
@@ -74,7 +76,7 @@ export async function middleware(request: NextRequest) {
   // Check admin routes
   if (isAdminPath(pathname) && user) {
     const adminSecret = request.cookies.get('zenqar_admin_verified')?.value;
-    if (adminSecret !== process.env.ADMIN_SECRET) {
+    if (adminSecret !== getAdminSecret()) {
       // Check DB for platform admin status
       const { data: adminRecord } = await supabase
         .from('platform_admins')

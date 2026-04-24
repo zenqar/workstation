@@ -5,6 +5,7 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getServerEnv } from '@/lib/env/server';
 
 export interface FxRate {
   rate: number;
@@ -12,8 +13,9 @@ export interface FxRate {
   fetchedAt: string;
 }
 
-const FALLBACK_RATE = Number(process.env.FX_FALLBACK_RATE ?? 1310);
-const CACHE_MINUTES = Number(process.env.FX_CACHE_MINUTES ?? 60);
+const env = getServerEnv();
+const FALLBACK_RATE = Number(env.FX_FALLBACK_RATE ?? 1310);
+const CACHE_MINUTES = Number(env.FX_CACHE_MINUTES ?? 60);
 
 // Module-level cache
 let _cached: FxRate | null = null;
@@ -26,14 +28,15 @@ function isCacheValid(): boolean {
 }
 
 async function fetchFromExternalApi(): Promise<number | null> {
-  const provider = process.env.FX_PROVIDER ?? 'mock';
+  const env = getServerEnv();
+  const provider = env.FX_PROVIDER ?? 'mock';
 
   if (provider === 'mock') {
     return null; // skip to DB snapshot
   }
 
-  const apiKey = process.env.FX_API_KEY;
-  const apiUrl = process.env.FX_API_URL;
+  const apiKey = env.FX_API_KEY;
+  const apiUrl = env.FX_API_URL;
 
   if (!apiKey || !apiUrl) return null;
 
@@ -104,9 +107,10 @@ export async function getCurrentFxRate(): Promise<FxRate> {
   // 2. External API
   const apiRate = await fetchFromExternalApi();
   if (apiRate !== null) {
+    const env = getServerEnv();
     const result: FxRate = {
       rate:      apiRate,
-      source:    process.env.FX_PROVIDER ?? 'api',
+      source:    env.FX_PROVIDER ?? 'api',
       fetchedAt: new Date().toISOString(),
     };
     await persistRate(apiRate, result.source);

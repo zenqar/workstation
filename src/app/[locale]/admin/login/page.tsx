@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Shield } from 'lucide-react';
+import { getAdminSecret } from '@/lib/env/server';
 
 export default function AdminLoginPage({ searchParams }: any) {
   const error = searchParams?.error;
@@ -9,8 +10,8 @@ export default function AdminLoginPage({ searchParams }: any) {
     'use server';
     const secret = formData.get('secret') as string;
     
-    // Use the getEnv helper or just process.env for the secret
-    const expectedSecret = process.env.ADMIN_SECRET;
+    // Use the centralized helper to get the secret from Cloudflare bindings
+    const expectedSecret = getAdminSecret();
 
     if (secret !== expectedSecret) {
       redirect('/admin/login?error=Invalid secret');

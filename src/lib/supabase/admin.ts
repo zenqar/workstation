@@ -1,28 +1,6 @@
 import 'server-only';
 import { createClient } from '@supabase/supabase-js';
-
-/**
- * Helper to safely get environment variables in both Node.js and Cloudflare environments.
- * OpenNext provides getCloudflareContext to access Worker bindings.
- */
-function getEnv() {
-  // Default to process.env (Node.js/Local)
-  let env: Record<string, any> = { ...process.env };
-
-  try {
-    // Dynamically attempt to get Cloudflare context
-    // This is the standard way for OpenNext to access Worker bindings at runtime
-    const { getCloudflareContext } = require('@opennextjs/cloudflare');
-    const cf = getCloudflareContext();
-    if (cf && cf.env) {
-      env = { ...env, ...cf.env };
-    }
-  } catch (e) {
-    // ignore error if not in Cloudflare context
-  }
-
-  return env;
-}
+import { getSupabaseUrl, getSupabaseServiceRoleKey, getServerEnv } from '@/lib/env/server';
 
 /**
  * Supabase admin client — uses the service role key.
@@ -31,13 +9,10 @@ function getEnv() {
  * This client bypasses RLS. Use with extreme care.
  */
 export function createAdminClient() {
-  const env = getEnv();
-
-  const url = env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = getSupabaseUrl();
+  const key = getSupabaseServiceRoleKey();
 
   // We only check for presence here so we don't crash during build time
-  // (unless a build-time script explicitly calls this)
   if (!url || !key) {
     const missing = [];
     if (!url) missing.push('NEXT_PUBLIC_SUPABASE_URL');
@@ -62,7 +37,7 @@ export function createAdminClient() {
  * Diagnostic function to check if the admin key is present without exposing it.
  */
 export function debugAdminConfig() {
-  const env = getEnv();
+  const env = getServerEnv();
   return {
     hasUrl: !!env.NEXT_PUBLIC_SUPABASE_URL,
     hasServiceKey: !!env.SUPABASE_SERVICE_ROLE_KEY,

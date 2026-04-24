@@ -325,6 +325,28 @@
       rgba(255, 255, 255, 0.02);
   }
 
+  /* TECHNIQUE 19: DEPTH-BASED OPACITY */
+  .glass-2 {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 0.5px solid rgba(255, 255, 255, 0.05);
+  }
+  .glass-3 {
+    background: rgba(255, 255, 255, 0.01);
+    backdrop-filter: blur(80px);
+    -webkit-backdrop-filter: blur(80px);
+    border: 0.5px solid rgba(255, 255, 255, 0.03);
+  }
+
+  /* TECHNIQUE 20: ICON REFINEMENT (SOFT-GLOW) */
+  .icon-glow {
+    filter: drop-shadow(0 0 8px rgba(100, 112, 243, 0.4));
+  }
+  .icon-glow-green {
+    filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.4));
+  }
+
   /* TECHNIQUE 21: GLASS MODAL / DRAWER SYSTEM */
   .modal-backdrop {
     position: fixed;
