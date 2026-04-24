@@ -45,16 +45,20 @@ export async function middleware(request: NextRequest) {
   // 1. Admin Authorization Check (Cookie-based as per user preference)
   // This allows reaching /admin without a Supabase session if they have the secret.
   if (isAdminPath(pathname)) {
-    const adminSecret = request.cookies.get('zenqar_admin_verified')?.value;
+    const adminSignature = request.cookies.get('zenqar_admin_verified')?.value;
     const expectedAdminSecret = await getAdminSecret();
-    if (adminSecret === expectedAdminSecret && expectedAdminSecret) {
-      // Valid admin cookie, allow through
-      return intlMiddleware(request) || NextResponse.next();
-    } else {
-      // Invalid admin cookie, redirect to admin login
-      const target = getLocalizedPath(locale, '/admin/login');
-      return NextResponse.redirect(new URL(target, request.url));
+    
+    if (adminSignature && expectedAdminSecret) {
+      const { verifyAdminToken } = await import('./lib/utils/admin');
+      const isValid = await verifyAdminToken(adminSignature, 'admin', expectedAdminSecret);
+      if (isValid) {
+        return intlMiddleware(request) || NextResponse.next();
+      }
     }
+    
+    // Invalid or missing admin signature
+    const target = getLocalizedPath(locale, '/admin/login');
+    return NextResponse.redirect(new URL(target, request.url));
   }
 
   // 2. Intl Handling

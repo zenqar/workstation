@@ -84,6 +84,7 @@ export default async function OnboardingPage() {
                 name="businessName"
                 type="text"
                 required
+                defaultValue={user.user_metadata?.pending_business_name || ''}
                 placeholder="e.g. Zenqar Tech Solutions"
                 className="input-glass"
               />

@@ -16,7 +16,7 @@ export default async function AdminLoginPage(props: {
 
   async function login(formData: FormData) {
     'use server';
-    const currentLocale = await getLocale();
+    const formLocale = formData.get('locale') as string || 'en';
     const secret = formData.get('secret') as string;
     
     // Use the centralized helper to get the secret from Cloudflare bindings
@@ -24,21 +24,26 @@ export default async function AdminLoginPage(props: {
 
     if (!expectedSecret) {
       console.error('[AdminLogin] CRITICAL: ADMIN_SECRET is not found in the environment!');
+      redirect(getLocalizedPath(formLocale, `/admin/login?error=System misconfigured`));
     }
 
     if (secret !== expectedSecret) {
-      redirect(getLocalizedPath(currentLocale, `/admin/login?error=Invalid secret`));
+      redirect(getLocalizedPath(formLocale, `/admin/login?error=Invalid secret`));
     }
 
+    // Sign the token instead of storing raw secret
+    const { signAdminToken } = await import('@/lib/utils/admin');
+    const signature = await signAdminToken('admin', expectedSecret);
+
     const cookieStore = await cookies();
-    cookieStore.set('zenqar_admin_verified', secret, {
+    cookieStore.set('zenqar_admin_verified', signature, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7, // 1 week
       path: '/',
     });
 
-    redirect(getLocalizedPath(currentLocale, '/admin'));
+    redirect(getLocalizedPath(formLocale, '/admin'));
   }
 
   return (
@@ -55,6 +60,7 @@ export default async function AdminLoginPage(props: {
 
         <form action={login} className="space-y-4">
           <div>
+            <input type="hidden" name="locale" value={locale} />
             <input
               type="password"
               name="secret"

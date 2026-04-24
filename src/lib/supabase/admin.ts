@@ -12,16 +12,11 @@ export async function createAdminClient() {
   const url = await getSupabaseUrl();
   const key = await getSupabaseServiceRoleKey();
 
-  // We only check for presence here so we don't crash during build time
   if (!url || !key) {
-    const missing = [];
-    if (!url) missing.push('NEXT_PUBLIC_SUPABASE_URL');
-    if (!key) missing.push('SUPABASE_SERVICE_ROLE_KEY');
-    
     throw new Error(
-      `[Zenqar Admin] Missing: ${missing.join(', ')}. \n` +
+      `[Zenqar Admin] Missing Supabase configuration. \n` +
       `Check your Cloudflare Dashboard > Pages > Settings > Variables & Secrets.\n` +
-      `IMPORTANT: SUPABASE_SERVICE_ROLE_KEY must be set as a Secret.`
+      `Ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set.`
     );
   }
 
@@ -37,11 +32,11 @@ export async function createAdminClient() {
  * Diagnostic function to check if the admin key is present without exposing it.
  */
 export async function debugAdminConfig() {
-  const env = await getServerEnv();
+  const url = await getSupabaseUrl();
+  const key = await getSupabaseServiceRoleKey();
+  
   return {
-    hasUrl: !!env.NEXT_PUBLIC_SUPABASE_URL,
-    hasServiceKey: !!env.SUPABASE_SERVICE_ROLE_KEY,
-    serviceKeyLength: env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
-    envKeys: Object.keys(env).filter(k => k.includes('SUPABASE') || k.includes('SECRET')),
+    hasUrl: !!url,
+    hasServiceKey: !!key,
   };
 }

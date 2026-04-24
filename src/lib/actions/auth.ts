@@ -47,7 +47,6 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
     }
 
     const supabase = await createClient();
-    const admin    = await createAdminClient();
     const { getAppUrl } = await import('@/lib/env/server');
     const appUrl = await getAppUrl();
 
@@ -55,7 +54,10 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
       email:    parsed.data.email,
       password: parsed.data.password,
       options:  {
-        data: { full_name: parsed.data.fullName },
+        data: { 
+          full_name: parsed.data.fullName,
+          pending_business_name: parsed.data.businessName // Store for onboarding
+        },
         emailRedirectTo: `${appUrl}/${locale}/auth/callback`,
       },
     });
@@ -65,12 +67,20 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
       return { error: authError.message || 'Authentication failed' };
     }
 
+    // If email confirmation is enabled, session will be null.
+    // In this case, we STOP here. The business will be created during onboarding
+    // after the user confirms their email and logs in.
+    if (!authData.session) {
+      redirect(getLocalizedPath(locale, '/login?message=check-email'));
+    }
+
     const userId = authData.user?.id;
     if (!userId) {
       return { error: 'Failed to create user account' };
     }
 
-    // Create business (use admin client to bypass RLS on insert before membership exists)
+    // If we have a session, we can proceed to create the business immediately
+    const admin = await createAdminClient();
     const { data: business, error: bizError } = await admin
       .from('businesses')
       .insert({
@@ -82,11 +92,13 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
 
     if (bizError || !business) {
       console.error('[Signup] Business Error:', bizError);
-      return { error: `Business creation failed: ${bizError?.message || 'Database error'}` };
+      // We don't return error here because the user is already created.
+      // They will be prompted to create a business during onboarding anyway.
+      redirect(getLocalizedPath(locale, '/app/onboarding'));
     }
 
     // Create owner membership
-    const { error: memberError } = await admin
+    await admin
       .from('business_memberships')
       .insert({
         business_id: business.id,
@@ -95,15 +107,6 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
         status:      'active',
       });
 
-    if (memberError) {
-      console.error('[Signup] Membership Error:', memberError);
-      return { error: `Setup failed: ${memberError.message || 'Could not link business'}` };
-    }
-
-    // If email confirmation is enabled, session might be null
-    if (!authData.session) {
-      redirect(getLocalizedPath(locale, '/login?message=check-email'));
-    }
   } catch (e: any) {
     if (e?.message === 'NEXT_REDIRECT') throw e;
     console.error('[Signup] Unexpected Error:', e);

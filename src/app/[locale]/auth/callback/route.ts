@@ -7,8 +7,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
   const { locale } = await params;
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  // if "next" is in search params, use it as the redirect URL
-  const next = searchParams.get('next') ?? `/${locale}/app/dashboard`;
+  let next = searchParams.get('next') ?? `/${locale}/app/dashboard`;
+  
+  // Security: Prevent open redirect vulnerabilities by ensuring 'next' is an internal path
+  if (!next.startsWith('/')) {
+    next = `/${locale}/app/dashboard`;
+  }
 
   if (code) {
     const cookieStore = await cookies();
