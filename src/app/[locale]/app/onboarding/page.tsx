@@ -64,7 +64,8 @@ export default async function OnboardingPage(props: {
 
     if (bizError || !business) {
       console.error('[Onboarding] Business insert failed:', JSON.stringify(bizError));
-      redirect(getLocalizedPath(actionLocale, '/app/onboarding?error=biz-failed'));
+      const errMsg = bizError?.message ? encodeURIComponent(bizError.message) : 'unknown';
+      redirect(getLocalizedPath(actionLocale, `/app/onboarding?error=biz-failed&msg=${errMsg}`));
     }
 
     // Step 2: Insert the owner membership.
