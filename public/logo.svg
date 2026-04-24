@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/-2000/svg" viewBox="0 0 400 120">
+  <g fill="#1A365D">
+    <!-- Shield Outline -->
+    <path d="M 20 10 L 100 10 L 100 70 L 60 110 L 20 70 Z" fill="none" stroke="#1A365D" stroke-width="12" stroke-linejoin="round"/>
+    
+    <!-- Stylized Z inside shield -->
+    <path d="M 40 30 L 80 30 L 80 40 L 50 70 L 80 70 L 80 80 L 40 80 L 40 70 L 70 40 L 40 40 Z" />
+
+    <!-- Text ZENQAR -->
+    <text x="120" y="80" font-family="sans-serif" font-weight="bold" font-size="72" letter-spacing="2">ZENQAR</text>
+  </g>
+</svg>

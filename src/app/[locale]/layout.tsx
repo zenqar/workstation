@@ -54,6 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       className={`${inter.variable} ${notoKufi.variable}`}
     >
       <body>
+        <div className="vignette" aria-hidden="true" />
         <NextIntlClientProvider messages={messages} locale={locale}>
           {children}
         </NextIntlClientProvider>
