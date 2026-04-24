@@ -123,9 +123,9 @@ export async function inviteTeamMember(businessId: string, email: string, role: 
   if (!validRoles.includes(role)) return { error: 'Invalid role' };
   if (!z.string().email().safeParse(email).success) return { error: 'Invalid email' };
 
-  // Check if already a member
+  // Check if already a member (use maybeSingle to avoid error when no row exists)
   const { data: existing } = await supabase.from('business_memberships')
-    .select('id').eq('business_id', businessId).eq('email', email).single();
+    .select('id').eq('business_id', businessId).eq('email', email).maybeSingle();
   if (existing) return { error: 'This email is already a team member' };
 
   // Check if user exists by email (look up profile)

@@ -45,15 +45,19 @@ export async function middleware(request: NextRequest) {
   // 1. Admin Authorization Check (Cookie-based as per user preference)
   // This allows reaching /admin without a Supabase session if they have the secret.
   if (isAdminPath(pathname)) {
-    const adminSignature = request.cookies.get('zenqar_admin_verified')?.value;
-    const expectedAdminSecret = await getAdminSecret();
-    
-    if (adminSignature && expectedAdminSecret) {
-      const { verifyAdminToken } = await import('./lib/utils/admin');
-      const isValid = await verifyAdminToken(adminSignature, 'admin', expectedAdminSecret);
-      if (isValid) {
-        return intlMiddleware(request) || NextResponse.next();
+    try {
+      const adminSignature = request.cookies.get('zenqar_admin_verified')?.value;
+      const expectedAdminSecret = await getAdminSecret();
+      
+      if (adminSignature && expectedAdminSecret) {
+        const { verifyAdminToken } = await import('./lib/utils/admin');
+        const isValid = await verifyAdminToken(adminSignature, 'admin', expectedAdminSecret);
+        if (isValid) {
+          return intlMiddleware(request) || NextResponse.next();
+        }
       }
+    } catch (e) {
+      console.error('[Middleware Admin Check Error]', e);
     }
     
     // Invalid or missing admin signature
@@ -68,8 +72,16 @@ export async function middleware(request: NextRequest) {
   });
 
   // 3. Supabase Auth Check
-  const supabaseUrl = await getSupabaseUrl();
-  const supabaseAnonKey = await getSupabaseAnonKey();
+  let supabaseUrl: string | undefined;
+  let supabaseAnonKey: string | undefined;
+
+  try {
+    supabaseUrl = await getSupabaseUrl();
+    supabaseAnonKey = await getSupabaseAnonKey();
+  } catch (e) {
+    console.error('[Middleware Env Error]', e);
+    return response;
+  }
 
   if (!supabaseUrl || !supabaseAnonKey) {
     return response;
