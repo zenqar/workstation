@@ -2,10 +2,9 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Shield } from 'lucide-react';
 import { getAdminSecret } from '@/lib/env/server';
-import { getLocale } from 'next-intl/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
 
-export default async function AdminLoginPage(props: { 
+export default async function AdminLoginPage(props: {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ error?: string }>;
 }) {
@@ -16,35 +15,30 @@ export default async function AdminLoginPage(props: {
 
   async function login(formData: FormData) {
     'use server';
-    const formLocale = formData.get('locale') as string || 'en';
+    const formLocale = (formData.get('locale') as string) || 'en';
     const secret = formData.get('secret') as string;
 
-    // Use the centralized helper to get the secret from Cloudflare bindings
     const expectedSecret = await getAdminSecret();
 
-    // Always use verifyAdminToken for constant-time comparison to prevent timing attacks.
-    // Use a generic error message regardless of whether the secret is missing or wrong
-    // to avoid revealing internal system state.
-    const { signAdminToken, verifyAdminToken } = await import('@/lib/utils/admin');
-
-    if (!expectedSecret) {
-      console.error('[AdminLogin] CRITICAL: ADMIN_SECRET is not configured.');
+    // Generic error in all failure cases — never reveal whether secret is missing or wrong
+    if (!expectedSecret || !secret) {
       redirect(getLocalizedPath(formLocale, `/admin/login?error=Invalid secret`));
     }
 
-    // Sign the provided secret and compare using constant-time HMAC verify
-    const providedSignature = await signAdminToken(secret, expectedSecret!);
-    const isValid = await verifyAdminToken(providedSignature, secret, expectedSecret!);
+    // Constant-time comparison: sign both with the same key, then compare the signatures
+    // This prevents timing attacks while keeping logic simple
+    const { signAdminToken } = await import('@/lib/utils/admin');
+    const expectedSignature = await signAdminToken(expectedSecret, expectedSecret);
+    const providedSignature = await signAdminToken(secret, expectedSecret);
 
-    if (!isValid || secret !== expectedSecret) {
+    if (providedSignature !== expectedSignature) {
       redirect(getLocalizedPath(formLocale, `/admin/login?error=Invalid secret`));
     }
 
-    // Sign the session token to store in cookie
-    const signature = await signAdminToken('admin', expectedSecret!);
-
+    // Set the session cookie with the signed admin token
+    const sessionToken = await signAdminToken('admin', expectedSecret);
     const cookieStore = await cookies();
-    cookieStore.set('zenqar_admin_verified', signature, {
+    cookieStore.set('zenqar_admin_verified', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -75,6 +69,7 @@ export default async function AdminLoginPage(props: {
               name="secret"
               placeholder="Admin Secret"
               required
+              autoComplete="off"
               className="input-glass"
             />
             {error && <p className="text-red-400 text-xs mt-2 ml-1">{error}</p>}
