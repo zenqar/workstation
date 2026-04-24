@@ -1,5 +1,6 @@
 import { getLocale } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getLocalizedPath } from '@/lib/utils/locale';
 import { Building2, ArrowRight, CheckCircle, LogOut, AlertCircle } from 'lucide-react';
@@ -64,6 +65,8 @@ export default async function OnboardingPage(props: {
       const errMsg = rpcError?.message ? encodeURIComponent(rpcError.message) : 'unknown';
       redirect(getLocalizedPath(actionLocale, `/app/onboarding?error=biz-failed&msg=${errMsg}`));
     }
+
+    revalidatePath('/', 'layout');
 
     redirect(getLocalizedPath(actionLocale, '/app/dashboard'));
   }

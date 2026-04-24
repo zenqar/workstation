@@ -12,13 +12,21 @@ export async function getUserBusinesses() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('business_memberships')
     .select('role, status, business:businesses(*)')
     .eq('user_id', user.id)
     .eq('status', 'active');
 
-  return (data || []).map((m) => ({
+  if (error) {
+    console.error('[getUserBusinesses] Error fetching businesses:', error);
+    return [];
+  }
+
+  // Filter out any where the business join failed (e.g., RLS blocked it)
+  const validMemberships = (data || []).filter(m => m.business !== null);
+
+  return validMemberships.map((m) => ({
     business: m.business as NonNullable<typeof m.business>,
     role: m.role,
   }));

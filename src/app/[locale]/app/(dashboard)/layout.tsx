@@ -16,7 +16,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   // If user has no businesses, redirect to onboarding
   if (!businesses || businesses.length === 0) {
-    redirect(getLocalizedPath(locale, '/app/onboarding'));
+    redirect(getLocalizedPath(locale, '/app/onboarding?error=no-businesses-found'));
   }
 
   const { data: profile } = await supabase
