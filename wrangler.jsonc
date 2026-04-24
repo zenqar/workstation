@@ -5,6 +5,11 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "main": ".open-next/worker.js",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
   "vars": {
     "FX_PROVIDER": "mock",
     "FX_FALLBACK_RATE": "1310"
