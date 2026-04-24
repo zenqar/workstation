@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "workstation",
+  "compatibility_date": "2024-04-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "vars": {
+    "FX_PROVIDER": "mock",
+    "FX_FALLBACK_RATE": "1310"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
