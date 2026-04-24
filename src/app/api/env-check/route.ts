@@ -14,12 +14,12 @@ export async function GET() {
         hasAnonKey: !!env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         hasServiceRoleKey: !!env.SUPABASE_SERVICE_ROLE_KEY,
         hasAdminSecret: !!env.ADMIN_SECRET,
-        // Diagnostic info
+        // Detailed check
+        serviceRoleKeyLength: env.SUPABASE_SERVICE_ROLE_KEY?.length || 0,
+        adminSecretLength: env.ADMIN_SECRET?.length || 0,
         runtime: process.env.NEXT_RUNTIME || 'unknown',
-        deployment: env.CF_PAGES ? 'cloudflare-pages' : 'other',
-        envKeysFound: Object.keys(env).filter(k => 
-          k.includes('SUPABASE') || k.includes('SECRET') || k.includes('NEXT_PUBLIC')
-        ).length
+        envKeysFound: Object.keys(env).length || 'hidden (proxy)',
+        allKeys: Object.keys(env).filter(k => !k.startsWith('__'))
       }
     });
   } catch (error: any) {

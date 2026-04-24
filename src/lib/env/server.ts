@@ -8,23 +8,25 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
  */
 
 export function getServerEnv() {
-  // In many Cloudflare environments, bindings are already on process.env
-  let env: Record<string, any> = { ...process.env };
-
+  // 1. Try Cloudflare Context (Standard OpenNext)
   try {
-    // If we are in a context where getCloudflareContext is available, use it to ensure we have all bindings
     const cf = getCloudflareContext();
-    if (cf && cf.env) {
-      env = { ...env, ...cf.env };
+    if (cf && cf.env && Object.keys(cf.env).length > 0) {
+      return cf.env;
     }
-  } catch (e) {
-    // ignore
+    // If cf.env exists but is a proxy (empty keys), return it anyway
+    if (cf && cf.env) return cf.env;
+  } catch (e) {}
+
+  // 2. Try globalThis (Direct Worker global)
+  // In some environments, bindings are attached directly to the global object
+  const g = globalThis as any;
+  if (g.ADMIN_SECRET || g.SUPABASE_SERVICE_ROLE_KEY) {
+    return g;
   }
 
-  // Debugging (only in development or if explicitly needed)
-  // console.log('[getServerEnv] Keys found:', Object.keys(env).filter(k => k.includes('SUPABASE') || k.includes('SECRET')));
-
-  return env;
+  // 3. Fallback to process.env (Node.js / Local / Patched Edge)
+  return process.env;
 }
 
 export function getSupabaseUrl() {
