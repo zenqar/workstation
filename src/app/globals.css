@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ============================================================
    Zenqar — 2026 Apple Glass Architecture · PHASE 2
    Components · Scroll-linked motion · Wide gamut · Containers
