@@ -52,7 +52,8 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
     });
 
     if (authError) {
-      return { error: authError.message };
+      console.error('[Signup] Auth Error:', authError);
+      return { error: authError.message || 'Authentication failed' };
     }
 
     const userId = authData.user?.id;
@@ -71,7 +72,8 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
       .single();
 
     if (bizError || !business) {
-      return { error: `Failed to create business: ${bizError?.message || 'Unknown error'}` };
+      console.error('[Signup] Business Error:', bizError);
+      return { error: `Business creation failed: ${bizError?.message || 'Database error'}` };
     }
 
     // Create owner membership
@@ -85,11 +87,15 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
       });
 
     if (memberError) {
-      return { error: `Failed to set up business membership: ${memberError.message}` };
+      console.error('[Signup] Membership Error:', memberError);
+      return { error: `Setup failed: ${memberError.message || 'Could not link business'}` };
     }
   } catch (e: any) {
     if (e?.message === 'NEXT_REDIRECT') throw e;
-    return { error: e?.message || 'An unexpected error occurred during signup' };
+    console.error('[Signup] Unexpected Error:', e);
+    // Ensure we always return a string
+    const errorMessage = typeof e === 'string' ? e : (e?.message || e?.error_description || 'An unexpected error occurred during signup');
+    return { error: String(errorMessage) };
   }
 
   redirect('/app/dashboard');

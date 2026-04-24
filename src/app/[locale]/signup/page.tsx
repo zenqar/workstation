@@ -21,7 +21,14 @@ export default function SignupPage() {
       return;
     }
     const result = await signUp(fd);
-    if (result?.error) { setError(result.error); setLoading(false); }
+    if (result?.error) { 
+      // Safely handle both string and object errors
+      const msg = typeof result.error === 'string' 
+        ? result.error 
+        : JSON.stringify(result.error);
+      setError(msg); 
+      setLoading(false); 
+    }
   }
 
   return (
