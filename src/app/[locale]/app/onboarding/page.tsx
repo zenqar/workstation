@@ -183,14 +183,17 @@ export default async function OnboardingPage(props: {
           </form>
         </div>
 
-        <p className="text-center text-xs text-white/25 mt-6">
+        <div className="text-center text-xs text-white/25 mt-6">
           Wrong account?{' '}
-          <form action={signOut} className="inline">
-            <button type="submit" className="text-zenqar-400 hover:underline bg-transparent border-0 cursor-pointer text-xs">
+          <form action={signOut} className="inline-flex">
+            <button
+              type="submit"
+              className="text-zenqar-400 hover:underline bg-transparent border-0 cursor-pointer text-xs p-0 m-0 leading-none"
+            >
               Sign out
             </button>
           </form>
-        </p>
+        </div>
       </div>
     </div>
   );
