@@ -13,6 +13,10 @@ export default function AdminLoginPage({ searchParams }: any) {
     // Use the centralized helper to get the secret from Cloudflare bindings
     const expectedSecret = getAdminSecret();
 
+    if (!expectedSecret) {
+      console.error('[AdminLogin] CRITICAL: ADMIN_SECRET is not found in the environment!');
+    }
+
     if (secret !== expectedSecret) {
       redirect('/admin/login?error=Invalid secret');
     }

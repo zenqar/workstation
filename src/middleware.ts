@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   '/forgot-password',
   '/reset-password',
   '/admin/login',
+  '/api/env-check',
 ];
 
 // Routes that require platform admin role
