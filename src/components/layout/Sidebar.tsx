@@ -31,7 +31,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
     { name: t('accounts'), href: `/${locale}/app/accounts`, icon: Wallet },
     { name: t('payments'), href: `/${locale}/app/payments`, icon: CreditCard },
     { name: t('expenses'), href: `/${locale}/app/expenses`, icon: Receipt },
-    { name: t('reports'), href: `/${locale}/app/reports`, icon: BarChart3 },
+    // { name: t('reports'), href: `/${locale}/app/reports`, icon: BarChart3 }, // Not yet implemented
     { name: t('settings'), href: `/${locale}/app/settings`, icon: Settings },
   ];
 

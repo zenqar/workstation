@@ -18,27 +18,36 @@ export default async function AdminLoginPage(props: {
     'use server';
     const formLocale = formData.get('locale') as string || 'en';
     const secret = formData.get('secret') as string;
-    
+
     // Use the centralized helper to get the secret from Cloudflare bindings
     const expectedSecret = await getAdminSecret();
 
-    if (!expectedSecret) {
-      console.error('[AdminLogin] CRITICAL: ADMIN_SECRET is not found in the environment!');
-      redirect(getLocalizedPath(formLocale, `/admin/login?error=System misconfigured`));
-    }
+    // Always use verifyAdminToken for constant-time comparison to prevent timing attacks.
+    // Use a generic error message regardless of whether the secret is missing or wrong
+    // to avoid revealing internal system state.
+    const { signAdminToken, verifyAdminToken } = await import('@/lib/utils/admin');
 
-    if (secret !== expectedSecret) {
+    if (!expectedSecret) {
+      console.error('[AdminLogin] CRITICAL: ADMIN_SECRET is not configured.');
       redirect(getLocalizedPath(formLocale, `/admin/login?error=Invalid secret`));
     }
 
-    // Sign the token instead of storing raw secret
-    const { signAdminToken } = await import('@/lib/utils/admin');
-    const signature = await signAdminToken('admin', expectedSecret);
+    // Sign the provided secret and compare using constant-time HMAC verify
+    const providedSignature = await signAdminToken(secret, expectedSecret!);
+    const isValid = await verifyAdminToken(providedSignature, secret, expectedSecret!);
+
+    if (!isValid || secret !== expectedSecret) {
+      redirect(getLocalizedPath(formLocale, `/admin/login?error=Invalid secret`));
+    }
+
+    // Sign the session token to store in cookie
+    const signature = await signAdminToken('admin', expectedSecret!);
 
     const cookieStore = await cookies();
     cookieStore.set('zenqar_admin_verified', signature, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 1 week
       path: '/',
     });

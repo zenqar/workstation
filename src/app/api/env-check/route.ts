@@ -3,10 +3,22 @@ import { getServerEnv } from '@/lib/env/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Restrict to development/staging only — never expose in production
+  const env = (await getServerEnv()) as any;
+  const isProduction = (env.NODE_ENV || process.env.NODE_ENV) === 'production';
+
+  if (isProduction) {
+    // In production, require a secret query param to allow diagnostics
+    const { searchParams } = new URL(request.url);
+    const token = searchParams.get('token');
+    const adminSecret = env.ADMIN_SECRET;
+    if (!adminSecret || token !== adminSecret) {
+      return NextResponse.json({ status: 'forbidden' }, { status: 403 });
+    }
+  }
+
   try {
-    const env = (await getServerEnv()) as any;
-    
     return NextResponse.json({
       status: 'ok',
       diagnostics: {

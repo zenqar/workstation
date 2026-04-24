@@ -1,12 +1,14 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { ActionResult } from '@/lib/types';
 import { z } from 'zod';
 import { getLocale } from 'next-intl/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
+import { cookies } from 'next/headers';
 
 // ============================================================
 // Validation schemas
@@ -108,7 +110,7 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
       });
 
   } catch (e: any) {
-    if (e?.message === 'NEXT_REDIRECT') throw e;
+    if (isRedirectError(e)) throw e;
     console.error('[Signup] Unexpected Error:', e);
     const errorMessage = typeof e === 'string' ? e : (e?.message || e?.error_description || 'An unexpected error occurred during signup');
     return { error: String(errorMessage) };
@@ -164,6 +166,9 @@ export async function signOut(): Promise<void> {
   const locale = await getLocale();
   const supabase = await createClient();
   await supabase.auth.signOut();
+  // Clear the admin session cookie to prevent continued admin access after logout
+  const cookieStore = await cookies();
+  cookieStore.delete('zenqar_admin_verified');
   redirect(getLocalizedPath(locale, '/login'));
 }
 

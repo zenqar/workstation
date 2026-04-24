@@ -9,7 +9,7 @@ export default async function AdminDashboard() {
 
   // Get total users
   const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
-  const totalUsers = users?.users.length || 0;
+  const totalUsers = usersError ? 0 : (users?.users.length || 0);
 
   // Get businesses
   const { data: businesses, count: businessCount } = await supabase
@@ -21,7 +21,7 @@ export default async function AdminDashboard() {
   // Get recent invoices as activity
   const { data: recentInvoices } = await supabase
     .from('invoices')
-    .select('id, amount, currency, created_at, business:business_id(name)')
+    .select('id, total, currency, created_at, business:business_id(name)')
     .order('created_at', { ascending: false })
     .limit(5);
 
@@ -86,7 +86,7 @@ export default async function AdminDashboard() {
             <h2 className="text-lg font-semibold text-white">Recent Users</h2>
           </div>
           <div className="space-y-4">
-            {users?.users.slice(0, 5).map((u) => (
+            {(!usersError ? users?.users.slice(0, 5) : [])?.map((u) => (
               <div key={u.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                 <div>
                   <p className="text-sm font-medium text-white">{u.email}</p>
@@ -95,13 +95,16 @@ export default async function AdminDashboard() {
                 <form action={async () => {
                   'use server';
                   const admin = await createAdminClient();
+                  // Send a real password reset email via Supabase
                   await admin.auth.admin.generateLink({
                     type: 'recovery',
                     email: u.email!,
+                    options: {
+                      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/en/auth/callback?next=/en/reset-password`,
+                    },
                   });
-                  // In a real app, we'd send an email here or show the link
                 }}>
-                  <button className="btn-secondary text-xs px-3 py-1.5" title="Send Password Reset">
+                  <button type="submit" className="btn-secondary text-xs px-3 py-1.5" title="Send Password Reset Email">
                     <Key className="w-3 h-3" /> Reset
                   </button>
                 </form>
@@ -124,7 +127,7 @@ export default async function AdminDashboard() {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium text-white tabular-nums">
-                    {inv.amount.toLocaleString()} {inv.currency}
+                    {Number(inv.total ?? 0).toLocaleString()} {inv.currency}
                   </p>
                 </div>
               </div>
