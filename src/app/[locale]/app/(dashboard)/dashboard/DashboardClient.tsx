@@ -10,6 +10,7 @@ import { formatCurrency, formatDate, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLOR
 import { Wallet, TrendingDown, TrendingUp, AlertCircle, ArrowRight, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import WelcomeTour from '@/components/WelcomeTour';
 
 export default function DashboardClient({
   defaultBusinessId,
@@ -223,6 +224,9 @@ export default function DashboardClient({
           </div>
         </>
       )}
+
+      {/* Welcome tour — shows on first visit, dismissible */}
+      <WelcomeTour />
     </div>
   );
 }
