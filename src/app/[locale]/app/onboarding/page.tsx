@@ -13,11 +13,9 @@ export default async function OnboardingPage(props: {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    redirect(getLocalizedPath(locale, '/login'));
-  }
+  if (!user) redirect(getLocalizedPath(locale, '/login'));
 
-  // If the user already has an active business, go straight to dashboard
+  // If the user already has a business, go straight to dashboard
   const { data: memberships } = await supabase
     .from('business_memberships')
     .select('business_id')
@@ -29,13 +27,18 @@ export default async function OnboardingPage(props: {
   }
 
   const pendingBusinessName = user.user_metadata?.pending_business_name as string | undefined;
-  const errorMessage = searchParams.error === 'create-failed'
-    ? 'Failed to create business. Please try again.'
-    : searchParams.error === 'name-required'
-    ? 'Business name is required.'
-    : null;
 
-  // Server action — pass locale via hidden form field to avoid getLocale() inside action
+  const errorCode = searchParams.error;
+  const errorMessage =
+    errorCode === 'biz-failed'   ? 'Could not create your business. Please try again.' :
+    errorCode === 'mem-failed'   ? 'Business created but membership setup failed. Please contact support.' :
+    errorCode === 'name-required'? 'Please enter a business name.' :
+    errorCode === 'auth-error'   ? 'Authentication error. Please sign out and sign in again.' :
+    null;
+
+  // Server action — uses the regular authenticated client.
+  // The "memberships: self-owner bootstrap" RLS policy (migration 004) allows
+  // an authenticated user to insert their first 'owner' membership.
   async function createBusiness(formData: FormData) {
     'use server';
     const name = (formData.get('businessName') as string)?.trim();
@@ -49,38 +52,39 @@ export default async function OnboardingPage(props: {
     const { data: { user: innerUser } } = await innerSupabase.auth.getUser();
 
     if (!innerUser) {
-      redirect(getLocalizedPath(actionLocale, '/login'));
+      redirect(getLocalizedPath(actionLocale, '/login?error=auth-error'));
     }
 
-    try {
-      const { createAdminClient } = await import('@/lib/supabase/admin');
-      const admin = await createAdminClient();
+    // Step 1: Insert the business (RLS allows authenticated insert)
+    const { data: business, error: bizError } = await innerSupabase
+      .from('businesses')
+      .insert({ name, created_by: innerUser.id })
+      .select('id')
+      .single();
 
-      const { data: business, error: bizError } = await admin
-        .from('businesses')
-        .insert({ name, created_by: innerUser.id })
-        .select()
-        .single();
+    if (bizError || !business) {
+      console.error('[Onboarding] Business insert failed:', JSON.stringify(bizError));
+      redirect(getLocalizedPath(actionLocale, '/app/onboarding?error=biz-failed'));
+    }
 
-      if (bizError || !business) {
-        console.error('[Onboarding] Business insert error:', bizError);
-        redirect(getLocalizedPath(actionLocale, '/app/onboarding?error=create-failed'));
-      }
-
-      const { error: memError } = await admin.from('business_memberships').insert({
+    // Step 2: Insert the owner membership.
+    // Allowed by "memberships: self-owner bootstrap" policy (migration 004):
+    //   - user_id = auth.uid()
+    //   - role = 'owner'
+    //   - business.created_by = auth.uid()
+    //   - no existing membership for this business
+    const { error: memError } = await innerSupabase
+      .from('business_memberships')
+      .insert({
         business_id: business.id,
         user_id:     innerUser.id,
         role:        'owner',
         status:      'active',
       });
 
-      if (memError) {
-        console.error('[Onboarding] Membership insert error:', memError);
-        redirect(getLocalizedPath(actionLocale, '/app/onboarding?error=create-failed'));
-      }
-    } catch (e) {
-      console.error('[Onboarding] Unexpected error:', e);
-      redirect(getLocalizedPath(actionLocale, '/app/onboarding?error=create-failed'));
+    if (memError) {
+      console.error('[Onboarding] Membership insert failed:', JSON.stringify(memError));
+      redirect(getLocalizedPath(actionLocale, '/app/onboarding?error=mem-failed'));
     }
 
     redirect(getLocalizedPath(actionLocale, '/app/dashboard'));
@@ -98,7 +102,6 @@ export default async function OnboardingPage(props: {
           <button
             type="submit"
             className="flex items-center gap-2 text-xs text-white/40 hover:text-white/80 transition-colors px-3 py-2 rounded-lg hover:bg-white/5"
-            title="Sign out and use a different account"
           >
             <LogOut className="w-3.5 h-3.5" />
             Sign out
@@ -113,13 +116,10 @@ export default async function OnboardingPage(props: {
             <Building2 className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Set Up Your Business</h1>
-          <p className="text-white/50 mt-2 text-sm leading-relaxed">
-            Signed in as{' '}
-            <span className="text-white/80 font-medium">{user.email}</span>
+          <p className="text-white/50 mt-2 text-sm">
+            Signed in as <span className="text-white/80 font-medium">{user.email}</span>
           </p>
-          <p className="text-white/30 mt-1 text-xs">
-            Create your workspace — you can invite your team later.
-          </p>
+          <p className="text-white/30 mt-1 text-xs">You can invite your team after setup.</p>
         </div>
 
         {/* Feature list */}
@@ -136,18 +136,25 @@ export default async function OnboardingPage(props: {
           ))}
         </div>
 
-        {/* Error message */}
+        {/* Error banner */}
         {errorMessage && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            {errorMessage}
+          <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm mb-4">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div>
+              <p>{errorMessage}</p>
+              {errorCode === 'mem-failed' && (
+                <p className="text-xs mt-1 text-red-400/70">
+                  Error code: mem-failed — your business was created but membership setup failed.
+                  Please sign out and sign back in.
+                </p>
+              )}
+            </div>
           </div>
         )}
 
         {/* Form */}
         <div className="glass-card p-8">
           <form action={createBusiness} className="space-y-5">
-            {/* Pass locale via form so server action doesn't need getLocale() */}
             <input type="hidden" name="locale" value={locale} />
 
             <div className="space-y-2">
@@ -166,9 +173,7 @@ export default async function OnboardingPage(props: {
                 className="input-glass"
                 autoFocus
               />
-              <p className="text-xs text-white/30 ml-1">
-                You can update this anytime in Settings.
-              </p>
+              <p className="text-xs text-white/30 ml-1">You can change this anytime in Settings.</p>
             </div>
 
             <button type="submit" className="btn-primary w-full group">
@@ -185,7 +190,6 @@ export default async function OnboardingPage(props: {
               Sign out
             </button>
           </form>
-          {' '}and use a different one.
         </p>
       </div>
     </div>
