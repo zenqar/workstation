@@ -8,12 +8,15 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Wallet, ArrowRightLeft } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useParams } from 'next/navigation';
 
 export default function AccountsClient({ defaultBusinessId, initialAccounts }: any) {
   const t = useTranslations();
   const { activeBusiness, activeRole } = useBusiness();
   const [accounts, setAccounts] = useState(initialAccounts);
   const [loading, setLoading] = useState(false);
+  const params = useParams();
+  const locale = params.locale as string;
 
   useEffect(() => {
     if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
@@ -40,11 +43,11 @@ export default function AccountsClient({ defaultBusinessId, initialAccounts }: a
         </div>
         {activeRole && ['owner', 'admin', 'accountant'].includes(activeRole) && (
           <div className="flex gap-2">
-            <Link href="/app/accounts/transfer" className="btn-secondary">
+            <Link href={`/${locale}/app/accounts/transfer`} className="btn-secondary">
               <ArrowRightLeft className="w-4 h-4" />
               <span className="hidden sm:inline">{t('accounts.transfer')}</span>
             </Link>
-            <Link href="/app/accounts/new" className="btn-primary">
+            <Link href={`/${locale}/app/accounts/new`} className="btn-primary">
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">{t('accounts.newAccount')}</span>
             </Link>
@@ -57,7 +60,7 @@ export default function AccountsClient({ defaultBusinessId, initialAccounts }: a
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {accounts.map((acc: any) => (
-            <Link key={acc.id} href={`/app/accounts/${acc.id}`}>
+            <Link key={acc.id} href={`/${locale}/app/accounts/${acc.id}`}>
               <div className="glass-card p-6 flex flex-col h-full hover:border-zenqar-500/50 transition-colors group cursor-pointer">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">

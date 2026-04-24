@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { FileText, Shield, Globe, TrendingUp, ArrowRight, CheckCircle2 } from 'lucide-react';
 
-export default function LandingPage() {
+export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+
   return (
     <main className="min-h-screen flex flex-col">
       {/* Navbar */}
@@ -13,8 +15,8 @@ export default function LandingPage() {
           <span className="font-bold text-lg text-white tracking-tight">Zenqar</span>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="btn-secondary text-sm px-4 py-2">Sign In</Link>
-          <Link href="/signup" className="btn-primary text-sm px-4 py-2">Get Started</Link>
+          <Link href={`/${locale}/login`} className="btn-secondary text-sm px-4 py-2">Sign In</Link>
+          <Link href={`/${locale}/signup`} className="btn-primary text-sm px-4 py-2">Get Started</Link>
         </div>
       </nav>
 
@@ -38,11 +40,11 @@ export default function LandingPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 mt-10 animate-in">
-          <Link href="/signup" className="btn-primary px-8 py-3 text-base">
+          <Link href={`/${locale}/signup`} className="btn-primary px-8 py-3 text-base">
             Start Free
             <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link href="/login" className="btn-secondary px-8 py-3 text-base">
+          <Link href={`/${locale}/login`} className="btn-secondary px-8 py-3 text-base">
             Sign In
           </Link>
         </div>

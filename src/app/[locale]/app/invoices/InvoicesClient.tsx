@@ -7,6 +7,7 @@ import { getInvoices } from '@/lib/actions/invoices';
 import { formatCurrency, formatDate, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
 import { Plus, FileText, Search } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 export default function InvoicesClient({ defaultBusinessId, initialInvoices }: any) {
   const t = useTranslations();
@@ -14,6 +15,8 @@ export default function InvoicesClient({ defaultBusinessId, initialInvoices }: a
   const [invoices, setInvoices] = useState(initialInvoices);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const params = useParams();
+  const locale = params.locale as string;
 
   useEffect(() => {
     if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
@@ -41,7 +44,7 @@ export default function InvoicesClient({ defaultBusinessId, initialInvoices }: a
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-white tracking-tight">{t('invoices.title')}</h1>
         {activeRole && ['owner', 'admin', 'accountant', 'staff'].includes(activeRole) && (
-          <Link href="/app/invoices/new" className="btn-primary">
+          <Link href={`/${locale}/app/invoices/new`} className="btn-primary">
             <Plus className="w-4 h-4" />
             <span>{t('invoices.newInvoice')}</span>
           </Link>
@@ -80,7 +83,7 @@ export default function InvoicesClient({ defaultBusinessId, initialInvoices }: a
                   {filteredInvoices.map((inv: any) => (
                     <tr key={inv.id}>
                       <td>
-                        <Link href={`/app/invoices/${inv.id}`} className="font-medium text-white hover:text-zenqar-400 transition-colors">
+                        <Link href={`/${locale}/app/invoices/${inv.id}`} className="font-medium text-white hover:text-zenqar-400 transition-colors">
                           {inv.invoice_number}
                         </Link>
                       </td>

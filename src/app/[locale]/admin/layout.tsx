@@ -1,9 +1,11 @@
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server';
 import Link from 'next/link';
 import { Shield, Home, LogOut } from 'lucide-react';
+import { getLocalizedPath } from '@/lib/utils/locale';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const t = await getTranslations();
+  const locale = await getLocale();
 
   return (
     <div className="min-h-screen flex flex-col bg-dark-bg">
@@ -17,7 +19,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <span className="font-bold text-white tracking-tight">Zenqar Admin</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/app/dashboard" className="text-sm text-white/50 hover:text-white flex items-center gap-2 transition-colors">
+            <Link 
+              href={getLocalizedPath(locale, '/app/dashboard')} 
+              className="text-sm text-white/50 hover:text-white flex items-center gap-2 transition-colors"
+            >
               <Home className="w-4 h-4" /> Return to App
             </Link>
           </div>

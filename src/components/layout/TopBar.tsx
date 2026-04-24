@@ -10,12 +10,15 @@ import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import Sidebar from './Sidebar';
+import { useParams } from 'next/navigation';
 
 export default function TopBar({ user, profile }: { user: User; profile: Profile | null }) {
   const t = useTranslations('common');
   const { businesses, activeBusiness, setActiveBusinessId } = useBusiness();
   const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const params = useParams();
+  const locale = params.locale as string;
 
   return (
     <>
@@ -65,7 +68,7 @@ export default function TopBar({ user, profile }: { user: User; profile: Profile
                 </div>
                 <div className="px-3 pt-2 mt-2 border-t border-white/10">
                   <Link 
-                    href="/signup" 
+                    href={`/${locale}/app/onboarding`} 
                     className="flex items-center gap-2 text-sm text-zenqar-400 hover:text-zenqar-300 py-1"
                   >
                     + Create new business

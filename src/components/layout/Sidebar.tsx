@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
@@ -19,18 +19,20 @@ import type { Profile } from '@/lib/types';
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname();
+  const params = useParams();
+  const locale = params.locale as string;
   const t = useTranslations('nav');
   const { activeBusiness } = useBusiness();
 
   const navigation = [
-    { name: t('dashboard'), href: '/app/dashboard', icon: LayoutDashboard },
-    { name: t('invoices'), href: '/app/invoices', icon: FileText },
-    { name: t('contacts'), href: '/app/contacts', icon: Users },
-    { name: t('accounts'), href: '/app/accounts', icon: Wallet },
-    { name: t('payments'), href: '/app/payments', icon: CreditCard },
-    { name: t('expenses'), href: '/app/expenses', icon: Receipt },
-    { name: t('reports'), href: '/app/reports', icon: BarChart3 },
-    { name: t('settings'), href: '/app/settings', icon: Settings },
+    { name: t('dashboard'), href: `/${locale}/app/dashboard`, icon: LayoutDashboard },
+    { name: t('invoices'), href: `/${locale}/app/invoices`, icon: FileText },
+    { name: t('contacts'), href: `/${locale}/app/contacts`, icon: Users },
+    { name: t('accounts'), href: `/${locale}/app/accounts`, icon: Wallet },
+    { name: t('payments'), href: `/${locale}/app/payments`, icon: CreditCard },
+    { name: t('expenses'), href: `/${locale}/app/expenses`, icon: Receipt },
+    { name: t('reports'), href: `/${locale}/app/reports`, icon: BarChart3 },
+    { name: t('settings'), href: `/${locale}/app/settings`, icon: Settings },
   ];
 
   return (

@@ -4,9 +4,9 @@ import { getTranslations } from 'next-intl/server';
 import { CheckCircle2, XCircle, Building2, Receipt } from 'lucide-react';
 import Link from 'next/link';
 
-export default async function VerifyInvoicePage({ params }: { params: { token: string } }) {
+export default async function VerifyInvoicePage({ params }: { params: Promise<{ token: string; locale: string }> }) {
+  const { token, locale } = await params;
   const t = await getTranslations();
-  const token = params.token;
 
   const supabase = await createAdminClient();
   const { data: invoice, error } = await supabase
@@ -144,7 +144,7 @@ export default async function VerifyInvoicePage({ params }: { params: { token: s
         )}
 
         <div className="mt-12 text-center">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white transition-colors">
+          <Link href={`/${locale}`} className="inline-flex items-center gap-2 text-sm text-white/40 hover:text-white transition-colors">
             <Receipt className="w-4 h-4" />
             {t('verification.poweredBy')}
           </Link>

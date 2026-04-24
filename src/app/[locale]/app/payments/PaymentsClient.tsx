@@ -7,6 +7,7 @@ import { getPayments } from '@/lib/actions/payments';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, CreditCard, Search } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 export default function PaymentsClient({ defaultBusinessId, initialPayments }: any) {
   const t = useTranslations();
@@ -14,6 +15,8 @@ export default function PaymentsClient({ defaultBusinessId, initialPayments }: a
   const [payments, setPayments] = useState(initialPayments);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const params = useParams();
+  const locale = params.locale as string;
 
   useEffect(() => {
     if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
@@ -42,7 +45,7 @@ export default function PaymentsClient({ defaultBusinessId, initialPayments }: a
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-white tracking-tight">{t('payments.title')}</h1>
         {activeRole && ['owner', 'admin', 'accountant', 'staff'].includes(activeRole) && (
-          <Link href="/app/invoices" className="btn-primary">
+          <Link href={`/${locale}/app/invoices`} className="btn-primary">
             <Plus className="w-4 h-4" />
             <span>{t('payments.newPayment')}</span>
           </Link>
@@ -82,7 +85,7 @@ export default function PaymentsClient({ defaultBusinessId, initialPayments }: a
                     <tr key={p.id}>
                       <td className="text-white/70">{formatDate(p.payment_date)}</td>
                       <td>
-                        <Link href={`/app/invoices/${p.invoice_id}`} className="font-medium text-white hover:text-zenqar-400 transition-colors">
+                        <Link href={`/${locale}/app/invoices/${p.invoice_id}`} className="font-medium text-white hover:text-zenqar-400 transition-colors">
                           {p.invoice?.invoice_number || '—'}
                         </Link>
                       </td>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { createInvoice } from '@/lib/actions/invoices';
@@ -12,6 +12,8 @@ import Link from 'next/link';
 export default function NewInvoiceClient({ defaultBusinessId, initialContacts, initialContext }: any) {
   const t = useTranslations();
   const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
   const { activeBusiness } = useBusiness();
   const [contacts, setContacts] = useState(initialContacts);
   const [loading, setLoading] = useState(false);
@@ -70,7 +72,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts, i
       setError(res.error);
       setSaving(false);
     } else {
-      router.push(`/app/invoices/${res.data?.id}`);
+      router.push(`/${locale}/app/invoices/${res.data?.id}`);
     }
   };
 
@@ -79,7 +81,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts, i
   return (
     <div className="space-y-6 pb-8">
       <div className="flex items-center gap-4 mb-6">
-        <Link href="/app/invoices" className="p-2 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
+        <Link href={`/${locale}/app/invoices`} className="p-2 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <h1 className="text-2xl font-bold text-white tracking-tight">{t('invoices.createTitle')}</h1>

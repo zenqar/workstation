@@ -7,6 +7,7 @@ import { getExpenses } from '@/lib/actions/expenses';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Receipt, Search } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 export default function ExpensesClient({ defaultBusinessId, initialExpenses }: any) {
   const t = useTranslations();
@@ -14,6 +15,8 @@ export default function ExpensesClient({ defaultBusinessId, initialExpenses }: a
   const [expenses, setExpenses] = useState(initialExpenses);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const params = useParams();
+  const locale = params.locale as string;
 
   useEffect(() => {
     if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
@@ -41,7 +44,7 @@ export default function ExpensesClient({ defaultBusinessId, initialExpenses }: a
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-white tracking-tight">{t('expenses.title')}</h1>
         {activeRole && ['owner', 'admin', 'accountant', 'staff'].includes(activeRole) && (
-          <Link href="/app/expenses/new" className="btn-primary">
+          <Link href={`/${locale}/app/expenses/new`} className="btn-primary">
             <Plus className="w-4 h-4" />
             <span>{t('expenses.newExpense')}</span>
           </Link>

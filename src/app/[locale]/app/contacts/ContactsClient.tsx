@@ -6,6 +6,7 @@ import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { getContacts } from '@/lib/actions/contacts';
 import { Plus, Users, Search } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 export default function ContactsClient({ defaultBusinessId, initialContacts }: any) {
   const t = useTranslations();
@@ -13,6 +14,8 @@ export default function ContactsClient({ defaultBusinessId, initialContacts }: a
   const [contacts, setContacts] = useState(initialContacts);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const params = useParams();
+  const locale = params.locale as string;
 
   useEffect(() => {
     if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
@@ -41,7 +44,7 @@ export default function ContactsClient({ defaultBusinessId, initialContacts }: a
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-white tracking-tight">{t('contacts.title')}</h1>
         {activeRole && ['owner', 'admin', 'accountant', 'staff'].includes(activeRole) && (
-          <Link href="/app/contacts/new" className="btn-primary">
+          <Link href={`/${locale}/app/contacts/new`} className="btn-primary">
             <Plus className="w-4 h-4" />
             <span>{t('contacts.newContact')}</span>
           </Link>
@@ -66,7 +69,7 @@ export default function ContactsClient({ defaultBusinessId, initialContacts }: a
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredContacts.length > 0 ? (
               filteredContacts.map((contact: any) => (
-                <Link key={contact.id} href={`/app/contacts/${contact.id}`}>
+                <Link key={contact.id} href={`/${locale}/app/contacts/${contact.id}`}>
                   <div className="glass-card p-5 hover:border-zenqar-500/50 transition-colors group">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-lg font-medium text-white/80 group-hover:bg-zenqar-500/20 group-hover:text-zenqar-400 transition-colors">

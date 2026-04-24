@@ -9,6 +9,7 @@ import { getExpenses } from '@/lib/actions/expenses';
 import { formatCurrency, formatDate, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
 import { Wallet, TrendingDown, TrendingUp, AlertCircle, ArrowRight, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 export default function DashboardClient({
   defaultBusinessId,
@@ -22,6 +23,8 @@ export default function DashboardClient({
   const [invoices, setInvoices] = useState(initialInvoices);
   const [expenses, setExpenses] = useState(initialExpenses);
   const [loading, setLoading] = useState(false);
+  const params = useParams();
+  const locale = params.locale as string;
 
   useEffect(() => {
     // If the active business is different from the default one used on the server,
@@ -59,11 +62,11 @@ export default function DashboardClient({
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href="/app/invoices/new" className="btn-primary">
+          <Link href={`/${locale}/app/invoices/new`} className="btn-primary">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">{t('dashboard.newInvoice')}</span>
           </Link>
-          <Link href="/app/expenses/new" className="btn-secondary">
+          <Link href={`/${locale}/app/expenses/new`} className="btn-secondary">
             <TrendingDown className="w-4 h-4" />
             <span className="hidden sm:inline">{t('dashboard.addExpense')}</span>
           </Link>
@@ -146,7 +149,7 @@ export default function DashboardClient({
               <div className="mouse-light"></div>
               <div className="p-5 border-b border-white/5 flex items-center justify-between">
                 <h3 className="font-semibold text-white">{t('dashboard.recentInvoices')}</h3>
-                <Link href="/app/invoices" className="text-xs text-zenqar-400 hover:text-zenqar-300 flex items-center gap-1">
+                <Link href={`/${locale}/app/invoices`} className="text-xs text-zenqar-400 hover:text-zenqar-300 flex items-center gap-1">
                   {t('dashboard.viewAll')} <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
@@ -157,7 +160,7 @@ export default function DashboardClient({
                       {invoices.map((inv: any) => (
                         <tr key={inv.id}>
                           <td className="w-1/3">
-                            <Link href={`/app/invoices/${inv.id}`} className="font-medium text-white hover:text-zenqar-400 transition-colors">
+                            <Link href={`/${locale}/app/invoices/${inv.id}`} className="font-medium text-white hover:text-zenqar-400 transition-colors">
                               {inv.invoice_number}
                             </Link>
                             <div className="text-xs text-white/40 mt-1">{inv.contact?.name || '—'}</div>
@@ -188,7 +191,7 @@ export default function DashboardClient({
               <div className="mouse-light"></div>
               <div className="p-5 border-b border-white/5 flex items-center justify-between">
                 <h3 className="font-semibold text-white">{t('dashboard.recentExpenses')}</h3>
-                <Link href="/app/expenses" className="text-xs text-zenqar-400 hover:text-zenqar-300 flex items-center gap-1">
+                <Link href={`/${locale}/app/expenses`} className="text-xs text-zenqar-400 hover:text-zenqar-300 flex items-center gap-1">
                   {t('dashboard.viewAll')} <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
