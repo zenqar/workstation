@@ -20,9 +20,12 @@ export default async function AdminLoginPage(props: {
 
     const expectedSecret = await getAdminSecret();
 
-    // Generic error in all failure cases — never reveal whether secret is missing or wrong
-    if (!expectedSecret || !secret) {
-      redirect(getLocalizedPath(formLocale, `/admin/login?error=Invalid secret`));
+    if (!expectedSecret) {
+      redirect(getLocalizedPath(formLocale, `/admin/login?error=Server configuration error: ADMIN_SECRET not set`));
+    }
+
+    if (!secret) {
+      redirect(getLocalizedPath(formLocale, `/admin/login?error=Secret is required`));
     }
 
     // Constant-time comparison: sign both with the same key, then compare the signatures
