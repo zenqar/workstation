@@ -46,10 +46,21 @@ export async function middleware(request: NextRequest) {
     request: { headers: request.headers },
   });
 
-  const supabase = createServerClient(
-    getSupabaseUrl()!,
-    getSupabaseAnonKey()!,
-    {
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseAnonKey = getSupabaseAnonKey();
+
+  // If Supabase config is missing, we can't run auth middleware
+  // We'll skip it to avoid a 500 error, but the app will likely fail later
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('[Middleware] Supabase configuration is missing!');
+    return response;
+  }
+
+  try {
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -96,6 +107,9 @@ export async function middleware(request: NextRequest) {
     (p) => pathname === p || pathname.endsWith(p)
   )) {
     return NextResponse.redirect(new URL('/app/dashboard', request.url));
+  }
+  } catch (error) {
+    console.error('[Middleware Error]', error);
   }
 
   return response;

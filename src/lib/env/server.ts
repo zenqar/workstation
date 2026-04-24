@@ -1,4 +1,5 @@
 import 'server-only';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 /**
  * Global Environment Helper for Cloudflare Workers (OpenNext)
@@ -7,21 +8,21 @@ import 'server-only';
  */
 
 export function getServerEnv() {
+  // In many Cloudflare environments, bindings are already on process.env
   let env: Record<string, any> = { ...process.env };
 
   try {
-    // OpenNext specific: getCloudflareContext provides access to Worker bindings
-    const { getCloudflareContext } = require('@opennextjs/cloudflare');
+    // If we are in a context where getCloudflareContext is available, use it to ensure we have all bindings
     const cf = getCloudflareContext();
     if (cf && cf.env) {
-      // Merge Cloudflare bindings into the env object
-      // These are variables/secrets set in the Cloudflare Dashboard
       env = { ...env, ...cf.env };
     }
   } catch (e) {
-    // Not in a Cloudflare environment or getCloudflareContext failed
-    // This is expected during local 'next dev' or some build phases
+    // ignore
   }
+
+  // Debugging (only in development or if explicitly needed)
+  // console.log('[getServerEnv] Keys found:', Object.keys(env).filter(k => k.includes('SUPABASE') || k.includes('SECRET')));
 
   return env;
 }
