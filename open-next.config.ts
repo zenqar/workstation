@@ -1,11 +1,9 @@
-import cache from "@opennextjs/cloudflare/kv-cache";
-
 export default {
   default: {
     override: {
       wrapper: "cloudflare-node",
       converter: "edge",
-      incrementalCache: async () => cache,
+      incrementalCache: "dummy",
       tagCache: "dummy",
       queue: "dummy",
     },
