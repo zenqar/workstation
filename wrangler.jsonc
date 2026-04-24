@@ -14,6 +14,7 @@
     "FX_PROVIDER": "mock",
     "FX_FALLBACK_RATE": "1310",
     "NEXT_PUBLIC_SUPABASE_URL": "https://rdhflhsmftlncuiyrjdl.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_SoMOF0LHkZc6ZZFn6RlULA_wEXU-ank",
     "NEXT_PUBLIC_APP_URL": "https://workstation.info-zenqar.workers.dev"
   },
   "observability": {

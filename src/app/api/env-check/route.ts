@@ -20,7 +20,7 @@ export async function GET() {
   } catch (error: any) {
     return NextResponse.json({
       status: 'error',
-      error: error.message,
+      error: 'Diagnostics failed to run',
     }, { status: 500 });
   }
 }
