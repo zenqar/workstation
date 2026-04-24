@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { FileText, Shield, Globe, TrendingUp, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { FileText, Shield, Globe, TrendingUp, ArrowRight, CheckCircle2, Search } from 'lucide-react';
+import VerifySearch from './VerifySearch';
 
 export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -47,6 +48,23 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
           <Link href={`/${locale}/login`} className="btn-secondary px-8 py-3 text-base">
             Sign In
           </Link>
+        </div>
+      </section>
+
+      {/* Verify Invoice Section */}
+      <section className="py-12 px-6 max-w-3xl mx-auto w-full text-center relative z-10">
+        <div className="glass-card-elevated p-8 border-zenqar-500/20 bg-zenqar-900/10 backdrop-blur-md relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-zenqar-500/10 rounded-full blur-[80px] -mr-32 -mt-32 pointer-events-none"></div>
+          
+          <div className="w-12 h-12 rounded-2xl bg-zenqar-500/20 flex items-center justify-center mx-auto mb-4 border border-zenqar-500/30">
+            <Search className="w-6 h-6 text-zenqar-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Verify an Invoice</h2>
+          <p className="text-white/60 text-sm mb-6 max-w-md mx-auto">
+            Received an invoice from a Zenqar merchant? Enter the unique verification code below to instantly confirm its validity and see secure payment details.
+          </p>
+          
+          <VerifySearch locale={locale} />
         </div>
       </section>
 
