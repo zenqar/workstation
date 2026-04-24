@@ -58,7 +58,7 @@ export default async function OnboardingPage(props: {
     // Step 1: Insert the business (RLS allows authenticated insert)
     const { data: business, error: bizError } = await innerSupabase
       .from('businesses')
-      .insert({ name, created_by: innerUser.id })
+      .insert({ name })
       .select('id')
       .single();
 

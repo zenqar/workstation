@@ -86,8 +86,7 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
     const { data: business, error: bizError } = await admin
       .from('businesses')
       .insert({
-        name:       parsed.data.businessName,
-        created_by: userId,
+        name: parsed.data.businessName,
       })
       .select()
       .single();
