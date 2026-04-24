@@ -129,7 +129,7 @@ export async function inviteTeamMember(businessId: string, email: string, role: 
   if (existing) return { error: 'This email is already a team member' };
 
   // Check if user exists by email (look up profile)
-  const admin = createAdminClient();
+  const admin = await createAdminClient();
   const { data: users } = await admin.auth.admin.listUsers();
   const existingUser = users?.users?.find((u) => u.email === email);
 

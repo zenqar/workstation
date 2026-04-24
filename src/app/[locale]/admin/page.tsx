@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation';
 
 export default async function AdminDashboard() {
   const t = await getTranslations();
-  const supabase = createAdminClient();
+  const supabase = await createAdminClient();
 
   // Get total users
   const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
@@ -94,7 +94,7 @@ export default async function AdminDashboard() {
                 </div>
                 <form action={async () => {
                   'use server';
-                  const admin = createAdminClient();
+                  const admin = await createAdminClient();
                   await admin.auth.admin.generateLink({
                     type: 'recovery',
                     email: u.email!,

@@ -13,30 +13,38 @@ export interface FxRate {
   fetchedAt: string;
 }
 
-const env = getServerEnv();
-const FALLBACK_RATE = Number(env.FX_FALLBACK_RATE ?? 1310);
-const CACHE_MINUTES = Number(env.FX_CACHE_MINUTES ?? 60);
-
 // Module-level cache
 let _cached: FxRate | null = null;
 let _cachedAt: number | null = null;
 
-function isCacheValid(): boolean {
+async function getConfig() {
+  const env = await getServerEnv();
+  return {
+    FALLBACK_RATE: Number(env.FX_FALLBACK_RATE ?? 1310),
+    CACHE_MINUTES: Number(env.FX_CACHE_MINUTES ?? 60),
+    PROVIDER: env.FX_PROVIDER ?? 'mock',
+    API_KEY: env.FX_API_KEY,
+    API_URL: env.FX_API_URL,
+  };
+}
+
+async function isCacheValid(): Promise<boolean> {
   if (!_cached || !_cachedAt) return false;
+  const config = await getConfig();
   const ageMs = Date.now() - _cachedAt;
-  return ageMs < CACHE_MINUTES * 60 * 1000;
+  return ageMs < config.CACHE_MINUTES * 60 * 1000;
 }
 
 async function fetchFromExternalApi(): Promise<number | null> {
-  const env = getServerEnv();
-  const provider = env.FX_PROVIDER ?? 'mock';
+  const config = await getConfig();
+  const provider = config.PROVIDER;
 
   if (provider === 'mock') {
     return null; // skip to DB snapshot
   }
 
-  const apiKey = env.FX_API_KEY;
-  const apiUrl = env.FX_API_URL;
+  const apiKey = config.API_KEY;
+  const apiUrl = config.API_URL;
 
   if (!apiKey || !apiUrl) return null;
 
@@ -44,14 +52,14 @@ async function fetchFromExternalApi(): Promise<number | null> {
     let url = apiUrl;
     if (provider === 'exchangerate_api') {
       url = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/USD`;
-      const res = await fetch(url, { next: { revalidate: CACHE_MINUTES * 60 } });
+      const res = await fetch(url, { next: { revalidate: config.CACHE_MINUTES * 60 } });
       const json = await res.json();
       return json?.conversion_rates?.IQD ?? null;
     }
 
     if (provider === 'fixer') {
       url = `http://data.fixer.io/api/latest?access_key=${apiKey}&base=USD&symbols=IQD`;
-      const res = await fetch(url, { next: { revalidate: CACHE_MINUTES * 60 } });
+      const res = await fetch(url, { next: { revalidate: config.CACHE_MINUTES * 60 } });
       const json = await res.json();
       return json?.rates?.IQD ?? null;
     }
@@ -64,7 +72,7 @@ async function fetchFromExternalApi(): Promise<number | null> {
 
 async function fetchFromDatabase(): Promise<number | null> {
   try {
-    const supabase = createAdminClient();
+    const supabase = await createAdminClient();
     const { data } = await supabase
       .from('fx_rate_snapshots')
       .select('rate')
@@ -82,7 +90,7 @@ async function fetchFromDatabase(): Promise<number | null> {
 
 async function persistRate(rate: number, source: string): Promise<void> {
   try {
-    const supabase = createAdminClient();
+    const supabase = await createAdminClient();
     await supabase.from('fx_rate_snapshots').insert({
       from_currency: 'USD',
       to_currency:   'IQD',
@@ -100,17 +108,18 @@ async function persistRate(rate: number, source: string): Promise<void> {
  */
 export async function getCurrentFxRate(): Promise<FxRate> {
   // 1. Memory cache
-  if (isCacheValid() && _cached) {
+  if (await isCacheValid() && _cached) {
     return _cached;
   }
 
   // 2. External API
   const apiRate = await fetchFromExternalApi();
+  const config = await getConfig();
+  
   if (apiRate !== null) {
-    const env = getServerEnv();
     const result: FxRate = {
       rate:      apiRate,
-      source:    env.FX_PROVIDER ?? 'api',
+      source:    config.PROVIDER ?? 'api',
       fetchedAt: new Date().toISOString(),
     };
     await persistRate(apiRate, result.source);
@@ -134,7 +143,7 @@ export async function getCurrentFxRate(): Promise<FxRate> {
 
   // 4. Hardcoded fallback
   const fallback: FxRate = {
-    rate:      FALLBACK_RATE,
+    rate:      config.FALLBACK_RATE,
     source:    'fallback',
     fetchedAt: new Date().toISOString(),
   };

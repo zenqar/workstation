@@ -4,59 +4,48 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 /**
  * Global Environment Helper for Cloudflare Workers (OpenNext)
  * This utility ensures that environment variables are correctly read from 
- * Cloudflare Worker bindings at runtime, with a fallback to process.env for local development.
+ * Cloudflare Worker bindings at runtime using the async loader.
  */
 
-export function getServerEnv() {
-  // 1. Try Cloudflare Context (Standard OpenNext)
+export async function getServerEnv() {
   try {
-    const cf = getCloudflareContext();
-    if (cf && cf.env && Object.keys(cf.env).length > 0) {
-      return cf.env;
+    // OpenNext specific: getCloudflareContext provides access to Worker bindings
+    // Using async: true is the most reliable way in the latest OpenNext versions
+    const cf = await getCloudflareContext({ async: true });
+    if (cf && cf.env) {
+      return cf.env as any;
     }
-    // If cf.env exists but is a proxy (empty keys), return it anyway
-    if (cf && cf.env) return cf.env;
-  } catch (e) {}
-
-  // 2. Try globalThis (Direct Worker global)
-  // In some environments, bindings are attached directly to the global object
-  const g = globalThis as any;
-  if (g.ADMIN_SECRET || g.SUPABASE_SERVICE_ROLE_KEY) {
-    return g;
-  }
-
-  // 3. Fallback to process.env (Node.js / Local / Patched Edge)
-  return process.env;
-}
-
-export function getSupabaseUrl() {
-  const env = getServerEnv();
-  const url = env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!url) {
-    // Only throw at runtime when requested
-    if (process.env.NODE_ENV === 'production') {
-      console.error('[ENV] NEXT_PUBLIC_SUPABASE_URL is missing from runtime!');
+  } catch (e) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[getServerEnv] getCloudflareContext failed, falling back to process.env');
     }
   }
-  return url;
+
+  // Fallback to process.env for local development
+  return process.env as any;
 }
 
-export function getSupabaseAnonKey() {
-  const env = getServerEnv();
+export async function getSupabaseUrl() {
+  const env = await getServerEnv();
+  return env.NEXT_PUBLIC_SUPABASE_URL;
+}
+
+export async function getSupabaseAnonKey() {
+  const env = await getServerEnv();
   return env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 }
 
-export function getSupabaseServiceRoleKey() {
-  const env = getServerEnv();
+export async function getSupabaseServiceRoleKey() {
+  const env = await getServerEnv();
   return env.SUPABASE_SERVICE_ROLE_KEY;
 }
 
-export function getAdminSecret() {
-  const env = getServerEnv();
+export async function getAdminSecret() {
+  const env = await getServerEnv();
   return env.ADMIN_SECRET;
 }
 
-export function getAppUrl() {
-  const env = getServerEnv();
+export async function getAppUrl() {
+  const env = await getServerEnv();
   return env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 }

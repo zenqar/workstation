@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const config = debugAdminConfig();
+    const config = await debugAdminConfig();
     
     return NextResponse.json({
       status: 'ok',

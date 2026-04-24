@@ -11,7 +11,7 @@ export default function AdminLoginPage({ searchParams }: any) {
     const secret = formData.get('secret') as string;
     
     // Use the centralized helper to get the secret from Cloudflare bindings
-    const expectedSecret = getAdminSecret();
+    const expectedSecret = await getAdminSecret();
 
     if (!expectedSecret) {
       console.error('[AdminLogin] CRITICAL: ADMIN_SECRET is not found in the environment!');

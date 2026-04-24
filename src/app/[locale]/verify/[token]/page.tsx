@@ -8,7 +8,7 @@ export default async function VerifyInvoicePage({ params }: { params: { token: s
   const t = await getTranslations();
   const token = params.token;
 
-  const supabase = createAdminClient();
+  const supabase = await createAdminClient();
   const { data: invoice, error } = await supabase
     .from('invoices')
     .select('*, business:businesses(*), contact:contacts(*), invoice_items(*)')

@@ -13,8 +13,7 @@
   "vars": {
     "FX_PROVIDER": "mock",
     "FX_FALLBACK_RATE": "1310",
-    "NEXT_PUBLIC_SUPABASE_URL": "https://rdhflhsmftncuivonhba.supabase.co",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://rdhflhsmftlncuiyrjdl.supabase.co",
     "NEXT_PUBLIC_APP_URL": "https://workstation.info-zenqar.workers.dev"
   },
   "observability": {

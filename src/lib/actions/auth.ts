@@ -41,7 +41,7 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
     }
 
     const supabase = await createClient();
-    const admin    = createAdminClient();
+    const admin    = await createAdminClient();
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email:    parsed.data.email,

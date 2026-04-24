@@ -8,9 +8,9 @@ import { getSupabaseUrl, getSupabaseServiceRoleKey, getServerEnv } from '@/lib/e
  * 
  * This client bypasses RLS. Use with extreme care.
  */
-export function createAdminClient() {
-  const url = getSupabaseUrl();
-  const key = getSupabaseServiceRoleKey();
+export async function createAdminClient() {
+  const url = await getSupabaseUrl();
+  const key = await getSupabaseServiceRoleKey();
 
   // We only check for presence here so we don't crash during build time
   if (!url || !key) {
@@ -36,8 +36,8 @@ export function createAdminClient() {
 /**
  * Diagnostic function to check if the admin key is present without exposing it.
  */
-export function debugAdminConfig() {
-  const env = getServerEnv();
+export async function debugAdminConfig() {
+  const env = await getServerEnv();
   return {
     hasUrl: !!env.NEXT_PUBLIC_SUPABASE_URL,
     hasServiceKey: !!env.SUPABASE_SERVICE_ROLE_KEY,

@@ -9,10 +9,12 @@ import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env/server';
  */
 export async function createClient() {
   const cookieStore = await cookies();
+  const url = await getSupabaseUrl();
+  const anonKey = await getSupabaseAnonKey();
 
   return createServerClient(
-    getSupabaseUrl()!,
-    getSupabaseAnonKey()!,
+    url!,
+    anonKey!,
     {
       cookies: {
         getAll() {

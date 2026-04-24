@@ -47,8 +47,8 @@ export async function middleware(request: NextRequest) {
     request: { headers: request.headers },
   });
 
-  const supabaseUrl = getSupabaseUrl();
-  const supabaseAnonKey = getSupabaseAnonKey();
+  const supabaseUrl = await getSupabaseUrl();
+  const supabaseAnonKey = await getSupabaseAnonKey();
 
   // If Supabase config is missing, we can't run auth middleware
   // We'll skip it to avoid a 500 error, but the app will likely fail later
@@ -88,7 +88,8 @@ export async function middleware(request: NextRequest) {
   // Check admin routes
   if (isAdminPath(pathname) && user) {
     const adminSecret = request.cookies.get('zenqar_admin_verified')?.value;
-    if (adminSecret !== getAdminSecret()) {
+    const expectedAdminSecret = await getAdminSecret();
+    if (adminSecret !== expectedAdminSecret) {
       // Check DB for platform admin status
       const { data: adminRecord } = await supabase
         .from('platform_admins')
