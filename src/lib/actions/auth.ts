@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { ActionResult } from '@/lib/types';
 import { z } from 'zod';
+import { getLocale } from 'next-intl/server';
 
 // ============================================================
 // Validation schemas
@@ -27,6 +28,8 @@ const SignInSchema = z.object({
 // ============================================================
 
 export async function signUp(formData: FormData): Promise<ActionResult> {
+  const locale = await getLocale();
+  
   try {
     const raw = {
       email:        formData.get('email') as string,
@@ -90,15 +93,19 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
       console.error('[Signup] Membership Error:', memberError);
       return { error: `Setup failed: ${memberError.message || 'Could not link business'}` };
     }
+
+    // If email confirmation is enabled, session might be null
+    if (!authData.session) {
+      redirect(`/${locale}/login?message=check-email`);
+    }
   } catch (e: any) {
     if (e?.message === 'NEXT_REDIRECT') throw e;
     console.error('[Signup] Unexpected Error:', e);
-    // Ensure we always return a string
     const errorMessage = typeof e === 'string' ? e : (e?.message || e?.error_description || 'An unexpected error occurred during signup');
     return { error: String(errorMessage) };
   }
 
-  redirect('/app/dashboard');
+  redirect(`/${locale}/app/dashboard`);
 }
 
 // ============================================================
@@ -106,6 +113,8 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
 // ============================================================
 
 export async function signIn(formData: FormData): Promise<ActionResult> {
+  const locale = await getLocale();
+  
   const raw = {
     email:    formData.get('email') as string,
     password: formData.get('password') as string,
@@ -117,16 +126,28 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email:    parsed.data.email,
     password: parsed.data.password,
   });
 
   if (error) {
-    return { error: 'Invalid email or password' };
+    console.error('[SignIn] Detailed Error:', {
+      message: error.message,
+      status: error.status,
+      code: error.code,
+      name: error.name
+    });
+    
+    // Provide more detailed feedback in development
+    if (process.env.NODE_ENV === 'development') {
+      return { error: `Auth Error: ${error.message} (Code: ${error.code})` };
+    }
+    
+    return { error: error.message || 'Invalid email or password' };
   }
 
-  redirect('/app/dashboard');
+  redirect(`/${locale}/app/dashboard`);
 }
 
 // ============================================================
@@ -134,9 +155,10 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
 // ============================================================
 
 export async function signOut(): Promise<void> {
+  const locale = await getLocale();
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect('/login');
+  redirect(`/${locale}/login`);
 }
 
 // ============================================================
@@ -144,7 +166,9 @@ export async function signOut(): Promise<void> {
 // ============================================================
 
 export async function forgotPassword(formData: FormData): Promise<ActionResult> {
+  const locale = await getLocale();
   const email = formData.get('email') as string;
+  
   if (!email || !z.string().email().safeParse(email).success) {
     return { error: 'Please enter a valid email address' };
   }
@@ -154,7 +178,7 @@ export async function forgotPassword(formData: FormData): Promise<ActionResult> 
   const appUrl = await getAppUrl();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${appUrl}/reset-password`,
+    redirectTo: `${appUrl}/${locale}/reset-password`,
   });
 
   if (error) {
@@ -169,6 +193,7 @@ export async function forgotPassword(formData: FormData): Promise<ActionResult> 
 // ============================================================
 
 export async function resetPassword(formData: FormData): Promise<ActionResult> {
+  const locale = await getLocale();
   const password = formData.get('password') as string;
   const confirm  = formData.get('confirmPassword') as string;
 
@@ -187,5 +212,5 @@ export async function resetPassword(formData: FormData): Promise<ActionResult> {
     return { error: error.message };
   }
 
-  redirect('/app/dashboard');
+  redirect(`/${locale}/app/dashboard`);
 }
