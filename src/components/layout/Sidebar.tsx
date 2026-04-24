@@ -39,7 +39,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
     <div className="flex flex-col h-full bg-dark-bg/50">
       {/* Brand */}
       <div className="p-6 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-primary-gradient flex items-center justify-center shadow-glow">
+        <div className="w-8 h-8 rounded-lg bg-zenqar-gradient flex items-center justify-center shadow-glow">
           <span className="text-white font-bold text-sm">Z</span>
         </div>
         <span className="font-bold text-lg text-white tracking-tight">Zenqar</span>
@@ -69,16 +69,16 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       </nav>
 
       {/* User profile brief */}
-      <div className="p-4 border-t border-border mt-auto">
+      <div className="p-4 border-t border-white/5 mt-auto bg-white/[0.02]">
         <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 text-xs font-medium text-white/80">
+          <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-xs font-medium text-white/80">
             {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-medium text-white truncate">
+            <span className="text-sm font-semibold text-white truncate">
               {profile?.full_name || 'User'}
             </span>
-            <span className="text-xs text-white/40 truncate">
+            <span className="text-[10px] uppercase tracking-wider text-white/30 truncate">
               {activeBusiness?.name || 'Loading...'}
             </span>
           </div>

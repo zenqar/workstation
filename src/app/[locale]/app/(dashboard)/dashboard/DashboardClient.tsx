@@ -79,42 +79,42 @@ export default function DashboardClient({
       ) : (
         <>
           {/* Main Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 stagger-children">
-            <div className="glass-card p-6 bg-gradient-to-br from-zenqar-900/50 to-transparent border-zenqar-500/20 relative overflow-hidden group">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 stagger-children">
+            <div className="stats-card group">
               <div className="mouse-light"></div>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-white/70">{t('dashboard.totalBalanceIqd')}</h3>
-                <div className="w-8 h-8 rounded-full bg-zenqar-500/20 flex items-center justify-center">
-                  <Wallet className="w-4 h-4 text-zenqar-400" />
+                <h3 className="text-sm font-medium text-white/50">{t('dashboard.totalBalanceIqd')}</h3>
+                <div className="w-10 h-10 rounded-xl bg-zenqar-500/10 border border-zenqar-500/20 flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-zenqar-400" />
                 </div>
               </div>
-              <div className="text-3xl font-bold text-white tabular-nums">
+              <div className="text-3xl font-bold text-white tabular-nums tracking-tight">
                 {formatCurrency(stats.totalBalanceIqd, 'IQD')}
               </div>
             </div>
 
-            <div className="glass-card p-6 bg-gradient-to-br from-emerald-900/30 to-transparent border-emerald-500/20 relative overflow-hidden group">
+            <div className="stats-card group">
               <div className="mouse-light"></div>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-white/70">{t('dashboard.totalBalanceUsd')}</h3>
-                <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <Wallet className="w-4 h-4 text-emerald-400" />
+                <h3 className="text-sm font-medium text-white/50">{t('dashboard.totalBalanceUsd')}</h3>
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                  <Wallet className="w-5 h-5 text-emerald-400" />
                 </div>
               </div>
-              <div className="text-3xl font-bold text-white tabular-nums">
+              <div className="text-3xl font-bold text-white tabular-nums tracking-tight">
                 {formatCurrency(stats.totalBalanceUsd, 'USD')}
               </div>
             </div>
 
-            <div className="glass-card p-6 relative overflow-hidden group">
+            <div className="stats-card group">
               <div className="mouse-light"></div>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-white/70">{t('dashboard.estimatedTotal')}</h3>
-                <span className="text-xs text-white/40 px-2 py-1 rounded bg-white/5 border border-white/10">
+                <h3 className="text-sm font-medium text-white/50">{t('dashboard.estimatedTotal')}</h3>
+                <span className="text-[10px] uppercase tracking-wider text-white/30 px-2 py-1 rounded bg-white/5 border border-white/10">
                   {t('dashboard.currentRate')}: {stats.fxRate}
                 </span>
               </div>
-              <div className="text-3xl font-bold text-white tabular-nums">
+              <div className="text-3xl font-bold text-white tabular-nums tracking-tight">
                 {formatCurrency(stats.estimatedTotalIqd, 'IQD')}
               </div>
             </div>
