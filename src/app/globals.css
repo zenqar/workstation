@@ -258,6 +258,26 @@
     );
   }
 
+  /* MOUSE GLOW & SPOTLIGHT EFFECTS */
+  #mouseGlow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(100, 112, 243, 0.03) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s;
+  }
+  .mouse-light {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
   /* TECHNIQUE 17: STAGGERED CHILDREN ANIMATIONS */
   .stagger-children > * {
     opacity: 0;

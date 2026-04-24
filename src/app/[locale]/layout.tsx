@@ -40,6 +40,8 @@ export const metadata: Metadata = {
   },
 };
 
+import MouseGlowEffect from '@/components/MouseGlowEffect';
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   const messages = await getMessages();
@@ -55,6 +57,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     >
       <body>
         <div className="vignette" aria-hidden="true" />
+        <MouseGlowEffect />
         <NextIntlClientProvider messages={messages} locale={locale}>
           {children}
         </NextIntlClientProvider>

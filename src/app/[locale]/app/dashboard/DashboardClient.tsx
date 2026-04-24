@@ -75,8 +75,9 @@ export default function DashboardClient({
       ) : (
         <>
           {/* Main Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="glass-card p-6 bg-gradient-to-br from-zenqar-900/50 to-transparent border-zenqar-500/20">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 stagger-children">
+            <div className="glass-card p-6 bg-gradient-to-br from-zenqar-900/50 to-transparent border-zenqar-500/20 relative overflow-hidden group">
+              <div className="mouse-light"></div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium text-white/70">{t('dashboard.totalBalanceIqd')}</h3>
                 <div className="w-8 h-8 rounded-full bg-zenqar-500/20 flex items-center justify-center">
@@ -88,7 +89,8 @@ export default function DashboardClient({
               </div>
             </div>
 
-            <div className="glass-card p-6 bg-gradient-to-br from-emerald-900/30 to-transparent border-emerald-500/20">
+            <div className="glass-card p-6 bg-gradient-to-br from-emerald-900/30 to-transparent border-emerald-500/20 relative overflow-hidden group">
+              <div className="mouse-light"></div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium text-white/70">{t('dashboard.totalBalanceUsd')}</h3>
                 <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
@@ -100,7 +102,8 @@ export default function DashboardClient({
               </div>
             </div>
 
-            <div className="glass-card p-6">
+            <div className="glass-card p-6 relative overflow-hidden group">
+              <div className="mouse-light"></div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-medium text-white/70">{t('dashboard.estimatedTotal')}</h3>
                 <span className="text-xs text-white/40 px-2 py-1 rounded bg-white/5 border border-white/10">
@@ -114,20 +117,24 @@ export default function DashboardClient({
           </div>
 
           {/* Secondary Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="glass-card p-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
+            <div className="glass-card p-4 relative overflow-hidden group">
+              <div className="mouse-light"></div>
               <p className="text-xs text-white/50 mb-1">{t('dashboard.unpaidInvoices')}</p>
               <p className="text-xl font-semibold text-white">{stats.unpaidInvoicesCount}</p>
             </div>
-            <div className="glass-card p-4">
+            <div className="glass-card p-4 relative overflow-hidden group">
+              <div className="mouse-light"></div>
               <p className="text-xs text-red-400/80 mb-1">{t('dashboard.overdueInvoices')}</p>
               <p className="text-xl font-semibold text-red-400">{stats.overdueInvoicesCount}</p>
             </div>
-            <div className="glass-card p-4">
+            <div className="glass-card p-4 relative overflow-hidden group">
+              <div className="mouse-light"></div>
               <p className="text-xs text-white/50 mb-1">{t('dashboard.paymentsThisMonth')}</p>
               <p className="text-xl font-semibold text-white">{stats.paymentsThisMonth}</p>
             </div>
-            <div className="glass-card p-4">
+            <div className="glass-card p-4 relative overflow-hidden group">
+              <div className="mouse-light"></div>
               <p className="text-xs text-white/50 mb-1">{t('dashboard.expensesThisMonth')}</p>
               <p className="text-xl font-semibold text-white">{stats.expensesThisMonth}</p>
             </div>
@@ -135,7 +142,8 @@ export default function DashboardClient({
 
           <div className="grid lg:grid-cols-2 gap-6">
             {/* Recent Invoices */}
-            <div className="glass-card flex flex-col">
+            <div className="glass-card flex flex-col relative overflow-hidden group">
+              <div className="mouse-light"></div>
               <div className="p-5 border-b border-white/5 flex items-center justify-between">
                 <h3 className="font-semibold text-white">{t('dashboard.recentInvoices')}</h3>
                 <Link href="/app/invoices" className="text-xs text-zenqar-400 hover:text-zenqar-300 flex items-center gap-1">
@@ -176,7 +184,8 @@ export default function DashboardClient({
             </div>
 
             {/* Recent Expenses */}
-            <div className="glass-card flex flex-col">
+            <div className="glass-card flex flex-col relative overflow-hidden group">
+              <div className="mouse-light"></div>
               <div className="p-5 border-b border-white/5 flex items-center justify-between">
                 <h3 className="font-semibold text-white">{t('dashboard.recentExpenses')}</h3>
                 <Link href="/app/expenses" className="text-xs text-zenqar-400 hover:text-zenqar-300 flex items-center gap-1">

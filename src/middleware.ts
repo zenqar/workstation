@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   '/signup',
   '/forgot-password',
   '/reset-password',
+  '/admin/login',
 ];
 
 // Routes that require platform admin role
@@ -28,7 +29,8 @@ function isPublicPath(pathname: string): boolean {
 
 function isAdminPath(pathname: string): boolean {
   const withoutLocale = pathname.replace(/^\/(en|ar|ku)/, '') || '/';
-  return ADMIN_PATHS.some((p) => withoutLocale.startsWith(p));
+  // Allow /admin/login to be public, but protect everything else under /admin
+  return withoutLocale.startsWith('/admin') && withoutLocale !== '/admin/login';
 }
 
 export async function middleware(request: NextRequest) {
