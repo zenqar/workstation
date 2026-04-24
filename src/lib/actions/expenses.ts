@@ -22,7 +22,7 @@ async function requireBusinessUser(businessId: string) {
 
 const ExpenseSchema = z.object({
   account_id:   z.string().uuid(),
-  contact_id:   z.string().uuid().nullable().optional(),
+  contact_id:   z.string().uuid().nullable().optional().or(z.literal('')),
   category:     z.string().min(1),
   description:  z.string().min(1),
   amount:       z.number().positive(),
@@ -49,7 +49,7 @@ export async function createExpense(
   const { data: expenseId, error } = await supabase.rpc('record_expense', {
     p_business_id:  businessId,
     p_account_id:   d.account_id,
-    p_contact_id:   d.contact_id ?? null,
+    p_contact_id:   d.contact_id || null,
     p_category:     d.category,
     p_description:  d.description,
     p_amount:       d.amount,

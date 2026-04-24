@@ -4,6 +4,20 @@
 
 do $$
 begin
+  -- 0. Align profiles table
+  if not exists (select 1 from information_schema.columns where table_name = 'profiles' and column_name = 'avatar_url') then
+    alter table public.profiles add column avatar_url text;
+  end if;
+  if not exists (select 1 from information_schema.columns where table_name = 'profiles' and column_name = 'phone') then
+    alter table public.profiles add column phone text;
+  end if;
+  if not exists (select 1 from information_schema.columns where table_name = 'profiles' and column_name = 'is_platform_admin') then
+    alter table public.profiles add column is_platform_admin boolean not null default false;
+  end if;
+  if not exists (select 1 from information_schema.columns where table_name = 'profiles' and column_name = 'updated_at') then
+    alter table public.profiles add column updated_at timestamptz not null default now();
+  end if;
+
   -- 1. Align contacts table
   if not exists (select 1 from information_schema.columns where table_name = 'contacts' and column_name = 'company_name') then
     alter table public.contacts add column company_name text;

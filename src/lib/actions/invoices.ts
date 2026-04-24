@@ -16,7 +16,7 @@ const InvoiceItemSchema = z.object({
 });
 
 const InvoiceSchema = z.object({
-  contact_id:     z.string().uuid().nullable().optional(),
+  contact_id:     z.string().uuid().nullable().optional().or(z.literal('')),
   currency:       z.enum(['IQD', 'USD']),
   issue_date:     z.string(),
   due_date:       z.string().nullable().optional(),
@@ -100,7 +100,7 @@ export async function createInvoice(
     .insert({
       business_id:      businessId,
       invoice_number:   numData,
-      contact_id:       d.contact_id,
+      contact_id:       d.contact_id || null,
       currency:         d.currency,
       issue_date:       d.issue_date,
       due_date:         d.due_date,
@@ -181,7 +181,7 @@ export async function updateInvoice(
   const { error: updateError } = await supabase
     .from('invoices')
     .update({
-      contact_id:       d.contact_id,
+      contact_id:       d.contact_id || null,
       currency:         d.currency,
       issue_date:       d.issue_date,
       due_date:         d.due_date,
