@@ -18,7 +18,9 @@ export default async function AdminLoginPage(props: {
     const formLocale = (formData.get('locale') as string) || 'en';
     const secret = formData.get('secret') as string;
 
-    const expectedSecret = await getAdminSecret();
+    const rawExpectedSecret = await getAdminSecret();
+    const expectedSecret = rawExpectedSecret?.trim();
+    const cleanSecret = secret.trim();
 
     if (!expectedSecret) {
       redirect(getLocalizedPath(formLocale, `/admin/login?error=Server configuration error: ADMIN_SECRET not set`));
@@ -32,7 +34,7 @@ export default async function AdminLoginPage(props: {
     // This prevents timing attacks while keeping logic simple
     const { signAdminToken } = await import('@/lib/utils/admin');
     const expectedSignature = await signAdminToken(expectedSecret, expectedSecret);
-    const providedSignature = await signAdminToken(secret, expectedSecret);
+    const providedSignature = await signAdminToken(cleanSecret, expectedSecret);
 
     if (providedSignature !== expectedSignature) {
       redirect(getLocalizedPath(formLocale, `/admin/login?error=Invalid secret`));
