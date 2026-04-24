@@ -138,6 +138,8 @@ export interface Invoice {
   amount_due: number;
   notes: string | null;
   internal_notes: string | null;
+  custom_customer_name: string | null;
+  custom_customer_type: string | null;
   snapshot_json: Record<string, unknown> | null;
   snapshot_taken_at: string | null;
   verification_token: string;
@@ -253,7 +255,11 @@ export interface DashboardStats {
 }
 
 export interface InvoiceFormData {
+  customer_mode: 'existing' | 'custom';
   contact_id: string | null;
+  custom_customer_name: string | null;
+  custom_customer_type: string | null;
+  save_to_contacts: boolean;
   currency: CurrencyCode;
   issue_date: string;
   due_date: string | null;

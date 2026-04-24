@@ -16,7 +16,11 @@ const InvoiceItemSchema = z.object({
 });
 
 const InvoiceSchema = z.object({
+  customer_mode:  z.enum(['existing', 'custom']).default('existing'),
   contact_id:     z.string().uuid().nullable().optional().or(z.literal('')),
+  custom_customer_name: z.string().nullable().optional(),
+  custom_customer_type: z.string().nullable().optional(),
+  save_to_contacts: z.boolean().default(false),
   currency:       z.enum(['IQD', 'USD']),
   issue_date:     z.string(),
   due_date:       z.string().nullable().optional(),
@@ -94,13 +98,44 @@ export async function createInvoice(
     return { error: 'Failed to generate invoice number' };
   }
 
+  let finalContactId = d.contact_id || null;
+  let customCustomerName = d.custom_customer_name || null;
+  let customCustomerType = d.custom_customer_type || null;
+
+  if (d.customer_mode === 'custom' && customCustomerName) {
+    if (d.save_to_contacts) {
+      // Create official contact
+      const { data: newContact, error: contactError } = await supabase
+        .from('contacts')
+        .insert({
+          business_id: businessId,
+          type: 'customer',
+          name: customCustomerName,
+          company_name: d.custom_customer_type === 'business' ? customCustomerName : null,
+          created_by: user.id
+        })
+        .select('id')
+        .single();
+      
+      if (!contactError && newContact) {
+        finalContactId = newContact.id;
+        customCustomerName = null; // No need for custom text since it's a real contact now
+        customCustomerType = null;
+      }
+    } else {
+      finalContactId = null; // Keep it as custom text only
+    }
+  }
+
   // Insert invoice
   const { data: invoice, error: invError } = await supabase
     .from('invoices')
     .insert({
       business_id:      businessId,
       invoice_number:   numData,
-      contact_id:       d.contact_id || null,
+      contact_id:       finalContactId,
+      custom_customer_name: customCustomerName,
+      custom_customer_type: customCustomerType,
       currency:         d.currency,
       issue_date:       d.issue_date,
       due_date:         d.due_date,
@@ -178,10 +213,42 @@ export async function updateInvoice(
     d.items, d.discount_percent, d.tax_rate
   );
 
+  let finalContactId = d.contact_id || null;
+  let customCustomerName = d.custom_customer_name || null;
+  let customCustomerType = d.custom_customer_type || null;
+
+  if (d.customer_mode === 'custom' && customCustomerName) {
+    if (d.save_to_contacts) {
+      // Create official contact
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: newContact, error: contactError } = await supabase
+        .from('contacts')
+        .insert({
+          business_id: businessId,
+          type: 'customer',
+          name: customCustomerName,
+          company_name: d.custom_customer_type === 'business' ? customCustomerName : null,
+          created_by: user?.id
+        })
+        .select('id')
+        .single();
+      
+      if (!contactError && newContact) {
+        finalContactId = newContact.id;
+        customCustomerName = null;
+        customCustomerType = null;
+      }
+    } else {
+      finalContactId = null;
+    }
+  }
+
   const { error: updateError } = await supabase
     .from('invoices')
     .update({
-      contact_id:       d.contact_id || null,
+      contact_id:       finalContactId,
+      custom_customer_name: customCustomerName,
+      custom_customer_type: customCustomerType,
       currency:         d.currency,
       issue_date:       d.issue_date,
       due_date:         d.due_date,

@@ -21,7 +21,11 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts, i
   const [error, setError] = useState('');
 
   const [form, setForm] = useState({
+    customer_mode: 'existing' as 'existing' | 'custom',
     contact_id: '',
+    custom_customer_name: '',
+    custom_customer_type: 'individual' as 'individual' | 'business',
+    save_to_contacts: false,
     currency: initialContext?.settings?.default_currency || 'IQD',
     issue_date: new Date().toISOString().split('T')[0],
     due_date: '',
@@ -96,17 +100,62 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts, i
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="glass-card p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-1.5 lg:col-span-2">
-            <label className="text-sm text-white/60">{t('invoices.customer')}</label>
-            <select 
-              className="input-glass"
-              value={form.contact_id}
-              onChange={e => setForm({...form, contact_id: e.target.value})}
-            >
-              <option value="">{t('invoices.selectCustomer')}</option>
-              {contacts.filter((c: any) => c.type !== 'supplier').map((c: any) => (
-                <option key={c.id} value={c.id}>{c.name} {c.company_name ? `(${c.company_name})` : ''}</option>
-              ))}
-            </select>
+            <div className="flex items-center justify-between">
+              <label className="text-sm text-white/60">{t('invoices.customer')}</label>
+              <button 
+                type="button" 
+                onClick={() => setForm({ ...form, customer_mode: form.customer_mode === 'existing' ? 'custom' : 'existing' })}
+                className="text-xs text-zenqar-400 hover:text-zenqar-300"
+              >
+                {form.customer_mode === 'existing' ? '+ Enter Custom Name' : 'Select Existing'}
+              </button>
+            </div>
+            
+            {form.customer_mode === 'existing' ? (
+              <select 
+                className="input-glass"
+                value={form.contact_id}
+                onChange={e => setForm({...form, contact_id: e.target.value})}
+              >
+                <option value="">{t('invoices.selectCustomer')}</option>
+                {contacts.filter((c: any) => c.type !== 'supplier').map((c: any) => (
+                  <option key={c.id} value={c.id}>{c.name} {c.company_name ? `(${c.company_name})` : ''}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex gap-3">
+                  <select 
+                    className="input-glass w-1/3"
+                    value={form.custom_customer_type}
+                    onChange={e => setForm({...form, custom_customer_type: e.target.value as 'individual' | 'business'})}
+                  >
+                    <option value="individual">Individual</option>
+                    <option value="business">Business</option>
+                  </select>
+                  <input 
+                    type="text"
+                    className="input-glass flex-1"
+                    placeholder="Customer or Business Name"
+                    value={form.custom_customer_name}
+                    onChange={e => setForm({...form, custom_customer_name: e.target.value})}
+                    required={form.customer_mode === 'custom'}
+                  />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer group w-fit">
+                  <div className="relative flex items-center justify-center w-4 h-4 rounded border border-white/20 bg-black/20 group-hover:border-zenqar-400 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      className="peer sr-only"
+                      checked={form.save_to_contacts}
+                      onChange={e => setForm({...form, save_to_contacts: e.target.checked})}
+                    />
+                    {form.save_to_contacts && <div className="absolute inset-0 m-0.5 bg-zenqar-500 rounded-sm"></div>}
+                  </div>
+                  <span className="text-xs text-white/50 group-hover:text-white/80 transition-colors">Save this to my contacts list</span>
+                </label>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">

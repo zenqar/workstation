@@ -34,7 +34,8 @@ export default function InvoicesClient({ defaultBusinessId, initialInvoices }: a
 
   const filteredInvoices = invoices.filter((inv: any) => 
     inv.invoice_number.toLowerCase().includes(search.toLowerCase()) ||
-    (inv.contact?.name && inv.contact.name.toLowerCase().includes(search.toLowerCase()))
+    (inv.contact?.name && inv.contact.name.toLowerCase().includes(search.toLowerCase())) ||
+    (inv.custom_customer_name && inv.custom_customer_name.toLowerCase().includes(search.toLowerCase()))
   );
 
   if (!activeBusiness) return <div className="animate-pulse text-white/50">{t('common.loading')}</div>;
@@ -88,7 +89,12 @@ export default function InvoicesClient({ defaultBusinessId, initialInvoices }: a
                         </Link>
                       </td>
                       <td>
-                        <div className="text-white/80">{inv.contact?.name || '—'}</div>
+                        <div className="text-white/80">
+                          {inv.contact?.name || inv.custom_customer_name || '—'}
+                          {inv.custom_customer_type && !inv.contact && (
+                            <span className="text-white/40 text-xs ml-2 capitalize">({inv.custom_customer_type})</span>
+                          )}
+                        </div>
                       </td>
                       <td>
                         <span className={cn('badge', INVOICE_STATUS_COLORS[inv.status as keyof typeof INVOICE_STATUS_COLORS])}>
