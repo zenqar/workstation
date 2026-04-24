@@ -55,37 +55,14 @@ export default async function OnboardingPage(props: {
       redirect(getLocalizedPath(actionLocale, '/login?error=auth-error'));
     }
 
-    // Step 1: Insert the business (RLS allows authenticated insert)
-    const { data: business, error: bizError } = await innerSupabase
-      .from('businesses')
-      .insert({ name })
-      .select('id')
-      .single();
+    // Step 1 & 2: Atomically insert business and membership via RPC
+    const { data: businessId, error: rpcError } = await innerSupabase
+      .rpc('create_business_with_owner', { p_name: name });
 
-    if (bizError || !business) {
-      console.error('[Onboarding] Business insert failed:', JSON.stringify(bizError));
-      const errMsg = bizError?.message ? encodeURIComponent(bizError.message) : 'unknown';
+    if (rpcError || !businessId) {
+      console.error('[Onboarding] RPC failed:', JSON.stringify(rpcError));
+      const errMsg = rpcError?.message ? encodeURIComponent(rpcError.message) : 'unknown';
       redirect(getLocalizedPath(actionLocale, `/app/onboarding?error=biz-failed&msg=${errMsg}`));
-    }
-
-    // Step 2: Insert the owner membership.
-    // Allowed by "memberships: self-owner bootstrap" policy (migration 004):
-    //   - user_id = auth.uid()
-    //   - role = 'owner'
-    //   - business.created_by = auth.uid()
-    //   - no existing membership for this business
-    const { error: memError } = await innerSupabase
-      .from('business_memberships')
-      .insert({
-        business_id: business.id,
-        user_id:     innerUser.id,
-        role:        'owner',
-        status:      'active',
-      });
-
-    if (memError) {
-      console.error('[Onboarding] Membership insert failed:', JSON.stringify(memError));
-      redirect(getLocalizedPath(actionLocale, '/app/onboarding?error=mem-failed'));
     }
 
     redirect(getLocalizedPath(actionLocale, '/app/dashboard'));

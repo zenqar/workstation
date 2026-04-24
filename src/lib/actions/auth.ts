@@ -82,31 +82,16 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
     }
 
     // If we have a session, we can proceed to create the business immediately
-    const admin = await createAdminClient();
-    const { data: business, error: bizError } = await admin
-      .from('businesses')
-      .insert({
-        name: parsed.data.businessName,
-      })
-      .select()
-      .single();
+    const innerSupabase = await createClient();
+    const { error: rpcError } = await innerSupabase
+      .rpc('create_business_with_owner', { p_name: parsed.data.businessName });
 
-    if (bizError || !business) {
-      console.error('[Signup] Business Error:', bizError);
+    if (rpcError) {
+      console.error('[Signup] Business RPC Error:', rpcError);
       // We don't return error here because the user is already created.
       // They will be prompted to create a business during onboarding anyway.
       redirect(getLocalizedPath(locale, '/app/onboarding'));
     }
-
-    // Create owner membership
-    await admin
-      .from('business_memberships')
-      .insert({
-        business_id: business.id,
-        user_id:     userId,
-        role:        'owner',
-        status:      'active',
-      });
 
   } catch (e: any) {
     if (isRedirectError(e)) throw e;
