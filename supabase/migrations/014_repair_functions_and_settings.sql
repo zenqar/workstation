@@ -77,3 +77,38 @@ begin
     alter table public.profiles add column avatar_url text;
   end if;
 end $$;
+
+-- 6. Install handle_new_user function
+create or replace function handle_new_user()
+returns trigger
+language plpgsql security definer
+set search_path = public
+as $$
+begin
+  insert into profiles (id, email, full_name)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1))
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+-- 7. Install the user trigger
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function handle_new_user();
+
+-- 8. EMERGENCY REPAIR: Create missing profiles for existing auth users
+do $$
+begin
+  insert into profiles (id, email, full_name)
+  select id, email, coalesce(raw_user_meta_data->>'full_name', split_part(email, '@', 1))
+  from auth.users
+  where id not in (select id from profiles)
+  on conflict (id) do nothing;
+end $$;
+

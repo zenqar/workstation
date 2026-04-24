@@ -176,13 +176,17 @@ export async function removeTeamMember(businessId: string, membershipId: string)
 // ── Get team members ───────────────────────────────────────────
 export async function getTeamMembers(businessId: string) {
   const supabase = await createClient();
+  // Select without avatar_url first; column may not exist on all DB instances
   const { data, error } = await supabase
     .from('business_memberships')
-    .select('*, profile:profiles(id, full_name, email, avatar_url)')
+    .select('*, profile:profiles(id, full_name, email)')
     .eq('business_id', businessId)
     .order('joined_at');
-  if (error) throw error;
-  return data;
+  if (error) {
+    console.error('[getTeamMembers] Error fetching team:', error);
+    return [];
+  }
+  return data ?? [];
 }
 
 // ── Dashboard stats ────────────────────────────────────────────
