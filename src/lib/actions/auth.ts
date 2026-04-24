@@ -45,12 +45,15 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
 
     const supabase = await createClient();
     const admin    = await createAdminClient();
+    const { getAppUrl } = await import('@/lib/env/server');
+    const appUrl = await getAppUrl();
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email:    parsed.data.email,
       password: parsed.data.password,
       options:  {
         data: { full_name: parsed.data.fullName },
+        emailRedirectTo: `${appUrl}/${locale}/auth/callback`,
       },
     });
 

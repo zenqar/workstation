@@ -2,12 +2,20 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Shield } from 'lucide-react';
 import { getAdminSecret } from '@/lib/env/server';
+import { getLocale } from 'next-intl/server';
 
-export default function AdminLoginPage({ searchParams }: any) {
-  const error = searchParams?.error;
+export default async function AdminLoginPage(props: { 
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
+  const error = searchParams.error;
+  const locale = params.locale;
 
   async function login(formData: FormData) {
     'use server';
+    const currentLocale = await getLocale();
     const secret = formData.get('secret') as string;
     
     // Use the centralized helper to get the secret from Cloudflare bindings
@@ -18,7 +26,7 @@ export default function AdminLoginPage({ searchParams }: any) {
     }
 
     if (secret !== expectedSecret) {
-      redirect('/admin/login?error=Invalid secret');
+      redirect(`/${currentLocale}/admin/login?error=Invalid secret`);
     }
 
     const cookieStore = await cookies();
@@ -29,7 +37,7 @@ export default function AdminLoginPage({ searchParams }: any) {
       path: '/',
     });
 
-    redirect('/admin');
+    redirect(`/${currentLocale}/admin`);
   }
 
   return (
