@@ -10,7 +10,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
   let next = searchParams.get('next') ?? `/${locale}/app/dashboard`;
   
   // Security: Prevent open redirect vulnerabilities by ensuring 'next' is an internal path
-  if (!next.startsWith('/')) {
+  // Reject protocol-relative URLs (//evil.com) and non-local paths
+  if (!next.startsWith('/') || next.startsWith('//')) {
     next = `/${locale}/app/dashboard`;
   }
 
