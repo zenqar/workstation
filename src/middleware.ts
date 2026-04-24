@@ -50,6 +50,10 @@ export async function middleware(request: NextRequest) {
     if (adminSecret === expectedAdminSecret && expectedAdminSecret) {
       // Valid admin cookie, allow through
       return intlMiddleware(request) || NextResponse.next();
+    } else {
+      // Invalid admin cookie, redirect to admin login
+      const target = getLocalizedPath(locale, '/admin/login');
+      return NextResponse.redirect(new URL(target, request.url));
     }
   }
 
