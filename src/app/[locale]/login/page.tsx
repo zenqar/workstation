@@ -4,11 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { signIn } from '@/lib/actions/auth';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const params = useParams();
+  const locale = params.locale as string;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -34,6 +37,8 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="glass-card p-6 flex flex-col gap-4">
+          <input type="hidden" name="locale" value={locale} />
+          
           {error && (
             <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
               {error}
@@ -55,7 +60,7 @@ export default function LoginPage() {
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <label className="text-sm text-white/60 font-medium">Password</label>
-              <Link href="/forgot-password" className="text-xs text-zenqar-400 hover:text-zenqar-300 transition-colors">
+              <Link href={`/${locale}/forgot-password`} className="text-xs text-zenqar-400 hover:text-zenqar-300 transition-colors">
                 Forgot password?
               </Link>
             </div>
@@ -90,7 +95,7 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-white/40 mt-4">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="text-zenqar-400 hover:text-zenqar-300 transition-colors">
+          <Link href={`/${locale}/signup`} className="text-zenqar-400 hover:text-zenqar-300 transition-colors">
             Sign up free
           </Link>
         </p>

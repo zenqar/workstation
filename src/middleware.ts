@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { routing } from './i18n/routing';
 
 import { getSupabaseUrl, getSupabaseAnonKey, getAdminSecret } from './lib/env/server';
+import { getLocalizedPath } from './lib/utils/locale';
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -36,8 +37,14 @@ function isAdminPath(pathname: string): boolean {
   return withoutLocale.startsWith('/admin') && withoutLocale !== '/admin/login';
 }
 
+function getLocaleFromPathname(pathname: string): string {
+  const match = pathname.match(/^\/(en|ar|ku)/);
+  return match ? match[1] : 'en';
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const locale = getLocaleFromPathname(pathname);
 
   // Run intl middleware first for locale handling
   const intlResponse = intlMiddleware(request);
@@ -50,10 +57,7 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = await getSupabaseUrl();
   const supabaseAnonKey = await getSupabaseAnonKey();
 
-  // If Supabase config is missing, we can't run auth middleware
-  // We'll skip it to avoid a 500 error, but the app will likely fail later
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('[Middleware] Supabase configuration is missing!');
     return response;
   }
 
@@ -75,12 +79,12 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh the session — important for SSR
   const { data: { user } } = await supabase.auth.getUser();
 
   // Redirect unauthenticated users away from protected routes
   if (!isPublicPath(pathname) && !user) {
-    const loginUrl = new URL('/login', request.url);
+    const target = getLocalizedPath(locale, '/login');
+    const loginUrl = new URL(target, request.url);
     loginUrl.searchParams.set('redirectTo', pathname);
     return NextResponse.redirect(loginUrl);
   }
@@ -99,16 +103,15 @@ export async function middleware(request: NextRequest) {
         .single();
 
       if (!adminRecord) {
-        return NextResponse.redirect(new URL('/app/dashboard', request.url));
+        return NextResponse.redirect(new URL(getLocalizedPath(locale, '/app/dashboard'), request.url));
       }
     }
   }
 
   // Redirect authenticated users away from auth pages
-  if (user && ['/login', '/signup', '/forgot-password'].some(
-    (p) => pathname === p || pathname.endsWith(p)
-  )) {
-    return NextResponse.redirect(new URL('/app/dashboard', request.url));
+  const withoutLocale = pathname.replace(/^\/(en|ar|ku)/, '') || '/';
+  if (user && ['/login', '/signup', '/forgot-password'].includes(withoutLocale)) {
+    return NextResponse.redirect(new URL(getLocalizedPath(locale, '/app/dashboard'), request.url));
   }
   } catch (error) {
     console.error('[Middleware Error]', error);

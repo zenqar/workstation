@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { Shield } from 'lucide-react';
 import { getAdminSecret } from '@/lib/env/server';
 import { getLocale } from 'next-intl/server';
+import { getLocalizedPath } from '@/lib/utils/locale';
 
 export default async function AdminLoginPage(props: { 
   params: Promise<{ locale: string }>;
@@ -26,7 +27,7 @@ export default async function AdminLoginPage(props: {
     }
 
     if (secret !== expectedSecret) {
-      redirect(`/${currentLocale}/admin/login?error=Invalid secret`);
+      redirect(getLocalizedPath(currentLocale, `/admin/login?error=Invalid secret`));
     }
 
     const cookieStore = await cookies();
@@ -37,7 +38,7 @@ export default async function AdminLoginPage(props: {
       path: '/',
     });
 
-    redirect(`/${currentLocale}/admin`);
+    redirect(getLocalizedPath(currentLocale, '/admin'));
   }
 
   return (

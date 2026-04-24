@@ -4,18 +4,16 @@ import { getExpenses } from '@/lib/actions/expenses';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient';
+import { getLocale } from 'next-intl/server';
+import { getLocalizedPath } from '@/lib/utils/locale';
 
 export default async function DashboardPage() {
+  const locale = await getLocale();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
+  if (!user) redirect(getLocalizedPath(locale, '/login'));
 
-  // We need to know which business to fetch stats for. 
-  // We'll pass the initial server-fetched data to the client component,
-  // but since we don't know the "active" business on the server (it's in localStorage),
-  // we'll fetch the user's businesses and default to the first one, 
-  // then let the client fetch if it mismatches.
-  
+  // Get user's businesses
   const { data: memberships } = await supabase
     .from('business_memberships')
     .select('business_id')
@@ -23,7 +21,7 @@ export default async function DashboardPage() {
     .eq('status', 'active');
 
   if (!memberships || memberships.length === 0) {
-    redirect('/signup');
+    redirect(getLocalizedPath(locale, '/signup'));
   }
 
   const defaultBusinessId = memberships[0].business_id;
