@@ -15,13 +15,10 @@ const notoKufi = Noto_Kufi_Arabic({
 });
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // This is the true root shell. 
-  // Locale-specific attributes (lang, dir) will be managed in [locale]/layout.tsx 
-  // by wrapping in a div or using a client-side effect if needed, 
-  // but for SEO and hydration, we'll keep it simple here.
+  // The true root shell of the application
   return (
     <html className={`${inter.variable} ${notoKufi.variable}`}>
-      <body>
+      <body className="antialiased">
         {children}
       </body>
     </html>

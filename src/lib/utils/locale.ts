@@ -6,8 +6,8 @@ export const locales = ['en', 'ar', 'ku'];
 export const defaultLocale = 'en';
 
 /**
- * Prepends the locale to a path if it's not the default or if localePrefix is 'always'.
- * Zenqar uses locale-based paths for all routes.
+ * Prepends the locale to a path.
+ * Zenqar now uses localePrefix: 'always' for consistency.
  */
 export function getLocalizedPath(locale: string, path: string): string {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;

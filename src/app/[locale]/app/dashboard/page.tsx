@@ -21,7 +21,7 @@ export default async function DashboardPage() {
     .eq('status', 'active');
 
   if (!memberships || memberships.length === 0) {
-    redirect(getLocalizedPath(locale, '/signup'));
+    redirect(getLocalizedPath(locale, '/app/onboarding'));
   }
 
   const defaultBusinessId = memberships[0].business_id;
