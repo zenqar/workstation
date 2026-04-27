@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { ActionResult } from '@/lib/types';
 import { z } from 'zod';
 
@@ -36,15 +37,17 @@ export async function createContact(
   businessId: string,
   data: z.infer<typeof ContactSchema>
 ): Promise<ActionResult<{ id: string }>> {
-  const { supabase, user, role } = await requireBusinessUser(businessId);
-  if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) return { error: 'Permission denied' };
-
-  const parsed = ContactSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
-
-  const d = parsed.data;
   try {
-    const { data: contact, error } = await supabase
+    const { user, role } = await requireBusinessUser(businessId);
+    if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) return { error: 'Permission denied' };
+
+    const parsed = ContactSchema.safeParse(data);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+    const d = parsed.data;
+    const admin = await createAdminClient();
+    
+    const { data: contact, error } = await admin
       .from('contacts')
       .insert({
         business_id:  businessId,
@@ -60,18 +63,14 @@ export async function createContact(
         created_by:   user.id,
       })
       .select('id')
-      .maybeSingle();
+      .single();
 
     if (error) {
-      console.error('[createContact] Supabase error:', error);
-      return { error: error.message || 'Failed to create contact' };
+      console.error('[createContact] DB error:', error);
+      return { error: error.message };
     }
 
-    if (!contact) {
-      return { error: 'Failed to create contact (no data returned)' };
-    }
-
-    revalidatePath('/app/contacts');
+    revalidatePath('/[locale]/app/contacts', 'layout');
     return { data: { id: contact.id } };
   } catch (err: any) {
     console.error('[createContact] Runtime error:', err);
@@ -84,38 +83,52 @@ export async function updateContact(
   contactId: string,
   data: z.infer<typeof ContactSchema>
 ): Promise<ActionResult> {
-  const { supabase, role } = await requireBusinessUser(businessId);
-  if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) return { error: 'Permission denied' };
+  try {
+    const { role } = await requireBusinessUser(businessId);
+    if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) return { error: 'Permission denied' };
 
-  const parsed = ContactSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+    const parsed = ContactSchema.safeParse(data);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const d = parsed.data;
-  const { error } = await supabase
-    .from('contacts')
-    .update({ ...d, email: d.email || null })
-    .eq('id', contactId)
-    .eq('business_id', businessId);
+    const d = parsed.data;
+    const admin = await createAdminClient();
+    const { error } = await admin
+      .from('contacts')
+      .update({ ...d, email: d.email || null })
+      .eq('id', contactId)
+      .eq('business_id', businessId);
 
-  if (error) return { error: 'Failed to update contact' };
-  revalidatePath(`/app/contacts/${contactId}`);
-  revalidatePath('/app/contacts');
-  return {};
+    if (error) throw error;
+    
+    revalidatePath(`/[locale]/app/contacts/${contactId}`, 'layout');
+    revalidatePath('/[locale]/app/contacts', 'layout');
+    return {};
+  } catch (err: any) {
+    console.error('[updateContact]', err);
+    return { error: err.message };
+  }
 }
 
 export async function deleteContact(businessId: string, contactId: string): Promise<ActionResult> {
-  const { supabase, role } = await requireBusinessUser(businessId);
-  if (!['owner', 'admin', 'accountant'].includes(role)) return { error: 'Permission denied' };
+  try {
+    const { role } = await requireBusinessUser(businessId);
+    if (!['owner', 'admin', 'accountant'].includes(role)) return { error: 'Permission denied' };
 
-  const { error } = await supabase
-    .from('contacts')
-    .delete()
-    .eq('id', contactId)
-    .eq('business_id', businessId);
+    const admin = await createAdminClient();
+    const { error } = await admin
+      .from('contacts')
+      .delete()
+      .eq('id', contactId)
+      .eq('business_id', businessId);
 
-  if (error) return { error: 'Failed to delete contact' };
-  revalidatePath('/app/contacts');
-  return {};
+    if (error) throw error;
+    
+    revalidatePath('/[locale]/app/contacts', 'layout');
+    return {};
+  } catch (err: any) {
+    console.error('[deleteContact]', err);
+    return { error: err.message };
+  }
 }
 
 export async function getContacts(businessId: string, type?: string) {

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { ActionResult } from '@/lib/types';
 import { z } from 'zod';
 
@@ -36,36 +37,42 @@ export async function createExpense(
   businessId: string,
   data: z.infer<typeof ExpenseSchema>
 ): Promise<ActionResult<{ id: string }>> {
-  const { supabase, user, role } = await requireBusinessUser(businessId);
+  try {
+    const { user, role } = await requireBusinessUser(businessId);
 
-  if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) {
-    return { error: 'Permission denied' };
+    if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) {
+      return { error: 'Permission denied' };
+    }
+
+    const parsed = ExpenseSchema.safeParse(data);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+    const d = parsed.data;
+    const admin = await createAdminClient();
+    const { data: expenseId, error } = await admin.rpc('record_expense', {
+      p_business_id:  businessId,
+      p_account_id:   d.account_id,
+      p_contact_id:   d.contact_id || null,
+      p_category:     d.category,
+      p_description:  d.description,
+      p_amount:       d.amount,
+      p_currency:     d.currency,
+      p_expense_date: d.expense_date,
+      p_note:         d.note ?? null,
+      p_receipt_url:  d.receipt_url ?? null,
+      p_created_by:   user.id,
+    });
+
+    if (error) throw error;
+
+    revalidatePath('/[locale]/app/expenses', 'layout');
+    revalidatePath('/[locale]/app/accounts', 'layout');
+    revalidatePath('/[locale]/app/dashboard', 'layout');
+    return { data: { id: expenseId } };
+  } catch (err: any) {
+    console.error('[createExpense]', err);
+    return { error: err.message };
   }
-
-  const parsed = ExpenseSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
-
-  const d = parsed.data;
-  const { data: expenseId, error } = await supabase.rpc('record_expense', {
-    p_business_id:  businessId,
-    p_account_id:   d.account_id,
-    p_contact_id:   d.contact_id || null,
-    p_category:     d.category,
-    p_description:  d.description,
-    p_amount:       d.amount,
-    p_currency:     d.currency,
-    p_expense_date: d.expense_date,
-    p_note:         d.note ?? null,
-    p_receipt_url:  d.receipt_url ?? null,
-    p_created_by:   user.id,
-  });
-
-  if (error) return { error: error.message || 'Failed to create expense' };
-
-  revalidatePath('/app/expenses');
-  revalidatePath('/app/accounts');
-  revalidatePath('/app/dashboard');
-  return { data: { id: expenseId } };
 }
 
 export async function getExpenses(businessId: string) {
@@ -88,17 +95,24 @@ export async function getExpenses(businessId: string) {
 }
 
 export async function deleteExpense(businessId: string, expenseId: string): Promise<ActionResult> {
-  const { supabase, role } = await requireBusinessUser(businessId);
-  if (!['owner', 'admin', 'accountant'].includes(role)) return { error: 'Permission denied' };
+  try {
+    const { role } = await requireBusinessUser(businessId);
+    if (!['owner', 'admin', 'accountant'].includes(role)) return { error: 'Permission denied' };
 
-  const { error } = await supabase
-    .from('expenses')
-    .delete()
-    .eq('id', expenseId)
-    .eq('business_id', businessId);
+    const admin = await createAdminClient();
+    const { error } = await admin
+      .from('expenses')
+      .delete()
+      .eq('id', expenseId)
+      .eq('business_id', businessId);
 
-  if (error) return { error: 'Failed to delete expense' };
-  revalidatePath('/app/expenses');
-  revalidatePath('/app/dashboard');
-  return {};
+    if (error) throw error;
+    
+    revalidatePath('/[locale]/app/expenses', 'layout');
+    revalidatePath('/[locale]/app/dashboard', 'layout');
+    return {};
+  } catch (err: any) {
+    console.error('[deleteExpense]', err);
+    return { error: err.message };
+  }
 }

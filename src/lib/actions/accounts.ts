@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { ActionResult } from '@/lib/types';
 import { z } from 'zod';
 
@@ -25,33 +26,46 @@ const AccountSchema = z.object({
 });
 
 export async function createAccount(businessId: string, data: z.infer<typeof AccountSchema>): Promise<ActionResult<{ id: string }>> {
-  const { supabase, user, role } = await requireBusinessUser(businessId);
-  if (!['owner', 'admin', 'accountant'].includes(role)) return { error: 'Permission denied' };
+  try {
+    const { user, role } = await requireBusinessUser(businessId);
+    if (!['owner', 'admin', 'accountant'].includes(role)) return { error: 'Permission denied' };
 
-  const parsed = AccountSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+    const parsed = AccountSchema.safeParse(data);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { data: account, error } = await supabase.from('accounts').insert({
-    business_id: businessId, created_by: user.id, ...parsed.data,
-  }).select('id').single();
+    const admin = await createAdminClient();
+    const { data: account, error } = await admin.from('accounts').insert({
+      business_id: businessId, created_by: user.id, ...parsed.data,
+    }).select('id').single();
 
-  if (error) return { error: 'Failed to create account' };
-  revalidatePath('/app/accounts');
-  return { data: { id: account.id } };
+    if (error) throw error;
+    revalidatePath('/[locale]/app/accounts', 'layout');
+    return { data: { id: account.id } };
+  } catch (err: any) {
+    console.error('[createAccount]', err);
+    return { error: err.message };
+  }
 }
 
 export async function updateAccount(businessId: string, accountId: string, data: z.infer<typeof AccountSchema>): Promise<ActionResult> {
-  const { supabase, role } = await requireBusinessUser(businessId);
-  if (!['owner', 'admin', 'accountant'].includes(role)) return { error: 'Permission denied' };
+  try {
+    const { role } = await requireBusinessUser(businessId);
+    if (!['owner', 'admin', 'accountant'].includes(role)) return { error: 'Permission denied' };
 
-  const parsed = AccountSchema.safeParse(data);
-  if (!parsed.success) return { error: parsed.error.issues[0].message };
+    const parsed = AccountSchema.safeParse(data);
+    if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { error } = await supabase.from('accounts').update(parsed.data)
-    .eq('id', accountId).eq('business_id', businessId);
-  if (error) return { error: 'Failed to update account' };
-  revalidatePath(`/app/accounts/${accountId}`);
-  return {};
+    const admin = await createAdminClient();
+    const { error } = await admin.from('accounts').update(parsed.data)
+      .eq('id', accountId).eq('business_id', businessId);
+    if (error) throw error;
+    revalidatePath(`/[locale]/app/accounts/${accountId}`, 'layout');
+    revalidatePath('/[locale]/app/accounts', 'layout');
+    return {};
+  } catch (err: any) {
+    console.error('[updateAccount]', err);
+    return { error: err.message };
+  }
 }
 
 export async function getAccounts(businessId: string) {

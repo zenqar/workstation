@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { ActionResult, Invoice, InvoiceFormData } from '@/lib/types';
 import { z } from 'zod';
 
@@ -105,7 +106,8 @@ export async function createInvoice(
   if (d.customer_mode === 'custom' && customCustomerName) {
     if (d.save_to_contacts) {
       // Create official contact
-      const { data: newContact, error: contactError } = await supabase
+      const admin = await createAdminClient();
+      const { data: newContact, error: contactError } = await admin
         .from('contacts')
         .insert({
           business_id: businessId,
@@ -119,63 +121,70 @@ export async function createInvoice(
       
       if (!contactError && newContact) {
         finalContactId = newContact.id;
-        customCustomerName = null; // No need for custom text since it's a real contact now
+        customCustomerName = null; 
         customCustomerType = null;
       }
     } else {
-      finalContactId = null; // Keep it as custom text only
+      finalContactId = null; 
     }
   }
 
   // Insert invoice
-  const { data: invoice, error: invError } = await supabase
+  const admin = await createAdminClient();
+  const { data: invoice, error: invoiceError } = await admin
     .from('invoices')
     .insert({
-      business_id:      businessId,
-      invoice_number:   numData,
-      contact_id:       finalContactId,
+      business_id: businessId,
+      invoice_number: numData,
+      contact_id: finalContactId,
       custom_customer_name: customCustomerName,
       custom_customer_type: customCustomerType,
-      currency:         d.currency,
-      issue_date:       d.issue_date,
-      due_date:         d.due_date,
-      payment_terms:    d.payment_terms,
+      currency: d.currency,
+      issue_date: d.issue_date,
+      due_date: d.due_date,
+      payment_terms: d.payment_terms,
       subtotal,
-      discount_amount:  discountAmount,
+      discount_amount: discountAmount,
       discount_percent: d.discount_percent,
-      tax_amount:       taxAmount,
-      tax_rate:         d.tax_rate,
+      tax_amount: taxAmount,
+      tax_rate: d.tax_rate,
       total,
-      notes:            d.notes,
-      internal_notes:   d.internal_notes,
-      created_by:       user.id,
+      notes: d.notes,
+      internal_notes: d.internal_notes,
+      status: 'draft',
+      created_by: user.id,
     })
     .select('id')
     .single();
 
-  if (invError || !invoice) {
-    return { error: 'Failed to create invoice' };
+  if (invoiceError || !invoice) {
+    console.error('[createInvoice] DB error:', invoiceError);
+    return { error: invoiceError?.message || 'Failed to create invoice' };
   }
 
   // Insert line items
-  const itemInserts = d.items.map((item, idx) => ({
-    invoice_id:  invoice.id,
-    business_id: businessId,
-    description: item.description,
-    quantity:    item.quantity,
-    unit_price:  item.unit_price,
-    sort_order:  idx,
-  }));
+  if (d.items && d.items.length > 0) {
+    const itemInserts = d.items.map((item, idx) => ({
+      invoice_id:  invoice.id,
+      business_id: businessId,
+      description: item.description,
+      quantity:    item.quantity,
+      unit_price:  item.unit_price,
+      sort_order:  idx,
+    }));
 
-  const { error: itemsError } = await supabase
-    .from('invoice_items')
-    .insert(itemInserts);
+    const { error: itemsError } = await admin
+      .from('invoice_items')
+      .insert(itemInserts);
 
-  if (itemsError) {
-    return { error: 'Failed to save invoice items' };
+    if (itemsError) {
+      console.error('[createInvoice] Items error:', itemsError);
+    }
   }
 
-  revalidatePath(`/app/invoices`);
+  revalidatePath('/[locale]/app/invoices', 'layout');
+  revalidatePath('/[locale]/app/accounts', 'layout');
+  revalidatePath('/[locale]/app/contacts', 'layout');
   return { data: { id: invoice.id } };
 }
 
