@@ -7,12 +7,14 @@ import { useRouter, useParams } from 'next/navigation';
 import { formatCurrency, formatDate, cn, INVOICE_STATUS_COLORS } from '@/lib/utils';
 import { deleteContact } from '@/lib/actions/contacts';
 import { useState } from 'react';
+import ContactChat from './ContactChat';
 
-export default function ContactDetailsClient({ contact, invoices, businessId }: any) {
+export default function ContactDetailsClient({ contact, invoices, businessId, currentUserId }: any) {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState('invoices'); // 'invoices' or 'chat'
 
   const handleDelete = async () => {
     if (!confirm(t('common.confirmDelete'))) return;
@@ -112,48 +114,79 @@ export default function ContactDetailsClient({ contact, invoices, businessId }: 
           )}
         </div>
 
-        <div className="lg:col-span-2 glass-card flex flex-col h-full">
-          <div className="p-5 border-b border-white/5 flex items-center justify-between">
-            <h3 className="font-semibold text-white">{t('contacts.invoiceHistory')}</h3>
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex gap-4 border-b border-white/5">
+            <button 
+              onClick={() => setActiveSubTab('invoices')}
+              className={cn(
+                "pb-3 text-sm font-medium transition-colors relative",
+                activeSubTab === 'invoices' ? "text-zenqar-400" : "text-white/40 hover:text-white/60"
+              )}
+            >
+              {t('contacts.invoiceHistory')}
+              {activeSubTab === 'invoices' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zenqar-500 shadow-glow-sm" />}
+            </button>
+            <button 
+              onClick={() => setActiveSubTab('chat')}
+              className={cn(
+                "pb-3 text-sm font-medium transition-colors relative flex items-center gap-2",
+                activeSubTab === 'chat' ? "text-zenqar-400" : "text-white/40 hover:text-white/60"
+              )}
+            >
+              Secure Chat
+              {contact.connection_status === 'connected' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+              {activeSubTab === 'chat' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-zenqar-500 shadow-glow-sm" />}
+            </button>
           </div>
-          <div className="p-0 overflow-x-auto flex-1">
-            {invoices.length > 0 ? (
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>{t('invoices.invoiceNumber')}</th>
-                    <th>{t('common.status')}</th>
-                    <th className="text-right">{t('common.amount')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {invoices.map((inv: any) => (
-                    <tr key={inv.id}>
-                      <td>
-                        <Link href={`/${locale}/app/invoices/${inv.id}`} className="text-sm text-white font-medium hover:text-zenqar-400 transition-colors">
-                          {inv.invoice_number}
-                        </Link>
-                        <div className="text-[10px] text-white/30">{formatDate(inv.issue_date)}</div>
-                      </td>
-                      <td>
-                        <span className={cn('badge', INVOICE_STATUS_COLORS[inv.status as keyof typeof INVOICE_STATUS_COLORS])}>
-                          {t(`invoices.statuses.${inv.status}`)}
-                        </span>
-                      </td>
-                      <td className="text-right tabular-nums font-semibold text-white">
-                        {formatCurrency(inv.total, inv.currency)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="h-64 flex flex-col items-center justify-center text-center p-8">
-                <FileText className="w-12 h-12 text-white/10 mb-4" />
-                <p className="text-sm text-white/40">{t('contacts.noInvoices')}</p>
+
+          {activeSubTab === 'invoices' ? (
+            <div className="glass-card flex flex-col h-full">
+              <div className="p-0 overflow-x-auto flex-1">
+                {invoices.length > 0 ? (
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>{t('invoices.invoiceNumber')}</th>
+                        <th>{t('common.status')}</th>
+                        <th className="text-right">{t('common.amount')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {invoices.map((inv: any) => (
+                        <tr key={inv.id}>
+                          <td>
+                            <Link href={`/${locale}/app/invoices/${inv.id}`} className="text-sm text-white font-medium hover:text-zenqar-400 transition-colors">
+                              {inv.invoice_number}
+                            </Link>
+                            <div className="text-[10px] text-white/30">{formatDate(inv.issue_date)}</div>
+                          </td>
+                          <td>
+                            <span className={cn('badge', INVOICE_STATUS_COLORS[inv.status as keyof typeof INVOICE_STATUS_COLORS])}>
+                              {t(`invoices.statuses.${inv.status}`)}
+                            </span>
+                          </td>
+                          <td className="text-right tabular-nums font-semibold text-white">
+                            {formatCurrency(inv.total, inv.currency)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="h-64 flex flex-col items-center justify-center text-center p-8">
+                    <FileText className="w-12 h-12 text-white/10 mb-4" />
+                    <p className="text-sm text-white/40">{t('contacts.noInvoices')}</p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <ContactChat 
+              contactId={contact.id}
+              currentUserId={currentUserId}
+              connectedUserId={contact.connected_user_id}
+            />
+          )}
         </div>
       </div>
     </div>

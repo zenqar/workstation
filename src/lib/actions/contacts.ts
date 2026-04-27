@@ -72,14 +72,25 @@ export async function createContact(
 
     // ── Connection Logic ───────────────────────────────────────────
     if (d.email) {
-      // Check if user exists by email in the profiles table
+      // Check if user exists by email in the profiles table (case-insensitive)
       const { data: existingProfile } = await admin
         .from('profiles')
         .select('id')
-        .eq('email', d.email)
+        .eq('email', d.email.toLowerCase()) // Try exact lower case first
         .maybeSingle();
 
-      if (existingProfile) {
+      // If not found, try a more aggressive search
+      let targetProfileId = existingProfile?.id;
+      if (!targetProfileId) {
+        const { data: searchProfile } = await admin
+          .from('profiles')
+          .select('id')
+          .ilike('email', d.email)
+          .maybeSingle();
+        targetProfileId = searchProfile?.id;
+      }
+
+      if (targetProfileId) {
         // Create a contact request
         await admin.from('contact_requests').insert({
           sender_business_id: businessId,
