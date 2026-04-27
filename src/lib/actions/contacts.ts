@@ -72,11 +72,14 @@ export async function createContact(
 
     // ── Connection Logic ───────────────────────────────────────────
     if (d.email) {
-      // Check if user exists by email
-      const { data: userData } = await admin.auth.admin.getUserByEmail(d.email).catch(() => ({ data: { user: null } }));
-      const existingUser = userData?.user;
+      // Check if user exists by email in the profiles table
+      const { data: existingProfile } = await admin
+        .from('profiles')
+        .select('id')
+        .eq('email', d.email)
+        .maybeSingle();
 
-      if (existingUser) {
+      if (existingProfile) {
         // Create a contact request
         await admin.from('contact_requests').insert({
           sender_business_id: businessId,
