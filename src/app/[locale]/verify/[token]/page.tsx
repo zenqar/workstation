@@ -9,13 +9,29 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
   const t = await getTranslations();
 
   const supabase = await createAdminClient();
-  const { data: invoice, error } = await supabase
+  
+  // Try searching by verification_token first
+  let { data: invoice, error } = await supabase
     .from('invoices')
     .select('*, business:businesses(*), contact:contacts(*), invoice_items(*)')
     .eq('verification_token', token)
     .single();
 
-  const isValid = !error && invoice && invoice.status !== 'draft' && invoice.status !== 'cancelled';
+  // If not found, try searching by invoice_number (case-insensitive) as a fallback
+  if (!invoice) {
+    const { data: fallbackInvoice } = await supabase
+      .from('invoices')
+      .select('*, business:businesses(*), contact:contacts(*), invoice_items(*)')
+      .ilike('invoice_number', token)
+      .limit(1)
+      .single();
+    
+    if (fallbackInvoice) {
+      invoice = fallbackInvoice;
+    }
+  }
+
+  const isValid = invoice && invoice.status !== 'draft' && invoice.status !== 'cancelled';
 
   return (
     <div className="min-h-screen bg-dark-bg text-foreground flex flex-col items-center py-12 px-4 relative">
