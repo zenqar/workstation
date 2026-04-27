@@ -146,6 +146,8 @@ export default function ContactsClient({ defaultBusinessId, initialContacts = []
               </div>
             )}
           </div>
+        )}
+
         {activeTab === 'pending' && (
           <div className="space-y-6">
             {incoming.length > 0 && (
