@@ -1,22 +1,45 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { ArrowLeft, User, Mail, Phone, MapPin, FileText } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, MapPin, FileText, Trash2, ShieldCheck, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { formatCurrency, formatDate, cn, INVOICE_STATUS_COLORS } from '@/lib/utils';
+import { deleteContact } from '@/lib/actions/contacts';
+import { useState } from 'react';
 
-export default function ContactDetailsClient({ contact, invoices }: any) {
+export default function ContactDetailsClient({ contact, invoices, businessId }: any) {
   const t = useTranslations();
   const locale = useLocale();
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!confirm(t('common.confirmDelete'))) return;
+    setDeleting(true);
+    const res = await deleteContact(businessId, contact.id);
+    if (res?.error) alert(res.error);
+    else router.push(`/${locale}/app/contacts`);
+    setDeleting(false);
+  };
 
   return (
     <div className="space-y-6 pb-8">
-      <div className="flex items-center gap-4 mb-6">
-        <Link href={`/${locale}/app/contacts`} className="p-2 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <h1 className="text-2xl font-bold text-white tracking-tight">{contact.name}</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <Link href={`/${locale}/app/contacts`} className="p-2 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-2xl font-bold text-white tracking-tight">{contact.name}</h1>
+        </div>
+        <button 
+          onClick={handleDelete}
+          disabled={deleting}
+          className="btn-secondary text-red-400 hover:text-red-300 hover:bg-red-500/10 border-red-500/20"
+        >
+          <Trash2 className="w-4 h-4" />
+          <span>{deleting ? t('common.loading') : t('common.delete')}</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -28,9 +51,21 @@ export default function ContactDetailsClient({ contact, invoices }: any) {
               </div>
               <div>
                 <h3 className="font-semibold text-white">{contact.name}</h3>
-                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-white/60">
-                  {t(`contacts.${contact.type}`)}
-                </span>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-white/60">
+                    {t(`contacts.${contact.type}`)}
+                  </span>
+                  {contact.connection_status === 'connected' && (
+                    <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-zenqar-500/20 text-zenqar-400 border border-zenqar-500/20">
+                      <ShieldCheck className="w-3 h-3" /> Connected
+                    </span>
+                  )}
+                  {contact.connection_status === 'pending' && (
+                    <span className="flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                      <Clock className="w-3 h-3" /> Pending
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 

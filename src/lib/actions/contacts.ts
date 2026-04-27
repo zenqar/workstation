@@ -73,8 +73,8 @@ export async function createContact(
     // ── Connection Logic ───────────────────────────────────────────
     if (d.email) {
       // Check if user exists by email
-      const { data: users } = await admin.auth.admin.listUsers();
-      const existingUser = users?.users?.find((u) => u.email === d.email);
+      const { data: userData } = await admin.auth.admin.getUserByEmail(d.email).catch(() => ({ data: { user: null } }));
+      const existingUser = userData?.user;
 
       if (existingUser) {
         // Create a contact request

@@ -36,6 +36,7 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
       <ContactDetailsClient 
         contact={contact}
         invoices={invoices || []}
+        businessId={businessId}
       />
     );
   } catch (error) {
