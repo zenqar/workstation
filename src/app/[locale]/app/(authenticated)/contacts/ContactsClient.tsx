@@ -158,7 +158,7 @@ export default function ContactsClient({ defaultBusinessId, initialContacts = []
             {incoming.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider px-1">Received Requests</h3>
-                {incoming.map(req => (
+                {incoming.map((req: any) => (
                   <div key={req.id} className="glass-card p-4 flex items-center justify-between gap-4 border-zenqar-500/20 bg-zenqar-500/5">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-zenqar-500/20 flex items-center justify-center">
@@ -185,7 +185,7 @@ export default function ContactsClient({ defaultBusinessId, initialContacts = []
             {contacts.filter((c: any) => c.connection_status === 'pending').length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider px-1">Sent Requests</h3>
-                {contacts.filter((c: any) => c.connection_status === 'pending').map(contact => (
+                {contacts.filter((c: any) => c.connection_status === 'pending').map((contact: any) => (
                   <div key={contact.id} className="glass-card p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-lg font-medium text-white/40">
