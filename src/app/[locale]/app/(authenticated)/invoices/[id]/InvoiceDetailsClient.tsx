@@ -55,6 +55,26 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
       setLoading(false);
       router.refresh();
     }
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/${locale}/verify/${invoice.verification_token}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Invoice ${invoice.invoice_number}`,
+          text: `View invoice ${invoice.invoice_number} from ${invoice.business?.name || 'Zenqar'}`,
+          url: shareUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('Link copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
   };
 
   return (
@@ -94,10 +114,10 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
               <span>{t('invoices.cancelInvoice')}</span>
             </button>
           )}
-          <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all">
+          <button onClick={handlePrint} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all" title={t('common.print')}>
             <Printer className="w-4 h-4" />
           </button>
-          <button className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all">
+          <button onClick={handleShare} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all" title={t('common.share')}>
             <Share2 className="w-4 h-4" />
           </button>
         </div>

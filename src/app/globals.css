@@ -1809,3 +1809,77 @@
     background: rgba(255, 255, 255, 0.05);
   }
 }
+
+/* ═══════════════════════════════════════════
+   PRINT STYLES
+   ═══════════════════════════════════════════ */
+@media print {
+  /* Hide UI elements */
+  nav, sidebar, aside, footer, 
+  header .flex.flex-wrap, 
+  .flex.flex-wrap.gap-2, 
+  .btn-primary, .btn-secondary, 
+  .glass-card button,
+  [role="navigation"],
+  [aria-label="Sidebar"] {
+    display: none !important;
+  }
+
+  /* Reset layout for print */
+  body {
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  .glass-card {
+    background: white !important;
+    border: 1px solid #eee !important;
+    box-shadow: none !important;
+    color: black !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .text-white, .text-white\/90, .text-white\/80, .text-white\/70, .text-white\/60, .text-white\/50 {
+    color: black !important;
+  }
+
+  .text-white\/40, .text-white\/30 {
+    color: #666 !important;
+  }
+
+  .bg-white\/5, .bg-black\/20 {
+    background: #f9f9f9 !important;
+  }
+
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th, td {
+    border-bottom: 1px solid #eee !important;
+    color: black !important;
+  }
+
+  .badge {
+    border: 1px solid #ccc !important;
+    background: transparent !important;
+    color: black !important;
+  }
+
+  /* Force background colors for specific accents if needed */
+  .print-exact {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
