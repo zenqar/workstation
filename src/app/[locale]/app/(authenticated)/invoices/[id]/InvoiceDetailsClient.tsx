@@ -55,6 +55,8 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
       setLoading(false);
       router.refresh();
     }
+  };
+
   const handlePrint = () => {
     window.print();
   };
