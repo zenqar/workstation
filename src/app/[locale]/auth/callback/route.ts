@@ -13,6 +13,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
   // Reject protocol-relative URLs (//evil.com) and non-local paths
   if (!next.startsWith('/') || next.startsWith('//')) {
     next = `/${locale}/app/dashboard`;
+  } else {
+    // Ensure the path is localized
+    const { getLocalizedPath } = await import('@/lib/utils/locale');
+    next = getLocalizedPath(locale, next);
   }
 
   if (code) {
@@ -42,6 +46,16 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     );
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // Point 8: Check if user has business membership
+      const { data: memberships } = await supabase
+        .from('business_memberships')
+        .select('id')
+        .limit(1);
+
+      if (!memberships || memberships.length === 0) {
+        return NextResponse.redirect(`${origin}/${locale}/app/onboarding`);
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

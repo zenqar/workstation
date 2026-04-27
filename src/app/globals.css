@@ -133,6 +133,8 @@
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --ease-spring: cubic-bezier(0.22, 1.2, 0.36, 1);
     --ease-elastic: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+
+    color-scheme: dark;
   }
 
   * { border-color: hsl(var(--border)); }
@@ -151,10 +153,13 @@
 
   /* Force reset for browser defaults */
   input, textarea, select {
-    background-color: transparent !important;
+    background-color: #050508 !important; /* Fallback to match html background */
     color: inherit !important;
     border: none;
     outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    accent-color: var(--primary);
   }
 
   body::before {
@@ -234,8 +239,10 @@
       var(--glass-bg);
   }
 
+  input.input-glass, textarea.input-glass, select.input-glass,
   .input-glass, .textarea-glass, .select-glass {
-    background: rgba(0, 0, 0, 0.45) !important;
+    background-color: rgba(0, 0, 0, 0.45) !important;
+    background-image: none !important;
     border: 0.5px solid rgba(255, 255, 255, 0.05) !important;
     border-top-color: rgba(255, 255, 255, 0.02) !important;
     @apply rounded-[var(--radius-md)] text-sm text-white/90 placeholder:text-white/20
@@ -247,18 +254,51 @@
     font-family: inherit;
     -webkit-appearance: none;
     appearance: none;
+    caret-color: #6B70F3;
   }
   .input-glass:hover, .textarea-glass:hover, .select-glass:hover {
-    background: rgba(0, 0, 0, 0.35) !important;
+    background-color: rgba(0, 0, 0, 0.35) !important;
     border-color: rgba(255, 255, 255, 0.08) !important;
   }
   .input-glass:focus, .textarea-glass:focus, .select-glass:focus {
-    background: rgba(0, 0, 0, 0.25) !important;
+    background-color: rgba(0, 0, 0, 0.25) !important;
     border-color: transparent !important;
     box-shadow: 
       inset 0 2px 5px rgba(0,0,0,0.4),
       0 0 0 0.5px rgba(107, 112, 243, 0.6),
       0 0 0 4px rgba(107, 112, 243, 0.15) !important;
+  }
+  .input-glass:disabled, .textarea-glass:disabled, .select-glass:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: rgba(0, 0, 0, 0.2) !important;
+    box-shadow: none !important;
+  }
+
+  /* Fix for browser autofill white backgrounds */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus,
+  input:autofill,
+  input:autofill:hover,
+  input:autofill:focus,
+  textarea:autofill,
+  textarea:autofill:hover,
+  textarea:autofill:focus,
+  select:autofill,
+  select:autofill:hover,
+  select:autofill:focus {
+    -webkit-text-fill-color: white !important;
+    -webkit-box-shadow: 0 0 0px 1000px #0a0a0f inset !important;
+    box-shadow: 0 0 0px 1000px #0a0a0f inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: white !important;
   }
 
   .btn-primary {
@@ -280,6 +320,46 @@
     box-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 12px 28px rgba(84, 88, 224, 0.3), 0 32px 64px rgba(84, 88, 224, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.25); 
   }
   .btn-primary:active { transform: translateY(0) scale(0.98); }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 text-white text-sm font-semibold relative overflow-hidden;
+    background: rgba(255, 255, 255, 0.05);
+    border: 0.5px solid rgba(255, 255, 255, 0.1);
+    border-bottom-color: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-md);
+    box-shadow: 
+      0 1px 2px rgba(0,0,0,0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.4s var(--ease-spring);
+    cursor: pointer;
+  }
+  .btn-secondary:hover { 
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px) scale(1.02); 
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1); 
+  }
+  .btn-secondary:active { transform: translateY(0) scale(0.98); }
+
+  .data-table {
+    @apply w-full text-left border-collapse;
+  }
+  .data-table th {
+    @apply text-xs font-medium text-white/50 px-5 py-3 uppercase tracking-wider border-b border-white/5;
+  }
+  .data-table td {
+    @apply px-5 py-4 text-sm text-white/90 border-b border-white/5;
+  }
+  .data-table tbody tr {
+    transition: background-color 0.2s ease;
+  }
+  .data-table tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+
+  select.input-glass option {
+    background-color: #0a0a0f !important;
+    color: white !important;
+  }
 
   .nav-item {
     @apply flex items-center gap-4 px-4 py-2.5 text-sm cursor-pointer relative font-medium;

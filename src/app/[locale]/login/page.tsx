@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { signIn } from '@/lib/actions/auth';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useLocale } from 'next-intl';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const params = useParams();
-  const locale = params.locale as string;
+  const locale = useLocale();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

@@ -191,44 +191,64 @@ export async function getTeamMembers(businessId: string) {
 
 // ── Dashboard stats ────────────────────────────────────────────
 export async function getDashboardStats(businessId: string) {
-  const supabase = await createClient();
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+  try {
+    const supabase = await createClient();
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
 
-  const [invoicesRes, paymentsRes, expensesRes, balancesRes, fxRes] = await Promise.all([
-    supabase.from('invoices').select('id, status, total, currency, due_date').eq('business_id', businessId),
-    supabase.from('payments').select('amount, currency, payment_date').eq('business_id', businessId).gte('payment_date', monthStart),
-    supabase.from('expenses').select('amount, currency, expense_date').eq('business_id', businessId).gte('expense_date', monthStart),
-    supabase.rpc('get_business_balances', { p_business_id: businessId }),
-    supabase.from('fx_rate_snapshots').select('rate, fetched_at').order('fetched_at', { ascending: false }).limit(1).single(),
-  ]);
+    const [invoicesRes, paymentsRes, expensesRes, balancesRes, fxRes] = await Promise.all([
+      supabase.from('invoices').select('id, status, total, currency, due_date').eq('business_id', businessId),
+      supabase.from('payments').select('amount, currency, payment_date').eq('business_id', businessId).gte('payment_date', monthStart),
+      supabase.from('expenses').select('amount, currency, expense_date').eq('business_id', businessId).gte('expense_date', monthStart),
+      supabase.rpc('get_business_balances', { p_business_id: businessId }),
+      supabase.from('fx_rate_snapshots').select('rate, fetched_at').order('fetched_at', { ascending: false }).limit(1).maybeSingle(),
+    ]);
 
-  const invoices = invoicesRes.data || [];
-  const payments = paymentsRes.data || [];
-  const expenses = expensesRes.data || [];
-  const balances = balancesRes.data || [];
-  const fx = fxRes.data;
+    const invoices = invoicesRes.data || [];
+    const payments = paymentsRes.data || [];
+    const expenses = expensesRes.data || [];
+    const balances = balancesRes.data || [];
+    const fx = fxRes.data;
 
-  const fxRate = fx?.rate ?? 1310;
-  const totalIqd = (balances.find((b: { currency: string; total_balance: number }) => b.currency === 'IQD')?.total_balance) ?? 0;
-  const totalUsd = (balances.find((b: { currency: string; total_balance: number }) => b.currency === 'USD')?.total_balance) ?? 0;
+    const fxRate = fx?.rate ?? 1310;
+    const totalIqd = (balances.find((b: { currency: string; total_balance: number }) => b.currency === 'IQD')?.total_balance) ?? 0;
+    const totalUsd = (balances.find((b: { currency: string; total_balance: number }) => b.currency === 'USD')?.total_balance) ?? 0;
 
-  return {
-    totalBalanceIqd: totalIqd,
-    totalBalanceUsd: totalUsd,
-    estimatedTotalIqd: totalIqd + totalUsd * fxRate,
-    fxRate,
-    fxRateUpdatedAt: fx?.fetched_at ?? null,
-    unpaidInvoicesCount: invoices.filter((i) => ['issued', 'sent', 'partially_paid'].includes(i.status)).length,
-    overdueInvoicesCount: invoices.filter((i) => i.status === 'overdue').length,
-    invoicesThisMonth: invoices.filter((i) => i.status !== 'draft' && i.status !== 'cancelled').length,
-    paymentsThisMonth: payments.length,
-    paymentsAmountIqd: payments.filter((p) => p.currency === 'IQD').reduce((s, p) => s + p.amount, 0),
-    paymentsAmountUsd: payments.filter((p) => p.currency === 'USD').reduce((s, p) => s + p.amount, 0),
-    expensesThisMonth: expenses.length,
-    expensesAmountIqd: expenses.filter((e) => e.currency === 'IQD').reduce((s, e) => s + e.amount, 0),
-    expensesAmountUsd: expenses.filter((e) => e.currency === 'USD').reduce((s, e) => s + e.amount, 0),
-  };
+    return {
+      totalBalanceIqd: totalIqd,
+      totalBalanceUsd: totalUsd,
+      estimatedTotalIqd: totalIqd + totalUsd * fxRate,
+      fxRate,
+      fxRateUpdatedAt: fx?.fetched_at ?? null,
+      unpaidInvoicesCount: invoices.filter((i) => ['issued', 'sent', 'partially_paid'].includes(i.status)).length,
+      overdueInvoicesCount: invoices.filter((i) => i.status === 'overdue').length,
+      invoicesThisMonth: invoices.filter((i) => i.status !== 'draft' && i.status !== 'cancelled').length,
+      paymentsThisMonth: payments.length,
+      paymentsAmountIqd: payments.filter((p) => p.currency === 'IQD').reduce((s, p) => s + p.amount, 0),
+      paymentsAmountUsd: payments.filter((p) => p.currency === 'USD').reduce((s, p) => s + p.amount, 0),
+      expensesThisMonth: expenses.length,
+      expensesAmountIqd: expenses.filter((e) => e.currency === 'IQD').reduce((s, e) => s + e.amount, 0),
+      expensesAmountUsd: expenses.filter((e) => e.currency === 'USD').reduce((s, e) => s + e.amount, 0),
+    };
+  } catch (error) {
+    console.error('[getDashboardStats] Error:', error);
+    return {
+      totalBalanceIqd: 0,
+      totalBalanceUsd: 0,
+      estimatedTotalIqd: 0,
+      fxRate: 1310,
+      fxRateUpdatedAt: null,
+      unpaidInvoicesCount: 0,
+      overdueInvoicesCount: 0,
+      invoicesThisMonth: 0,
+      paymentsThisMonth: 0,
+      paymentsAmountIqd: 0,
+      paymentsAmountUsd: 0,
+      expensesThisMonth: 0,
+      expensesAmountIqd: 0,
+      expensesAmountUsd: 0,
+    };
+  }
 }
 
 // ── Update user profile / language ────────────────────────────

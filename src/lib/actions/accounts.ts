@@ -55,36 +55,41 @@ export async function updateAccount(businessId: string, accountId: string, data:
 }
 
 export async function getAccounts(businessId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('accounts').select('*').eq('business_id', businessId).eq('is_active', true).order('name');
-  if (error) throw error;
-  return data;
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('accounts').select('*').eq('business_id', businessId).order('name');
+    if (error) { console.error('[getAccounts] error:', error); return []; }
+    return data || [];
+  } catch (err) { console.error('[getAccounts] runtime error:', err); return []; }
 }
 
 export async function getAccountWithBalance(businessId: string, accountId: string) {
-  const supabase = await createClient();
-  const [{ data: account }, { data: balanceData }] = await Promise.all([
-    supabase.from('accounts').select('*').eq('id', accountId).eq('business_id', businessId).single(),
-    supabase.rpc('get_account_balance', { p_account_id: accountId }),
-  ]);
-  if (!account) throw new Error('Account not found');
-  return { ...account, balance: balanceData ?? 0 };
+  try {
+    const supabase = await createClient();
+    const [{ data: account }, { data: balanceData }] = await Promise.all([
+      supabase.from('accounts').select('*').eq('id', accountId).eq('business_id', businessId).single(),
+      supabase.rpc('get_account_balance', { p_account_id: accountId }),
+    ]);
+    if (!account) return null;
+    return { ...account, balance: balanceData ?? 0 };
+  } catch (err) { console.error('[getAccountWithBalance] runtime error:', err); return null; }
 }
 
 export async function getAccountsWithBalances(businessId: string) {
-  const supabase = await createClient();
-  const { data: accounts, error } = await supabase
-    .from('accounts').select('*').eq('business_id', businessId).eq('is_active', true).order('name');
-  if (error) throw error;
-
-  const withBalances = await Promise.all(
-    (accounts || []).map(async (acc) => {
-      const { data: bal } = await supabase.rpc('get_account_balance', { p_account_id: acc.id });
-      return { ...acc, balance: bal ?? 0 };
-    })
-  );
-  return withBalances;
+  try {
+    const supabase = await createClient();
+    const { data: accounts, error } = await supabase
+      .from('accounts').select('*').eq('business_id', businessId).order('name');
+    if (error) { console.error('[getAccountsWithBalances] error:', error); return []; }
+    const withBalances = await Promise.all(
+      (accounts || []).map(async (acc) => {
+        const { data: bal } = await supabase.rpc('get_account_balance', { p_account_id: acc.id });
+        return { ...acc, balance: bal ?? 0 };
+      })
+    );
+    return withBalances;
+  } catch (err) { console.error('[getAccountsWithBalances] runtime error:', err); return []; }
 }
 
 export async function transferFunds(
@@ -117,11 +122,13 @@ export async function transferFunds(
 }
 
 export async function getAccountTransactions(businessId: string, accountId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('money_transactions').select('*')
-    .eq('account_id', accountId).eq('business_id', businessId)
-    .order('transaction_date', { ascending: false }).limit(100);
-  if (error) throw error;
-  return data;
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('money_transactions').select('*')
+      .eq('account_id', accountId).eq('business_id', businessId)
+      .order('transaction_date', { ascending: false }).limit(100);
+    if (error) { console.error('[getAccountTransactions] error:', error); return []; }
+    return data || [];
+  } catch (err) { console.error('[getAccountTransactions] runtime error:', err); return []; }
 }

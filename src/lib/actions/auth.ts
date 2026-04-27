@@ -81,15 +81,13 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
       return { error: 'Failed to create user account' };
     }
 
-    // If we have a session, we can proceed to create the business immediately
     const innerSupabase = await createClient();
-    const { error: rpcError } = await innerSupabase
-      .rpc('create_business_with_owner', { p_name: parsed.data.businessName });
+    const { data: memberships } = await innerSupabase
+      .from('business_memberships')
+      .select('id')
+      .limit(1);
 
-    if (rpcError) {
-      console.error('[Signup] Business RPC Error:', rpcError);
-      // We don't return error here because the user is already created.
-      // They will be prompted to create a business during onboarding anyway.
+    if (!memberships || memberships.length === 0) {
       redirect(getLocalizedPath(locale, '/app/onboarding'));
     }
 
@@ -137,6 +135,16 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
     }
     
     return { error: error.message || 'Invalid email or password' };
+  }
+
+  // Point 8: Check if user has business membership
+  const { data: memberships } = await supabase
+    .from('business_memberships')
+    .select('id')
+    .limit(1);
+
+  if (!memberships || memberships.length === 0) {
+    redirect(getLocalizedPath(locale, '/app/onboarding'));
   }
 
   redirect(getLocalizedPath(locale, '/app/dashboard'));

@@ -69,14 +69,22 @@ export async function createExpense(
 }
 
 export async function getExpenses(businessId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('expenses')
-    .select('*, account:accounts(id, name, currency), contact:contacts(id, name)')
-    .eq('business_id', businessId)
-    .order('expense_date', { ascending: false });
-  if (error) throw error;
-  return data;
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('expenses')
+      .select('*, account:accounts(id, name, currency), contact:contacts(id, name)')
+      .eq('business_id', businessId)
+      .order('expense_date', { ascending: false });
+    if (error) {
+      console.error('[getExpenses] error:', error);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error('[getExpenses] runtime error:', err);
+    return [];
+  }
 }
 
 export async function deleteExpense(businessId: string, expenseId: string): Promise<ActionResult> {

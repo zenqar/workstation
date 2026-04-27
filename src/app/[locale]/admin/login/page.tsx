@@ -32,16 +32,16 @@ export default async function AdminLoginPage(props: {
 
     // Constant-time comparison: sign both with the same key, then compare the signatures
     // This prevents timing attacks while keeping logic simple
-    const { signAdminToken } = await import('@/lib/utils/admin');
-    const expectedSignature = await signAdminToken(expectedSecret, expectedSecret);
-    const providedSignature = await signAdminToken(cleanSecret, expectedSecret);
+    const { signAdminSession } = await import('@/lib/auth/admin-session');
+    const expectedSignature = await signAdminSession(expectedSecret, expectedSecret);
+    const providedSignature = await signAdminSession(cleanSecret, expectedSecret);
 
     if (providedSignature !== expectedSignature) {
-      redirect(getLocalizedPath(formLocale, `/admin/login?error=Invalid secret`));
+      redirect(`/${formLocale}/admin/login?error=Invalid%20secret`);
     }
 
     // Set the session cookie with the signed admin token
-    const sessionToken = await signAdminToken('admin', expectedSecret);
+    const sessionToken = await signAdminSession('admin', expectedSecret);
     const cookieStore = await cookies();
     cookieStore.set('zenqar_admin_verified', sessionToken, {
       httpOnly: true,
@@ -51,7 +51,7 @@ export default async function AdminLoginPage(props: {
       path: '/',
     });
 
-    redirect(getLocalizedPath(formLocale, '/admin'));
+    redirect(`/${formLocale}/admin`);
   }
 
   return (

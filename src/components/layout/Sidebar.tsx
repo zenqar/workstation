@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { 
@@ -19,8 +19,7 @@ import type { Profile } from '@/lib/types';
 
 export default function Sidebar({ profile }: { profile: Profile | null }) {
   const pathname = usePathname();
-  const params = useParams();
-  const locale = params.locale as string;
+  const locale = useLocale();
   const t = useTranslations('nav');
   const { activeBusiness } = useBusiness();
 

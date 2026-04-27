@@ -404,23 +404,31 @@ export async function recordPayment(
 // ============================================================
 
 export async function getInvoices(businessId: string, status?: string) {
-  const supabase = await createClient();
-  let query = supabase
-    .from('invoices')
-    .select(`
-      *,
-      contact:contacts(id, name, company_name)
-    `)
-    .eq('business_id', businessId)
-    .order('created_at', { ascending: false });
+  try {
+    const supabase = await createClient();
+    let query = supabase
+      .from('invoices')
+      .select(`
+        *,
+        contact:contacts(id, name, company_name)
+      `)
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false });
 
-  if (status) {
-    query = query.eq('status', status as Invoice['status']);
+    if (status) {
+      query = query.eq('status', status as Invoice['status']);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error('[getInvoices] error:', error);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error('[getInvoices] runtime error:', err);
+    return [];
   }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
 }
 
 // ============================================================
@@ -428,18 +436,26 @@ export async function getInvoices(businessId: string, status?: string) {
 // ============================================================
 
 export async function getInvoice(businessId: string, invoiceId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('invoices')
-    .select(`
-      *,
-      contact:contacts(*),
-      invoice_items(*)
-    `)
-    .eq('id', invoiceId)
-    .eq('business_id', businessId)
-    .single();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('invoices')
+      .select(`
+        *,
+        contact:contacts(*),
+        invoice_items(*)
+      `)
+      .eq('id', invoiceId)
+      .eq('business_id', businessId)
+      .single();
 
-  if (error) throw error;
-  return data;
+    if (error) {
+      console.error('[getInvoice] error:', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('[getInvoice] runtime error:', err);
+    return null;
+  }
 }

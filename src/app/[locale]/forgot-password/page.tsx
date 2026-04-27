@@ -5,13 +5,13 @@ import Link from 'next/link';
 import { forgotPassword } from '@/lib/actions/auth';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useLocale } from 'next-intl';
 
 export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const params = useParams();
-  const locale = params.locale as string;
+  const locale = useLocale();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

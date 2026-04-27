@@ -50,8 +50,8 @@ export async function middleware(request: NextRequest) {
       const expectedAdminSecret = await getAdminSecret();
       
       if (adminSignature && expectedAdminSecret) {
-        const { verifyAdminToken } = await import('./lib/utils/admin');
-        const isValid = await verifyAdminToken(adminSignature, 'admin', expectedAdminSecret);
+        const { verifyAdminSession } = await import('./lib/auth/admin-session');
+        const isValid = await verifyAdminSession(adminSignature, 'admin', expectedAdminSecret);
         if (isValid) {
           return intlMiddleware(request) || NextResponse.next();
         }

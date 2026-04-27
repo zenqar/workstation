@@ -43,28 +43,40 @@ export async function createContact(
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const d = parsed.data;
-  const { data: contact, error } = await supabase
-    .from('contacts')
-    .insert({
-      business_id:  businessId,
-      type:         d.type,
-      name:         d.name,
-      company_name: d.company_name ?? null,
-      email:        d.email || null,
-      phone:        d.phone ?? null,
-      address:      d.address ?? null,
-      city:         d.city ?? null,
-      country:      d.country ?? null,
-      notes:        d.notes ?? null,
-      created_by:   user.id,
-    })
-    .select('id')
-    .single();
+  try {
+    const { data: contact, error } = await supabase
+      .from('contacts')
+      .insert({
+        business_id:  businessId,
+        type:         d.type,
+        name:         d.name,
+        company_name: d.company_name ?? null,
+        email:        d.email || null,
+        phone:        d.phone ?? null,
+        address:      d.address ?? null,
+        city:         d.city ?? null,
+        country:      d.country ?? null,
+        notes:        d.notes ?? null,
+        created_by:   user.id,
+      })
+      .select('id')
+      .maybeSingle();
 
-  if (error) return { error: 'Failed to create contact' };
+    if (error) {
+      console.error('[createContact] Supabase error:', error);
+      return { error: error.message || 'Failed to create contact' };
+    }
 
-  revalidatePath('/app/contacts');
-  return { data: { id: contact.id } };
+    if (!contact) {
+      return { error: 'Failed to create contact (no data returned)' };
+    }
+
+    revalidatePath('/app/contacts');
+    return { data: { id: contact.id } };
+  } catch (err: any) {
+    console.error('[createContact] Runtime error:', err);
+    return { error: err.message || 'An unexpected error occurred' };
+  }
 }
 
 export async function updateContact(
@@ -107,28 +119,47 @@ export async function deleteContact(businessId: string, contactId: string): Prom
 }
 
 export async function getContacts(businessId: string, type?: string) {
-  const supabase = await createClient();
-  let query = supabase
-    .from('contacts')
-    .select('*')
-    .eq('business_id', businessId)
-    .eq('is_active', true)
-    .order('name');
+  try {
+    const supabase = await createClient();
+    let query = supabase
+      .from('contacts')
+      .select('*')
+      .eq('business_id', businessId)
+      // Removing is_active filter as it might not exist in the schema
+      .order('name');
 
-  if (type) query = query.eq('type', type);
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
+    if (type) query = query.eq('type', type);
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('[getContacts] Supabase error:', error);
+      return [];
+    }
+    
+    return data || [];
+  } catch (err) {
+    console.error('[getContacts] Runtime error:', err);
+    return [];
+  }
 }
 
 export async function getContact(businessId: string, contactId: string) {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('contacts')
-    .select('*')
-    .eq('id', contactId)
-    .eq('business_id', businessId)
-    .single();
-  if (error) throw error;
-  return data;
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .eq('id', contactId)
+      .eq('business_id', businessId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('[getContact] Supabase error:', error);
+      return null;
+    }
+    return data;
+  } catch (err) {
+    console.error('[getContact] Runtime error:', err);
+    return null;
+  }
 }

@@ -16,8 +16,8 @@ const notoKufi = Noto_Kufi_Arabic({
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${notoKufi.variable}`}>
-      <body className="antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} ${notoKufi.variable} antialiased`}>
         {children}
       </body>
     </html>

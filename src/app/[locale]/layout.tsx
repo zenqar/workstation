@@ -1,7 +1,13 @@
 import type { Metadata } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getMessages } from 'next-intl/server';
 import MouseGlowEffect from '@/components/MouseGlowEffect';
+import { notFound } from 'next/navigation';
+import { locales } from '@/i18n/routing';
+
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
 
 export const metadata: Metadata = {
   title: {
@@ -20,6 +26,11 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  
+  if (!locales.includes(locale as any)) {
+    notFound();
+  }
+
   const messages = await getMessages();
   const isRtl = ['ar', 'ku'].includes(locale);
 
