@@ -38,7 +38,7 @@ export default function TopBar({ user, profile }: { user: User; profile: Profile
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-colors"
             >
               <Building2 className="w-4 h-4 text-white/50" />
-              <span className="text-sm font-medium text-white/90">
+              <span className="text-sm font-bold text-white/90 font-outfit tracking-tight">
                 {activeBusiness?.name || 'Loading...'}
               </span>
               <ChevronDown className="w-4 h-4 text-white/50" />

@@ -140,25 +140,68 @@
   * { border-color: hsl(var(--border)); }
   html { 
     @apply scroll-smooth; 
+    font-family: var(--font-inter), system-ui, sans-serif;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01"; 
     text-rendering: optimizeLegibility; 
     background: #050508;
   }
   body { 
     @apply bg-transparent text-white/90 antialiased; 
+    font-family: var(--font-inter), system-ui, sans-serif;
     position: relative; 
     min-height: 100vh; 
     overflow-x: hidden;
   }
 
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-outfit), var(--font-inter), system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  [dir="rtl"] html, [dir="rtl"] body {
+    font-family: var(--font-noto-kufi), system-ui, sans-serif;
+  }
+
   /* Force reset for browser defaults */
   input, textarea, select {
-    background-color: #050508 !important; /* Fallback to match html background */
-    color: inherit !important;
+    background-color: transparent !important;
+    color: white !important;
+    font-family: inherit;
     border: none;
     outline: none;
     -webkit-appearance: none;
     appearance: none;
+  }
+
+  /* Specific fix for white letterboxes/backgrounds in some browsers */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover, 
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus {
+    -webkit-text-fill-color: white !important;
+    -webkit-box-shadow: 0 0 0px 1000px #0a0a0f inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* Custom dropdown arrow for macOS feel */
+  select.input-glass {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E") !important;
+    background-position: right 1rem center !important;
+    background-repeat: no-repeat !important;
+    background-size: 1.25em !important;
+    padding-right: 2.5rem !important;
+  }
+
+  select.input-glass option {
+    background-color: #0a0a0f !important;
+    color: white !important;
+    padding: 10px;
+  }
     accent-color: var(--primary);
   }
 
@@ -373,35 +416,69 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   1. HIGH-DPI REFINEMENTS — Retina-specific sharpening
-   ═══════════════════════════════════════════════════════════════ */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .glass-card,
-  .glass-card-elevated,
-  .stats-card {
-    border-width: 0.5px;
-  }
-  .input-glass {
-    border-width: 0.5px;
-  }
-  .divider,
-  .divider-v {
-    height: 0.5px;
-    width: 0.5px;
-  }
-  /* Slightly reduce noise on Retina — pixels are smaller */
-  body::before { opacity: 0.012; }
-  body::after  { opacity: 0.008; }
-}
-@media (-webkit-min-device-pixel-ratio: 3), (min-resolution: 288dpi) {
-  body::before { opacity: 0.008; }
-  body::after  { opacity: 0.005; }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   2. macOS TITLEBAR — window chrome glass
+   1. CORE COMPONENTS — Premium Glass & Buttons
    ═══════════════════════════════════════════════════════════════ */
 @layer components {
+  .glass-card {
+    position: relative;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 0.5px solid rgba(255, 255, 255, 0.06);
+    border-top-color: rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-xl);
+    box-shadow: 
+      0 4px 24px -1px rgba(0, 0, 0, 0.2),
+      0 12px 40px -2px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+  }
+
+  .glass-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Ffilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+    pointer-events: none;
+  }
+
+  .btn-primary {
+    @apply relative flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-all duration-300;
+    background: linear-gradient(180deg, #6B70F3 0%, #4F54D8 100%);
+    color: white;
+    box-shadow: 
+      0 4px 12px rgba(107, 112, 243, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border: 0.5px solid rgba(107, 112, 243, 0.5);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 6px 16px rgba(107, 112, 243, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    filter: brightness(1.1);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+    filter: brightness(0.95);
+  }
+
+  .input-glass {
+    @apply bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-sm text-white/90 outline-none transition-all duration-300;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .input-glass:focus {
+    @apply border-zenqar-500/50 bg-black/20;
+    box-shadow: 
+      inset 0 2px 4px rgba(0, 0, 0, 0.3),
+      0 0 0 4px rgba(107, 112, 243, 0.1);
+  }
+
   .titlebar {
     position: sticky;
     top: 0;
@@ -410,32 +487,19 @@
     align-items: center;
     height: 52px;
     padding: 0 16px;
-    background:
-      linear-gradient(
-        180deg,
-        rgba(8, 8, 14, 0.85) 0%,
-        rgba(8, 8, 14, 0.75) 80%,
-        rgba(8, 8, 14, 0.6) 100%
-      );
+    background: linear-gradient(180deg, rgba(8, 8, 14, 0.85) 0%, rgba(8, 8, 14, 0.75) 80%, rgba(8, 8, 14, 0.6) 100%);
     backdrop-filter: blur(40px) saturate(1.8) brightness(1.05);
     -webkit-backdrop-filter: blur(40px) saturate(1.8) brightness(1.05);
     border-bottom: 0.5px solid rgba(255, 255, 255, 0.04);
     box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.3);
   }
-  .titlebar::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 10%;
-    right: 10%;
-    height: 1px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.04),
-      transparent
-    );
+}
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .glass-card, .btn-primary, .input-glass {
+    border-width: 0.5px;
   }
+}
 
   /* Traffic light dots */
   .traffic-lights {

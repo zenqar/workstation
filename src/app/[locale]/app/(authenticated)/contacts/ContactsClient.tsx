@@ -6,7 +6,6 @@ import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { getContacts } from '@/lib/actions/contacts';
 import { Plus, Users, Search } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 
 export default function ContactsClient({ defaultBusinessId, initialContacts = [] }: any) {
   const t = useTranslations();

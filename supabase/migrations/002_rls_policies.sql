@@ -185,15 +185,25 @@ create policy "contacts: member read"
 create policy "contacts: writer insert"
   on contacts for insert
   with check (
-    business_id in (select auth.user_business_ids())
-    and auth.role_can_write(business_id)
+    exists (
+      select 1 from business_memberships m
+      where m.business_id = contacts.business_id
+        and m.user_id = auth.uid()
+        and m.status = 'active'
+        and m.role in ('owner', 'admin', 'accountant', 'staff')
+    )
   );
 
 create policy "contacts: writer update"
   on contacts for update
   using (
-    business_id in (select auth.user_business_ids())
-    and auth.role_can_write(business_id)
+    exists (
+      select 1 from business_memberships m
+      where m.business_id = contacts.business_id
+        and m.user_id = auth.uid()
+        and m.status = 'active'
+        and m.role in ('owner', 'admin', 'accountant', 'staff')
+    )
   );
 
 create policy "contacts: manager delete"

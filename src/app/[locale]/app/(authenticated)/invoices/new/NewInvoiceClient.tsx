@@ -8,6 +8,7 @@ import { createInvoice } from '@/lib/actions/invoices';
 import { getContacts } from '@/lib/actions/contacts';
 import { Plus, Trash2, ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export default function NewInvoiceClient({ defaultBusinessId, initialContacts = [], initialContext }: any) {
   const t = useTranslations();
@@ -99,62 +100,82 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="glass-card p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-1.5 lg:col-span-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm text-white/60">{t('invoices.customer')}</label>
-              <button 
-                type="button" 
-                onClick={() => setForm({ ...form, customer_mode: form.customer_mode === 'existing' ? 'custom' : 'existing' })}
-                className="text-xs text-zenqar-400 hover:text-zenqar-300"
-              >
-                {form.customer_mode === 'existing' ? '+ Enter Custom Name' : 'Select Existing'}
-              </button>
-            </div>
+            <label className="text-sm text-white/60">{t('invoices.customer')}</label>
             
-            {form.customer_mode === 'existing' ? (
-              <select 
-                className="input-glass"
-                value={form.contact_id}
-                onChange={e => setForm({...form, contact_id: e.target.value})}
-              >
-                <option value="">{t('invoices.selectCustomer')}</option>
-                {contacts.filter((c: any) => c.type !== 'supplier').map((c: any) => (
-                  <option key={c.id} value={c.id}>{c.name} {c.company_name ? `(${c.company_name})` : ''}</option>
-                ))}
-              </select>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex gap-3">
+            <div className="flex flex-col gap-3">
+              <div className="flex p-1 bg-white/5 rounded-xl border border-white/5 w-fit">
+                <button 
+                  type="button"
+                  onClick={() => setForm({ ...form, customer_mode: 'existing' })}
+                  className={cn(
+                    "px-4 py-1.5 text-xs font-medium rounded-lg transition-all",
+                    form.customer_mode === 'existing' 
+                      ? "bg-white/10 text-white shadow-sm" 
+                      : "text-white/40 hover:text-white/60"
+                  )}
+                >
+                  {t('invoices.selectExisting')}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setForm({ ...form, customer_mode: 'custom' })}
+                  className={cn(
+                    "px-4 py-1.5 text-xs font-medium rounded-lg transition-all",
+                    form.customer_mode === 'custom' 
+                      ? "bg-white/10 text-white shadow-sm" 
+                      : "text-white/40 hover:text-white/60"
+                  )}
+                >
+                  + {t('invoices.newCustomer')}
+                </button>
+              </div>
+
+              {form.customer_mode === 'existing' ? (
+                <select 
+                  className="input-glass"
+                  value={form.contact_id}
+                  onChange={e => setForm({...form, contact_id: e.target.value})}
+                >
+                  <option value="">{t('invoices.selectCustomer')}</option>
+                  {contacts.filter((c: any) => c.type !== 'supplier').map((c: any) => (
+                    <option key={c.id} value={c.id}>{c.name} {c.company_name ? `(${c.company_name})` : ''}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                   <select 
-                    className="input-glass w-1/3"
+                    className="input-glass"
                     value={form.custom_customer_type}
                     onChange={e => setForm({...form, custom_customer_type: e.target.value as 'individual' | 'business'})}
                   >
                     <option value="individual">Individual</option>
                     <option value="business">Business</option>
                   </select>
-                  <input 
-                    type="text"
-                    className="input-glass flex-1"
-                    placeholder="Customer or Business Name"
-                    value={form.custom_customer_name}
-                    onChange={e => setForm({...form, custom_customer_name: e.target.value})}
-                    required={form.customer_mode === 'custom'}
-                  />
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer group w-fit">
-                  <div className="relative flex items-center justify-center w-4 h-4 rounded border border-white/20 bg-black/20 group-hover:border-zenqar-400 transition-colors">
+                  <div className="sm:col-span-2 space-y-2">
                     <input 
-                      type="checkbox" 
-                      className="peer sr-only"
-                      checked={form.save_to_contacts}
-                      onChange={e => setForm({...form, save_to_contacts: e.target.checked})}
+                      type="text"
+                      className="input-glass"
+                      placeholder="Full Name or Business Name"
+                      value={form.custom_customer_name}
+                      onChange={e => setForm({...form, custom_customer_name: e.target.value})}
+                      required={form.customer_mode === 'custom'}
                     />
-                    {form.save_to_contacts && <div className="absolute inset-0 m-0.5 bg-zenqar-500 rounded-sm"></div>}
+                    <label className="flex items-center gap-2 cursor-pointer group w-fit">
+                      <div className="relative flex items-center justify-center w-4 h-4 rounded border border-white/20 bg-black/20 group-hover:border-zenqar-400 transition-colors">
+                        <input 
+                          type="checkbox" 
+                          className="peer sr-only"
+                          checked={form.save_to_contacts}
+                          onChange={e => setForm({...form, save_to_contacts: e.target.checked})}
+                        />
+                        {form.save_to_contacts && <div className="absolute inset-0 m-0.5 bg-zenqar-500 rounded-sm"></div>}
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-white/30 group-hover:text-white/60 transition-colors">Save to my contacts list</span>
+                    </label>
                   </div>
-                  <span className="text-xs text-white/50 group-hover:text-white/80 transition-colors">Save this to my contacts list</span>
-                </label>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-1.5">

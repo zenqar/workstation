@@ -36,12 +36,19 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
 
   return (
     <div className="flex flex-col h-full bg-dark-bg/50">
+      {/* Traffic Lights for Mac feel */}
+      <div className="flex gap-1.5 px-6 pt-6 pb-2">
+        <div className="w-3 h-3 rounded-full bg-[#FF5F57] shadow-inner" />
+        <div className="w-3 h-3 rounded-full bg-[#FEBC2E] shadow-inner" />
+        <div className="w-3 h-3 rounded-full bg-[#28C840] shadow-inner" />
+      </div>
+
       {/* Brand */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-zenqar-gradient flex items-center justify-center shadow-glow">
-          <span className="text-white font-bold text-sm">Z</span>
+      <div className="p-6 flex items-center gap-3 pt-4">
+        <div className="w-9 h-9 rounded-xl bg-zenqar-gradient flex items-center justify-center shadow-glow border border-white/20">
+          <span className="text-white font-black text-base">Z</span>
         </div>
-        <span className="font-bold text-lg text-white tracking-tight">Zenqar</span>
+        <span className="font-bold text-xl text-white tracking-tight font-outfit">Zenqar</span>
       </div>
 
       {/* Navigation */}
@@ -74,10 +81,10 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
             {profile?.full_name?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-semibold text-white truncate">
+            <span className="text-sm font-bold text-white truncate font-outfit">
               {profile?.full_name || 'User'}
             </span>
-            <span className="text-[10px] uppercase tracking-wider text-white/30 truncate">
+            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-white/30 truncate">
               {activeBusiness?.name || 'Loading...'}
             </span>
           </div>
