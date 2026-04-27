@@ -184,12 +184,14 @@ export async function createInvoice(
 
     if (itemsError) {
       console.error('[createInvoice] Items error:', itemsError);
+      return { error: `Invoice created but items failed: ${itemsError.message}` };
     }
   }
 
   revalidatePath('/[locale]/app/invoices', 'layout');
   revalidatePath('/[locale]/app/accounts', 'layout');
-  revalidatePath('/[locale]/app/contacts', 'layout');
+  revalidatePath('/[locale]/app/dashboard', 'layout');
+  
   return { data: { id: invoice.id } };
 }
 
@@ -419,8 +421,11 @@ export async function recordPayment(
 
 export async function getInvoices(businessId: string, status?: string) {
   try {
-    const supabase = await createClient();
-    let query = supabase
+    const { role } = await requireBusinessUser(businessId);
+    if (!role) return [];
+
+    const admin = await createAdminClient();
+    let query = admin
       .from('invoices')
       .select(`
         *,
@@ -430,7 +435,7 @@ export async function getInvoices(businessId: string, status?: string) {
       .order('created_at', { ascending: false });
 
     if (status) {
-      query = query.eq('status', status as Invoice['status']);
+      query = query.eq('status', status as any);
     }
 
     const { data, error } = await query;
@@ -451,8 +456,11 @@ export async function getInvoices(businessId: string, status?: string) {
 
 export async function getInvoice(businessId: string, invoiceId: string) {
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
+    const { role } = await requireBusinessUser(businessId);
+    if (!role) return null;
+
+    const admin = await createAdminClient();
+    const { data, error } = await admin
       .from('invoices')
       .select(`
         *,

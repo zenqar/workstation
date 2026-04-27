@@ -91,7 +91,7 @@ export default function NewAccountClient({ defaultBusinessId }: { defaultBusines
             <div className="space-y-1.5">
               <label className="text-sm text-white/60">{t('accounts.accountType')}</label>
               <select 
-                className="input-glass"
+                className="select-glass"
                 value={form.account_type}
                 onChange={e => setForm({...form, account_type: e.target.value as any})}
                 required
@@ -106,7 +106,7 @@ export default function NewAccountClient({ defaultBusinessId }: { defaultBusines
             <div className="space-y-1.5">
               <label className="text-sm text-white/60">{t('common.currency')}</label>
               <select 
-                className="input-glass"
+                className="select-glass"
                 value={form.currency}
                 onChange={e => setForm({...form, currency: e.target.value as any})}
                 required

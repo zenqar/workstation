@@ -133,33 +133,37 @@ export async function deleteContact(businessId: string, contactId: string): Prom
 
 export async function getContacts(businessId: string, type?: string) {
   try {
-    const supabase = await createClient();
-    let query = supabase
+    const { role } = await requireBusinessUser(businessId);
+    if (!role) return [];
+
+    const admin = await createAdminClient();
+    let query = admin
       .from('contacts')
       .select('*')
       .eq('business_id', businessId)
-      // Removing is_active filter as it might not exist in the schema
       .order('name');
 
     if (type) query = query.eq('type', type);
     const { data, error } = await query;
     
     if (error) {
-      console.error('[getContacts] Supabase error:', error);
+      console.error('[getContacts] error:', error);
       return [];
     }
-    
     return data || [];
   } catch (err) {
-    console.error('[getContacts] Runtime error:', err);
+    console.error('[getContacts] runtime error:', err);
     return [];
   }
 }
 
 export async function getContact(businessId: string, contactId: string) {
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
+    const { role } = await requireBusinessUser(businessId);
+    if (!role) return null;
+
+    const admin = await createAdminClient();
+    const { data, error } = await admin
       .from('contacts')
       .select('*')
       .eq('id', contactId)
@@ -167,12 +171,12 @@ export async function getContact(businessId: string, contactId: string) {
       .maybeSingle();
 
     if (error) {
-      console.error('[getContact] Supabase error:', error);
+      console.error('[getContact] error:', error);
       return null;
     }
     return data;
   } catch (err) {
-    console.error('[getContact] Runtime error:', err);
+    console.error('[getContact] runtime error:', err);
     return null;
   }
 }

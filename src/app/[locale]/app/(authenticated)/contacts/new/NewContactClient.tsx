@@ -95,7 +95,7 @@ export default function NewContactClient({ defaultBusinessId }: { defaultBusines
                 <div className="space-y-1.5">
                   <label className="text-sm text-white/60">{t('contacts.type')}</label>
                   <select 
-                    className="input-glass"
+                    className="select-glass"
                     value={form.type}
                     onChange={e => setForm({...form, type: e.target.value as any})}
                     required
@@ -175,7 +175,7 @@ export default function NewContactClient({ defaultBusinessId }: { defaultBusines
             <div className="glass-card p-6 space-y-4">
               <h3 className="text-lg font-semibold text-white">{t('common.notes')}</h3>
               <textarea 
-                className="input-glass min-h-[150px]"
+                className="textarea-glass min-h-[150px]"
                 value={form.notes}
                 onChange={e => setForm({...form, notes: e.target.value})}
                 placeholder={t('common.optional')}

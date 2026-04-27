@@ -15,24 +15,10 @@ interface AppShellProps {
 }
 
 export default function AppShell({ user, profile, businesses, children }: AppShellProps) {
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const glow = document.getElementById('mouseGlow');
-      if (glow) {
-        glow.style.left = `${e.clientX}px`;
-        glow.style.top = `${e.clientY}px`;
-      }
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
   return (
     <BusinessProvider initialBusinesses={businesses}>
       <div className="flex h-screen overflow-hidden bg-dark-bg text-foreground selection:bg-zenqar-500/30">
         {/* Background Visuals */}
-        <div className="vignette" />
-        <div id="mouseGlow" />
         <div className="ambient">
           <div className="ambient-orb orb-1" />
           <div className="ambient-orb orb-2" />

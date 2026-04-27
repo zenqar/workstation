@@ -38,7 +38,7 @@ function getLocaleFromPathname(pathname: string): string {
   return match ? match[1] : 'en';
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const locale = getLocaleFromPathname(pathname);
 
@@ -57,7 +57,7 @@ export async function middleware(request: NextRequest) {
         }
       }
     } catch (e) {
-      console.error('[Middleware Admin Check Error]', e);
+      console.error('[Proxy Admin Check Error]', e);
     }
     
     // Invalid or missing admin signature
@@ -79,7 +79,7 @@ export async function middleware(request: NextRequest) {
     supabaseUrl = await getSupabaseUrl();
     supabaseAnonKey = await getSupabaseAnonKey();
   } catch (e) {
-    console.error('[Middleware Env Error]', e);
+    console.error('[Proxy Env Error]', e);
     return response;
   }
 
@@ -123,7 +123,7 @@ export async function middleware(request: NextRequest) {
     }
     
   } catch (error) {
-    console.error('[Middleware Error]', error);
+    console.error('[Proxy Error]', error);
   }
 
   return response;

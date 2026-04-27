@@ -100,7 +100,7 @@ export default function NewExpenseClient({ defaultBusinessId, accounts = [], con
             <div className="space-y-1.5">
               <label className="text-sm text-white/60">{t('expenses.category')}</label>
               <select 
-                className="input-glass"
+                className="select-glass"
                 value={form.category}
                 onChange={e => setForm({...form, category: e.target.value})}
                 required
@@ -138,7 +138,7 @@ export default function NewExpenseClient({ defaultBusinessId, accounts = [], con
             <div className="space-y-1.5">
               <label className="text-sm text-white/60">{t('common.currency')}</label>
               <select 
-                className="input-glass"
+                className="select-glass"
                 value={form.currency}
                 onChange={e => setForm({...form, currency: e.target.value as any})}
                 required
@@ -151,7 +151,7 @@ export default function NewExpenseClient({ defaultBusinessId, accounts = [], con
             <div className="space-y-1.5 md:col-span-2">
               <label className="text-sm text-white/60">{t('expenses.paidFrom')}</label>
               <select 
-                className="input-glass"
+                className="select-glass"
                 value={form.account_id}
                 onChange={e => setForm({...form, account_id: e.target.value})}
                 required
@@ -169,7 +169,7 @@ export default function NewExpenseClient({ defaultBusinessId, accounts = [], con
             <div className="space-y-1.5 md:col-span-2">
               <label className="text-sm text-white/60">{t('expenses.supplier')}</label>
               <select 
-                className="input-glass"
+                className="select-glass"
                 value={form.contact_id}
                 onChange={e => setForm({...form, contact_id: e.target.value})}
               >
@@ -184,7 +184,7 @@ export default function NewExpenseClient({ defaultBusinessId, accounts = [], con
           <div className="space-y-1.5 pt-2">
             <label className="text-sm text-white/60">{t('common.notes')}</label>
             <textarea 
-              className="input-glass min-h-[80px]"
+              className="textarea-glass min-h-[80px]"
               value={form.note}
               onChange={e => setForm({...form, note: e.target.value})}
               placeholder={t('common.optional')}

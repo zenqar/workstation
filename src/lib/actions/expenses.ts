@@ -77,8 +77,11 @@ export async function createExpense(
 
 export async function getExpenses(businessId: string) {
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
+    const { role } = await requireBusinessUser(businessId);
+    if (!role) return [];
+
+    const admin = await createAdminClient();
+    const { data, error } = await admin
       .from('expenses')
       .select('*, account:accounts(id, name, currency), contact:contacts(id, name)')
       .eq('business_id', businessId)

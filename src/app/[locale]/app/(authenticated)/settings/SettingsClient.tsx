@@ -179,7 +179,7 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
                   <label className="text-sm text-white/60">{t('settings.footerNote')}</label>
-                  <textarea className="input-glass min-h-[100px]" value={setForm.invoice_footer_note || ''} onChange={e => setSetForm({...setForm, invoice_footer_note: e.target.value})} disabled={!canEdit} />
+                  <textarea className="textarea-glass min-h-[100px]" value={setForm.invoice_footer_note || ''} onChange={e => setSetForm({...setForm, invoice_footer_note: e.target.value})} disabled={!canEdit} />
                 </div>
               </div>
 
@@ -225,7 +225,7 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
                     </div>
                     <div className="space-y-1.5 w-full sm:w-48">
                       <label className="text-sm text-white/60">{t('settings.inviteRole')}</label>
-                      <select className="input-glass" value={inviteRole} onChange={e => setInviteRole(e.target.value)}>
+                      <select className="select-glass" value={inviteRole} onChange={e => setInviteRole(e.target.value)}>
                         <option value="admin">{t('settings.roles.admin')}</option>
                         <option value="accountant">{t('settings.roles.accountant')}</option>
                         <option value="staff">{t('settings.roles.staff')}</option>

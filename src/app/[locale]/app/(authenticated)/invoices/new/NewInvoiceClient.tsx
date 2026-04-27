@@ -132,7 +132,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
 
               {form.customer_mode === 'existing' ? (
                 <select 
-                  className="input-glass"
+                  className="select-glass"
                   value={form.contact_id}
                   onChange={e => setForm({...form, contact_id: e.target.value})}
                 >
@@ -144,7 +144,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                   <select 
-                    className="input-glass"
+                    className="select-glass"
                     value={form.custom_customer_type}
                     onChange={e => setForm({...form, custom_customer_type: e.target.value as 'individual' | 'business'})}
                   >
@@ -181,7 +181,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
           <div className="space-y-1.5">
             <label className="text-sm text-white/60">{t('common.currency')}</label>
             <select 
-              className="input-glass"
+              className="select-glass"
               value={form.currency}
               onChange={e => setForm({...form, currency: e.target.value})}
               required
@@ -309,7 +309,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
             <div className="space-y-1.5">
               <label className="text-sm text-white/60">{t('common.notes')}</label>
               <textarea 
-                className="input-glass min-h-[100px]"
+                className="textarea-glass min-h-[100px]"
                 value={form.notes}
                 onChange={e => setForm({...form, notes: e.target.value})}
                 placeholder={t('common.optional')}

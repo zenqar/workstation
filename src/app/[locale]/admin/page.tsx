@@ -3,7 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { Shield, Users, Building2, Activity, Key, ChevronRight } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard(props: { params: Promise<{ locale: string }> }) {
+  const { locale } = await props.params;
   const t = await getTranslations();
   const supabase = await createAdminClient();
 
@@ -95,12 +96,14 @@ export default async function AdminDashboard() {
                 <form action={async () => {
                   'use server';
                   const admin = await createAdminClient();
+                  const { getAppUrl } = await import('@/lib/env/server');
+                  const appUrl = await getAppUrl();
                   // Send a real password reset email via Supabase
                   await admin.auth.admin.generateLink({
                     type: 'recovery',
                     email: u.email!,
                     options: {
-                      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/en/auth/callback?next=/en/reset-password`,
+                      redirectTo: `${appUrl}/${locale}/auth/callback?next=/${locale}/reset-password`,
                     },
                   });
                 }}>

@@ -73,8 +73,11 @@ export async function updateAccount(businessId: string, accountId: string, data:
 
 export async function getAccounts(businessId: string) {
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
+    const { role } = await requireBusinessUser(businessId);
+    if (!role) return [];
+
+    const admin = await createAdminClient();
+    const { data, error } = await admin
       .from('accounts').select('*').eq('business_id', businessId).order('name');
     if (error) { console.error('[getAccounts] error:', error); return []; }
     return data || [];
@@ -83,10 +86,13 @@ export async function getAccounts(businessId: string) {
 
 export async function getAccountWithBalance(businessId: string, accountId: string) {
   try {
-    const supabase = await createClient();
+    const { role } = await requireBusinessUser(businessId);
+    if (!role) return null;
+
+    const admin = await createAdminClient();
     const [{ data: account }, { data: balanceData }] = await Promise.all([
-      supabase.from('accounts').select('*').eq('id', accountId).eq('business_id', businessId).single(),
-      supabase.rpc('get_account_balance', { p_account_id: accountId }),
+      admin.from('accounts').select('*').eq('id', accountId).eq('business_id', businessId).single(),
+      admin.rpc('get_account_balance', { p_account_id: accountId }),
     ]);
     if (!account) return null;
     return { ...account, balance: balanceData ?? 0 };
@@ -95,17 +101,21 @@ export async function getAccountWithBalance(businessId: string, accountId: strin
 
 export async function getAccountsWithBalances(businessId: string) {
   try {
-    const supabase = await createClient();
-    const { data: accounts, error } = await supabase
+    const { role } = await requireBusinessUser(businessId);
+    if (!role) return [];
+
+    const admin = await createAdminClient();
+    const { data: accounts, error } = await admin
       .from('accounts').select('*').eq('business_id', businessId).order('name');
+    
     if (error) { console.error('[getAccountsWithBalances] error:', error); return []; }
-    const withBalances = await Promise.all(
-      (accounts || []).map(async (acc) => {
-        const { data: bal } = await supabase.rpc('get_account_balance', { p_account_id: acc.id });
-        return { ...acc, balance: bal ?? 0 };
-      })
-    );
-    return withBalances;
+
+    const accountsWithBalances = await Promise.all((accounts || []).map(async (acc) => {
+      const { data: balance } = await admin.rpc('get_account_balance', { p_account_id: acc.id });
+      return { ...acc, balance: balance ?? 0 };
+    }));
+
+    return accountsWithBalances;
   } catch (err) { console.error('[getAccountsWithBalances] runtime error:', err); return []; }
 }
 
