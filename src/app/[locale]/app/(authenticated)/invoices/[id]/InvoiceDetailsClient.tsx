@@ -116,8 +116,9 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
               <span>{t('invoices.cancelInvoice')}</span>
             </button>
           )}
-          <button onClick={handlePrint} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all" title={t('common.print')}>
-            <Printer className="w-4 h-4" />
+          <button onClick={handlePrint} className="btn-secondary whitespace-nowrap" title={t('common.print')}>
+            <Download className="w-4 h-4" />
+            <span>Download PDF / Print</span>
           </button>
           <button onClick={handleShare} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all" title={t('common.share')}>
             <Share2 className="w-4 h-4" />
