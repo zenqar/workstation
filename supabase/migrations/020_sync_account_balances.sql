@@ -2,6 +2,14 @@
 -- Migration 020: Sync account balance column with transactions
 -- =============================================================
 
+-- 0. Ensure balance column exists
+do $$
+begin
+  if not exists (select 1 from information_schema.columns where table_name = 'accounts' and column_name = 'balance') then
+    alter table public.accounts add column balance numeric(18,3) not null default 0;
+  end if;
+end $$;
+
 -- 1. Create function to sync balance
 create or replace function public.update_account_balance()
 returns trigger language plpgsql security definer 
