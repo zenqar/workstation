@@ -8,6 +8,7 @@ import { Plus, Users, Search, Clock, ShieldCheck, Check, X } from 'lucide-react'
 import Link from 'next/link';
 import { getIncomingContactRequests, handleContactRequest } from '@/lib/actions/connections';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 export default function ContactsClient({ defaultBusinessId, initialContacts = [] }: any) {
   const t = useTranslations();
