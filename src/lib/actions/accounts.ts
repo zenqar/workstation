@@ -23,6 +23,8 @@ const AccountSchema = z.object({
   currency:       z.enum(['IQD', 'USD']),
   display_detail: z.string().nullable().optional(),
   bank_name:      z.string().nullable().optional(),
+  opening_balance: z.number().default(0),
+  opening_date:    z.string().optional().default(() => new Date().toISOString().split('T')[0]),
 });
 
 export async function createAccount(businessId: string, data: z.infer<typeof AccountSchema>): Promise<ActionResult<{ id: string }>> {

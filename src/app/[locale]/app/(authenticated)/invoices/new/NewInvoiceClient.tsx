@@ -33,6 +33,9 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
     tax_rate: initialContext?.settings?.invoice_tax_rate || 0,
     notes: initialContext?.settings?.invoice_footer_note || '',
     internal_notes: '',
+    is_external: false,
+    external_source: '',
+    external_id: '',
   });
 
   const [items, setItems] = useState([
@@ -210,6 +213,51 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
               value={form.due_date}
               onChange={e => setForm({...form, due_date: e.target.value})}
             />
+          </div>
+
+          <div className="lg:col-span-4 pt-4 border-t border-white/5">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative flex items-center justify-center w-5 h-5 rounded-lg border border-white/20 bg-black/20 group-hover:border-zenqar-400 transition-colors">
+                  <input 
+                    type="checkbox" 
+                    className="peer sr-only"
+                    checked={form.is_external}
+                    onChange={e => setForm({...form, is_external: e.target.checked})}
+                  />
+                  {form.is_external && <div className="absolute inset-0 m-1 bg-zenqar-500 rounded-md"></div>}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-semibold text-white group-hover:text-zenqar-300 transition-colors">Record as Old/External Invoice</span>
+                  <span className="text-[10px] text-white/30 uppercase tracking-wider">For invoices from previous companies or other systems</span>
+                </div>
+              </label>
+
+              {form.is_external && (
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-left-4 duration-500">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase tracking-wider font-bold text-white/40">Original System / Source</label>
+                    <input 
+                      type="text" 
+                      className="input-glass h-9 py-0"
+                      placeholder="e.g. Quickbooks, Excel, Manual"
+                      value={form.external_source}
+                      onChange={e => setForm({...form, external_source: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase tracking-wider font-bold text-white/40">Original Invoice #</label>
+                    <input 
+                      type="text" 
+                      className="input-glass h-9 py-0"
+                      placeholder="e.g. INV-2023-001"
+                      value={form.external_id}
+                      onChange={e => setForm({...form, external_id: e.target.value})}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

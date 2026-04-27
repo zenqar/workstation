@@ -22,6 +22,8 @@ export default function NewAccountClient({ defaultBusinessId }: { defaultBusines
     currency: 'IQD' as 'IQD' | 'USD',
     display_detail: '',
     bank_name: '',
+    opening_balance: 0,
+    opening_date: new Date().toISOString().split('T')[0],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,6 +37,7 @@ export default function NewAccountClient({ defaultBusinessId }: { defaultBusines
       ...form,
       display_detail: form.display_detail || null,
       bank_name: form.bank_name || null,
+      opening_balance: Number(form.opening_balance),
     });
 
     if (res?.error) {
@@ -139,6 +142,40 @@ export default function NewAccountClient({ defaultBusinessId }: { defaultBusines
                 placeholder="e.g. **** 1234"
               />
               <p className="text-[10px] text-white/30">Optional: For internal display purposes only.</p>
+            </div>
+
+            <div className="md:col-span-2 pt-4 border-t border-white/5">
+              <h4 className="text-sm font-medium text-white mb-4">Initial Balance</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <label className="text-sm text-white/60">Opening Balance</label>
+                  <div className="relative">
+                    <input 
+                      type="number" 
+                      step="any"
+                      className="input-glass"
+                      placeholder="0.00"
+                      value={form.opening_balance}
+                      onChange={e => setForm({...form, opening_balance: parseFloat(e.target.value) || 0})}
+                      required
+                    />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-white/40 font-medium">
+                      {form.currency}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-white/30">The current amount of money in this account.</p>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm text-white/60">As of Date</label>
+                  <input 
+                    type="date" 
+                    className="input-glass"
+                    value={form.opening_date}
+                    onChange={e => setForm({...form, opening_date: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

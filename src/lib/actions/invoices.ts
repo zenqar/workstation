@@ -31,6 +31,9 @@ const InvoiceSchema = z.object({
   notes:          z.string().nullable().optional(),
   internal_notes: z.string().nullable().optional(),
   items:          z.array(InvoiceItemSchema).min(1, 'At least one line item required'),
+  is_external:    z.boolean().default(false),
+  external_source: z.string().nullable().optional(),
+  external_id:    z.string().nullable().optional(),
 });
 
 // ============================================================
@@ -154,6 +157,9 @@ export async function createInvoice(
       internal_notes: d.internal_notes,
       status: 'draft',
       created_by: user.id,
+      is_external: d.is_external,
+      external_source: d.external_source,
+      external_id: d.external_id,
     })
     .select('id')
     .single();
