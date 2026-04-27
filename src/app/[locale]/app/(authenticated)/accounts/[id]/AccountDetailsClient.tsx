@@ -105,7 +105,6 @@ export default function AccountDetailsClient({ account, transactions, businessId
           </div>
         </div>
       </div>
-      </div>
 
       {/* Adjust Balance Modal */}
       {showAdjustModal && (
