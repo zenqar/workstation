@@ -22,3 +22,18 @@ export async function createAdminClient() {
     }
   });
 }
+
+/**
+ * Diagnostic helper: returns the status of admin configuration without exposing the key.
+ */
+export async function debugAdminConfig() {
+  const url = await getSupabaseUrl();
+  const serviceKey = await getSupabaseServiceRoleKey();
+  
+  return {
+    hasUrl: !!url,
+    hasServiceKey: !!serviceKey,
+    urlPrefix: url ? url.substring(0, 12) + '...' : null,
+    keyLength: serviceKey ? serviceKey.length : 0,
+  };
+}
