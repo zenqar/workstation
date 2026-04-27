@@ -4,6 +4,7 @@ import { getExpenses } from '@/lib/actions/expenses';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import DashboardClient from './DashboardClient';
+import { getIncomingContactRequests } from '@/lib/actions/connections';
 import { getLocale } from 'next-intl/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
 
@@ -26,10 +27,11 @@ export default async function DashboardPage() {
 
   const defaultBusinessId = memberships[0].business_id;
 
-  const [stats, invoices, expenses] = await Promise.all([
+  const [stats, invoices, expenses, incomingRequests] = await Promise.all([
     getDashboardStats(defaultBusinessId),
     getInvoices(defaultBusinessId),
-    getExpenses(defaultBusinessId)
+    getExpenses(defaultBusinessId),
+    getIncomingContactRequests()
   ]);
 
   return (
@@ -38,6 +40,7 @@ export default async function DashboardPage() {
       initialStats={stats}
       initialInvoices={invoices.slice(0, 5)} // recent 5
       initialExpenses={expenses.slice(0, 5)} // recent 5
+      incomingRequests={incomingRequests}
     />
   );
 }

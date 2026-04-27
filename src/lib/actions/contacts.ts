@@ -70,6 +70,28 @@ export async function createContact(
       return { error: error.message };
     }
 
+    // ── Connection Logic ───────────────────────────────────────────
+    if (d.email) {
+      // Check if user exists by email
+      const { data: users } = await admin.auth.admin.listUsers();
+      const existingUser = users?.users?.find((u) => u.email === d.email);
+
+      if (existingUser) {
+        // Create a contact request
+        await admin.from('contact_requests').insert({
+          sender_business_id: businessId,
+          sender_user_id:     user.id,
+          receiver_email:     d.email,
+          status:             'pending',
+        });
+
+        // Update contact status to pending
+        await admin.from('contacts').update({
+          connection_status: 'pending'
+        }).eq('id', contact.id);
+      }
+    }
+
     revalidatePath('/[locale]/app/contacts', 'layout');
     return { data: { id: contact.id } };
   } catch (err: any) {

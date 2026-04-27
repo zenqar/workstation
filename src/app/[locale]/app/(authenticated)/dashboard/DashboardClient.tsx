@@ -11,12 +11,14 @@ import { Wallet, TrendingDown, TrendingUp, AlertCircle, ArrowRight, Plus } from 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import WelcomeTour from '@/components/WelcomeTour';
+import ContactRequests from './ContactRequests';
 
 export default function DashboardClient({
   defaultBusinessId,
   initialStats,
   initialInvoices,
-  initialExpenses
+  initialExpenses,
+  incomingRequests = []
 }: any) {
   const t = useTranslations();
   const { activeBusiness } = useBusiness();
@@ -85,6 +87,8 @@ export default function DashboardClient({
         <div className="h-64 flex items-center justify-center text-white/40">{t('common.loading')}</div>
       ) : (
         <>
+          <ContactRequests requests={incomingRequests} />
+
           {/* Main Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 stagger-children">
             <div className="stats-card group">
