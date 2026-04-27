@@ -410,12 +410,10 @@
   .nav-item:hover { color: rgba(255, 255, 255, 0.7); background: rgba(255, 255, 255, 0.03); }
   .nav-item.active { @apply text-white; background: rgba(255, 255, 255, 0.06); border: 0.5px solid rgba(255, 255, 255, 0.08); box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06); }
   .nav-item.active::before { content: ''; position: absolute; left: -1px; top: 15%; bottom: 15%; width: 3px; background: linear-gradient(180deg, #6B70F3, #5458e0); border-radius: 0 4px 4px 0; box-shadow: 0 0 15px rgba(107, 112, 243, 0.5), 0 0 5px rgba(107, 112, 243, 0.8); }
-}
 
-/* ═══════════════════════════════════════════════════════════════
-   1. CORE COMPONENTS — Premium Glass & Buttons
-   ═══════════════════════════════════════════════════════════════ */
-@layer components {
+  /* ═══════════════════════════════════════════════════════════════
+     1. CORE COMPONENTS — Premium Glass & Buttons
+     ═══════════════════════════════════════════════════════════════ */
   .glass-card {
     position: relative;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
@@ -490,7 +488,6 @@
     border-bottom: 0.5px solid rgba(255, 255, 255, 0.04);
     box-shadow: 0 0.5px 0 rgba(0, 0, 0, 0.3);
   }
-}
 
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   .glass-card, .btn-primary, .input-glass {
