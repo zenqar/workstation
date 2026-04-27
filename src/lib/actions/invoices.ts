@@ -91,13 +91,16 @@ export async function createInvoice(
     d.items, d.discount_percent, d.tax_rate
   );
 
-  // Get next invoice number atomically
-  const { data: numData, error: numError } = await supabase
-    .rpc('get_next_invoice_number', { p_business_id: businessId });
+    const admin = await createAdminClient();
 
-  if (numError || !numData) {
-    return { error: 'Failed to generate invoice number' };
-  }
+    // Get next invoice number atomically using admin client
+    const { data: numData, error: numError } = await admin
+      .rpc('get_next_invoice_number', { p_business_id: businessId });
+
+    if (numError || !numData) {
+      console.error('[createInvoice] RPC error:', numError);
+      return { error: 'Failed to generate invoice number' };
+    }
 
   let finalContactId = d.contact_id || null;
   let customCustomerName = d.custom_customer_name || null;
@@ -106,7 +109,6 @@ export async function createInvoice(
   if (d.customer_mode === 'custom' && customCustomerName) {
     if (d.save_to_contacts) {
       // Create official contact
-      const admin = await createAdminClient();
       const { data: newContact, error: contactError } = await admin
         .from('contacts')
         .insert({
@@ -130,7 +132,6 @@ export async function createInvoice(
   }
 
   // Insert invoice
-  const admin = await createAdminClient();
   const { data: invoice, error: invoiceError } = await admin
     .from('invoices')
     .insert({
@@ -159,7 +160,11 @@ export async function createInvoice(
 
   if (invoiceError || !invoice) {
     console.error('[createInvoice] DB error:', invoiceError);
-    return { error: invoiceError?.message || 'Failed to create invoice' };
+    return { 
+      error: invoiceError 
+        ? `${invoiceError.message}${invoiceError.details ? ': ' + invoiceError.details : ''}` 
+        : 'Failed to create invoice (no data returned)' 
+    };
   }
 
   // Insert line items

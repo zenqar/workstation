@@ -38,12 +38,15 @@ export async function createAccount(businessId: string, data: z.infer<typeof Acc
       business_id: businessId, created_by: user.id, ...parsed.data,
     }).select('id').single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[createAccount] DB error:', error);
+      return { error: `${error.message}${error.details ? ': ' + error.details : ''}` };
+    }
     revalidatePath('/[locale]/app/accounts', 'layout');
     return { data: { id: account.id } };
   } catch (err: any) {
-    console.error('[createAccount]', err);
-    return { error: err.message };
+    console.error('[createAccount] Runtime error:', err);
+    return { error: err.message || 'An unexpected error occurred' };
   }
 }
 
