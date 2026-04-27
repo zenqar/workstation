@@ -2,6 +2,8 @@ import createMiddleware from 'next-intl/middleware';
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { routing } from './i18n/routing';
+ 
+export const runtime = 'edge';
 
 import { getSupabaseUrl, getSupabaseAnonKey, getAdminSecret } from './lib/env/server';
 import { getLocalizedPath } from './lib/utils/locale';
