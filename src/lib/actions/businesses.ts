@@ -85,12 +85,12 @@ export async function updateBusiness(businessId: string, data: z.infer<typeof Bu
 
 // ── Update business settings (invoice/payout config) ──────────
 const SettingsSchema = z.object({
-  invoice_due_days:         z.number().int().min(0).max(365),
+  invoice_due_days:         z.number().int().min(0).max(365).optional().default(30),
   invoice_footer_note:      z.string().nullable().optional(),
-  invoice_tax_label:        z.string(),
-  invoice_tax_rate:         z.number().min(0).max(100),
-  show_tax_on_invoice:      z.boolean(),
-  show_discount_on_invoice: z.boolean(),
+  invoice_tax_label:        z.string().optional().default('Tax'),
+  invoice_tax_rate:         z.number().min(0).max(100).optional().default(0),
+  show_tax_on_invoice:      z.boolean().optional().default(false),
+  show_discount_on_invoice: z.boolean().optional().default(true),
   payout_bank_name:         z.string().nullable().optional(),
   payout_account_name:      z.string().nullable().optional(),
   payout_account_number:    z.string().nullable().optional(),

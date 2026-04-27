@@ -33,6 +33,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
       <AccountDetailsClient 
         account={account}
         transactions={transactions}
+        businessId={businessId}
       />
     );
   } catch (error) {

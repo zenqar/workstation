@@ -161,3 +161,41 @@ export async function getAccountTransactions(businessId: string, accountId: stri
     return data || [];
   } catch (err) { console.error('[getAccountTransactions] runtime error:', err); return []; }
 }
+export async function adjustAccountBalance(
+  businessId: string,
+  accountId: string,
+  targetBalance: number,
+  currency: 'IQD' | 'USD',
+  reason: string = 'Manual adjustment'
+): Promise<ActionResult> {
+  try {
+    const { supabase, user, role } = await requireBusinessUser(businessId);
+    if (!['owner', 'admin'].includes(role)) return { error: 'Permission denied' };
+
+    // Get current balance
+    const { data: currentBalance } = await supabase.rpc('get_account_balance', { p_account_id: accountId });
+    const adjustment = targetBalance - (currentBalance || 0);
+
+    if (adjustment === 0) return {};
+
+    // Create adjustment transaction
+    const { error } = await supabase.from('money_transactions').insert({
+      business_id: businessId,
+      account_id: accountId,
+      type: 'manual_adjustment',
+      amount: adjustment,
+      currency: currency,
+      description: reason,
+      transaction_date: new Date().toISOString().split('T')[0],
+      created_by: user.id
+    });
+
+    if (error) throw error;
+    revalidatePath('/app/accounts');
+    revalidatePath(`/app/accounts/${accountId}`);
+    return {};
+  } catch (err: any) {
+    console.error('[adjustAccountBalance]', err);
+    return { error: err.message };
+  }
+}
