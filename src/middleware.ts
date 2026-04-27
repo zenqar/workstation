@@ -40,7 +40,7 @@ function getLocaleFromPathname(pathname: string): string {
   return match ? match[1] : 'en';
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const locale = getLocaleFromPathname(pathname);
 
