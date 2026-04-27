@@ -39,6 +39,7 @@ export default function ContactsClient({ defaultBusinessId, initialContacts = []
   }, [activeBusiness, defaultBusinessId]);
 
   const onHandleRequest = async (id: string, action: 'accept' | 'reject') => {
+    if (!activeBusiness) return;
     const res = await handleContactRequest(id, action);
     if (res?.error) alert(res.error);
     else {
