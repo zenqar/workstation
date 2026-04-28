@@ -69,6 +69,7 @@
     "payments": "Payments",
     "expenses": "Expenses",
     "reports": "Reports",
+    "support": "Support",
     "settings": "Settings"
   },
   "auth": {

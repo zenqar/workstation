@@ -13,7 +13,8 @@ import {
   CreditCard, 
   Receipt, 
   BarChart3, 
-  Settings 
+  Settings,
+  LifeBuoy
 } from 'lucide-react';
 import type { Profile } from '@/lib/types';
 
@@ -31,6 +32,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
     { name: t('payments'), href: `/${locale}/app/payments`, icon: CreditCard },
     { name: t('expenses'), href: `/${locale}/app/expenses`, icon: Receipt },
     // { name: t('reports'), href: `/${locale}/app/reports`, icon: BarChart3 }, // Not yet implemented
+    { name: t('support') || 'Support', href: `/${locale}/app/support`, icon: LifeBuoy },
     { name: t('settings'), href: `/${locale}/app/settings`, icon: Settings },
   ];
 
