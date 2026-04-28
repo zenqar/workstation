@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Shield, Users, Building2, Activity, Key, ChevronRight } from 'lucide-react';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 export default async function AdminDashboard(props: { params: Promise<{ locale: string }> }) {
   const { locale } = await props.params;
