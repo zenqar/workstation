@@ -39,9 +39,9 @@ export default async function AdminDashboard(props: { params: Promise<{ locale: 
     const n = b.name.toLowerCase();
     acc[n] = (acc[n] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, number>) || {};
   
-  const duplicateNames = Object.keys(nameCounts || {}).filter(n => nameCounts[n] > 1);
+  const duplicateNames = Object.keys(nameCounts).filter(n => nameCounts[n] > 1);
   const flaggedBusinesses = allBusinesses?.filter(b => duplicateNames.includes(b.name.toLowerCase()));
 
   return (
