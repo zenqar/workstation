@@ -130,10 +130,10 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
               <span>{t('invoices.issueInvoice')}</span>
             </button>
           )}
-          {['issued', 'sent', 'partially_paid'].includes(invoice.status) && (
+          {['issued', 'sent', 'accepted', 'payment_claimed', 'partially_paid'].includes(invoice.status) && (
             <button onClick={() => setShowPaymentModal(true)} className="btn-primary">
               <DollarSign className="w-4 h-4" />
-              <span>{isIncoming ? 'Pay Invoice' : t('invoices.recordPayment')}</span>
+              <span>{invoice.status === 'payment_claimed' ? 'Confirm & Record Payment' : (isIncoming ? 'Pay Invoice' : t('invoices.recordPayment'))}</span>
             </button>
           )}
           {invoice.status !== 'draft' && invoice.status !== 'cancelled' && !isIncoming && (
@@ -150,6 +150,30 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
             <Share2 className="w-4 h-4" />
           </button>
         </div>
+        
+        {invoice.status === 'payment_claimed' && (
+          <div className="mt-6 p-4 rounded-2xl bg-zenqar-500/10 border border-zenqar-500/20 flex items-center gap-4 animate-in slide-in-from-top-2 duration-300">
+            <div className="w-10 h-10 rounded-full bg-zenqar-500/20 flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-zenqar-500" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">Payment Claimed by Customer</p>
+              <p className="text-xs text-white/50">The customer has marked this invoice as paid. Please verify your accounts and confirm the receipt.</p>
+            </div>
+          </div>
+        )}
+
+        {invoice.status === 'accepted' && (
+          <div className="mt-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-4 animate-in slide-in-from-top-2 duration-300">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+              <ThumbsUp className="w-5 h-5 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">Invoice Accepted</p>
+              <p className="text-xs text-white/50">The customer has reviewed and accepted the terms of this invoice.</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

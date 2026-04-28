@@ -6,7 +6,7 @@ export type UserRole = 'owner' | 'admin' | 'accountant' | 'staff' | 'viewer';
 export type ContactType = 'customer' | 'supplier' | 'both';
 export type AccountType = 'cash' | 'bank' | 'wallet' | 'other';
 export type CurrencyCode = 'IQD' | 'USD';
-export type InvoiceStatus = 'draft' | 'issued' | 'sent' | 'partially_paid' | 'paid' | 'overdue' | 'cancelled';
+export type InvoiceStatus = 'draft' | 'issued' | 'sent' | 'accepted' | 'payment_claimed' | 'partially_paid' | 'paid' | 'overdue' | 'cancelled';
 export type TransactionType = 'payment_received' | 'expense_paid' | 'transfer_in' | 'transfer_out' | 'opening_balance' | 'manual_adjustment' | 'owner_deposit' | 'owner_withdrawal';
 export type MembershipStatus = 'active' | 'pending' | 'suspended';
 export type AppLanguage = 'en' | 'ar' | 'ku';
@@ -155,6 +155,9 @@ export interface Invoice {
   issued_at: string | null;
   created_at: string;
   updated_at: string;
+  accepted_at: string | null;
+  payment_claimed_at: string | null;
+  payment_confirmed_at: string | null;
   // Joined
   contact?: Contact;
 }

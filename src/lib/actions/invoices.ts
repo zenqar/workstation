@@ -561,3 +561,59 @@ export async function getInvoice(businessId: string, invoiceId: string) {
     return null;
   }
 }
+
+// ============================================================
+// Public Workflow Actions (Customer interactions)
+// ============================================================
+
+export async function acceptInvoicePublic(token: string): Promise<ActionResult> {
+  const admin = await createAdminClient();
+  const { data: invoice, error: fetchError } = await admin
+    .from('invoices')
+    .select('id, status, business_id')
+    .eq('verification_token', token)
+    .single();
+
+  if (fetchError || !invoice) return { error: 'Invoice not found' };
+  if (invoice.status !== 'sent') return { error: 'Invoice cannot be accepted in its current state' };
+
+  const { error: updateError } = await admin
+    .from('invoices')
+    .update({ 
+      status: 'accepted',
+      accepted_at: new Date().toISOString()
+    })
+    .eq('id', invoice.id);
+
+  if (updateError) return { error: 'Failed to accept invoice' };
+  
+  revalidatePath('/[locale]/verify/[token]', 'page');
+  revalidatePath('/[locale]/app/(authenticated)/invoices/[id]', 'page');
+  return {};
+}
+
+export async function claimPaymentPublic(token: string, note?: string): Promise<ActionResult> {
+  const admin = await createAdminClient();
+  const { data: invoice, error: fetchError } = await admin
+    .from('invoices')
+    .select('id, status, business_id')
+    .eq('verification_token', token)
+    .single();
+
+  if (fetchError || !invoice) return { error: 'Invoice not found' };
+  if (!['sent', 'accepted'].includes(invoice.status)) return { error: 'Payment cannot be claimed at this stage' };
+
+  const { error: updateError } = await admin
+    .from('invoices')
+    .update({ 
+      status: 'payment_claimed',
+      payment_claimed_at: new Date().toISOString()
+    })
+    .eq('id', invoice.id);
+
+  if (updateError) return { error: 'Failed to mark as paid' };
+  
+  revalidatePath('/[locale]/verify/[token]', 'page');
+  revalidatePath('/[locale]/app/(authenticated)/invoices/[id]', 'page');
+  return {};
+}

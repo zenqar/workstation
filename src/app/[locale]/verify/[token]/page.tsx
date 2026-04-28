@@ -1,7 +1,9 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { formatCurrency, formatDate, INVOICE_STATUS_COLORS } from '@/lib/utils';
 import { getTranslations } from 'next-intl/server';
-import { CheckCircle2, XCircle, Building2, Receipt, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, XCircle, Building2, Receipt, ShieldCheck, ThumbsUp, Wallet } from 'lucide-react';
+import { acceptInvoicePublic, claimPaymentPublic } from '@/lib/actions/invoices';
+import VerifyActions from './VerifyActions';
 import Link from 'next/link';
 
 export default async function VerifyInvoicePage({ params }: { params: Promise<{ token: string; locale: string }> }) {
@@ -186,6 +188,12 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
                   </div>
                 </div>
               )}
+
+              <VerifyActions 
+                token={token}
+                status={invoice.status}
+                locale={locale}
+              />
             </div>
           </div>
         ) : (
