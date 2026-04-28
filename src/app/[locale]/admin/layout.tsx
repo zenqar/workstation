@@ -1,6 +1,6 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import Link from 'next/link';
-import { Shield, Home, LogOut, Building2, Users } from 'lucide-react';
+import { Shield, Home, LogOut, Building2, Users, MessageSquare } from 'lucide-react';
 import { getLocalizedPath } from '@/lib/utils/locale';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -28,6 +28,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href={getLocalizedPath(locale, '/admin/users')} className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">
             <Users className="w-4 h-4" /> Users
           </Link>
+          <Link href={getLocalizedPath(locale, '/admin/support')} className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <MessageSquare className="w-4 h-4" /> Messages
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-white/5">
@@ -45,7 +48,21 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Shield className="w-5 h-5 text-red-400" />
             <span className="font-bold text-white tracking-tight">Admin</span>
           </div>
-          <Link href={getLocalizedPath(locale, '/app/dashboard')} className="text-sm text-white/50">Exit</Link>
+          <div className="flex items-center gap-4">
+            <nav className="flex items-center gap-3">
+              <Link href={getLocalizedPath(locale, '/admin')} className="p-2 text-white/50 hover:text-white transition-colors">
+                <Home className="w-4 h-4" />
+              </Link>
+              <Link href={getLocalizedPath(locale, '/admin/businesses')} className="p-2 text-white/50 hover:text-white transition-colors">
+                <Building2 className="w-4 h-4" />
+              </Link>
+              <Link href={getLocalizedPath(locale, '/admin/users')} className="p-2 text-white/50 hover:text-white transition-colors">
+                <Users className="w-4 h-4" />
+              </Link>
+            </nav>
+            <div className="w-px h-4 bg-white/10" />
+            <Link href={getLocalizedPath(locale, '/app/dashboard')} className="text-sm text-white/50">Exit</Link>
+          </div>
         </header>
 
         <div className="flex-1 w-full p-6 md:p-8 overflow-y-auto">
