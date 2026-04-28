@@ -130,6 +130,40 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
               <span>{t('invoices.issueInvoice')}</span>
             </button>
           )}
+
+          {isIncoming && invoice.status === 'sent' && (
+            <button 
+              onClick={async () => {
+                setLoading(true);
+                const { acceptInvoicePublic } = await import('@/lib/actions/invoices');
+                await acceptInvoicePublic(invoice.verification_token);
+                setLoading(false);
+                router.refresh();
+              }} 
+              disabled={loading} 
+              className="btn-primary bg-emerald-600 hover:bg-emerald-500"
+            >
+              <ThumbsUp className="w-4 h-4" />
+              <span>Accept Invoice</span>
+            </button>
+          )}
+
+          {isIncoming && (invoice.status === 'sent' || invoice.status === 'accepted') && (
+            <button 
+              onClick={async () => {
+                setLoading(true);
+                const { claimPaymentPublic } = await import('@/lib/actions/invoices');
+                await claimPaymentPublic(invoice.verification_token);
+                setLoading(false);
+                router.refresh();
+              }} 
+              disabled={loading} 
+              className="btn-primary"
+            >
+              <Wallet className="w-4 h-4" />
+              <span>I've Paid This</span>
+            </button>
+          )}
           {['issued', 'sent', 'accepted', 'payment_claimed', 'partially_paid'].includes(invoice.status) && (
             <button onClick={() => setShowPaymentModal(true)} className="btn-primary">
               <DollarSign className="w-4 h-4" />

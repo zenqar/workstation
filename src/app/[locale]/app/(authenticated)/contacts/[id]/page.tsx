@@ -42,14 +42,22 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
     // Incoming (if connected)
     if (contact.connected_business_id) {
       // Find the contact in their business that represents US
-      // Usually there is a contact record in their system with connected_business_id = OUR businessId
-      const { data: incoming } = await supabase
-        .from('invoices')
-        .select('*, business:businesses(name)')
+      const { data: reverseContact } = await supabase
+        .from('contacts')
+        .select('id')
         .eq('business_id', contact.connected_business_id)
-        .eq('contact_id', (await supabase.from('contacts').select('id').eq('business_id', contact.connected_business_id).eq('connected_business_id', businessId).single()).data?.id || 'none');
-        
-      if (incoming) invoices = [...invoices, ...incoming];
+        .eq('connected_business_id', businessId)
+        .maybeSingle();
+
+      if (reverseContact) {
+        const { data: incoming } = await supabase
+          .from('invoices')
+          .select('*, business:businesses(name)')
+          .eq('business_id', contact.connected_business_id)
+          .eq('contact_id', reverseContact.id);
+          
+        if (incoming) invoices = [...invoices, ...incoming];
+      }
     }
 
     invoices.sort((a, b) => new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime());
