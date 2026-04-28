@@ -87,9 +87,9 @@ export default function AccountDetailsClient({ account, transactions, businessId
                       </td>
                       <td className="text-right tabular-nums font-semibold">
                         <span className={cn(
-                          tx.type === 'deposit' ? 'text-emerald-400' : 'text-red-400'
+                          tx.amount >= 0 ? 'text-emerald-400' : 'text-red-400'
                         )}>
-                          {tx.type === 'deposit' ? '+' : '-'}{formatCurrency(tx.amount, account.currency)}
+                          {tx.amount >= 0 ? '+' : ''}{formatCurrency(tx.amount, account.currency)}
                         </span>
                       </td>
                     </tr>

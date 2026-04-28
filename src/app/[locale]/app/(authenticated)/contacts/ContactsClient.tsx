@@ -166,7 +166,11 @@ export default function ContactsClient({ defaultBusinessId, initialContacts = []
                       </div>
                       <div>
                         <p className="font-semibold text-white">{req.sender_business?.name}</p>
-                        <p className="text-xs text-white/40">Wants to connect with you</p>
+                        <p className="text-xs text-white/40 mb-1">Wants to connect with you</p>
+                        <div className="flex gap-2 text-[10px] text-white/30">
+                           {req.sender_business?.phone && <span>{req.sender_business.phone}</span>}
+                           {req.sender_business?.city && <span>{req.sender_business.city}</span>}
+                        </div>
                       </div>
                     </div>
                     <div className="flex gap-2">

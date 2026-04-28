@@ -32,9 +32,18 @@ export default function ContactRequests({ requests }: { requests: any[] }) {
                 Connection Request
                 <span className="px-1.5 py-0.5 rounded text-[10px] bg-zenqar-500/20 text-zenqar-400 border border-zenqar-500/20 uppercase tracking-widest">Action Required</span>
               </h4>
-              <p className="text-sm text-white/60">
-                <span className="text-white font-semibold">{req.sender_business?.name}</span> wants to connect with your business for automated invoicing and payments.
-              </p>
+              <div className="mt-1 space-y-1">
+                <p className="text-sm text-white/60">
+                  <span className="text-white font-semibold">{req.sender_business?.name}</span> wants to connect with your business for automated invoicing and payments.
+                </p>
+                {req.sender_business?.legal_name && req.sender_business.legal_name !== req.sender_business.name && (
+                  <p className="text-xs text-white/40">Legal Name: {req.sender_business.legal_name}</p>
+                )}
+                <div className="flex items-center gap-3 text-xs text-white/40">
+                  {req.sender_business?.phone && <span>📞 {req.sender_business.phone}</span>}
+                  {req.sender_business?.city && <span>📍 {req.sender_business.city}{req.sender_business?.country ? `, ${req.sender_business.country}` : ''}</span>}
+                </div>
+              </div>
             </div>
           </div>
           

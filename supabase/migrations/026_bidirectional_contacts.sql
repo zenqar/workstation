@@ -98,7 +98,7 @@ begin
         v_sender_biz_address,
         v_sender_biz_city,
         v_sender_biz_country,
-        'client', -- Defaulting to client, they can change it later
+        'customer', -- Defaulting to customer, they can change it later
         'connected',
         new.sender_user_id,
         v_receiver_user_id
