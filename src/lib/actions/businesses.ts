@@ -59,9 +59,9 @@ const BusinessUpdateSchema = z.object({
   city:          z.string().nullable().optional(),
   country:       z.string().nullable().optional(),
   tax_number:    z.string().nullable().optional(),
-  invoice_prefix:     z.string().min(1).max(10),
-  default_currency:   z.enum(['IQD', 'USD']),
-  default_language:   z.enum(['en', 'ar', 'ku']),
+  invoice_prefix:     z.string().min(1).max(10).optional(),
+  default_currency:   z.enum(['IQD', 'USD']).optional(),
+  default_language:   z.enum(['en', 'ar', 'ku']).optional(),
 });
 
 export async function updateBusiness(businessId: string, data: z.infer<typeof BusinessUpdateSchema>): Promise<ActionResult> {
@@ -70,8 +70,12 @@ export async function updateBusiness(businessId: string, data: z.infer<typeof Bu
   if (!user) return { error: 'Unauthorized' };
 
   const { data: mem } = await supabase.from('business_memberships').select('role')
-    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').single();
-  if (!mem || !['owner', 'admin'].includes(mem.role)) return { error: 'Permission denied' };
+    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').maybeSingle();
+  
+  const { data: profile } = await supabase.from('profiles').select('is_platform_admin').eq('id', user.id).single();
+  const isPlatformAdmin = !!profile?.is_platform_admin;
+
+  if (!isPlatformAdmin && (!mem || !['owner', 'admin'].includes(mem.role))) return { error: 'Permission denied' };
 
   const parsed = BusinessUpdateSchema.safeParse(data);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -99,8 +103,12 @@ export async function submitVerificationRequest(businessId: string, data: z.infe
   if (!user) return { error: 'Unauthorized' };
 
   const { data: mem } = await supabase.from('business_memberships').select('role')
-    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').single();
-  if (!mem || !['owner', 'admin'].includes(mem.role)) return { error: 'Permission denied' };
+    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').maybeSingle();
+  
+  const { data: profile } = await supabase.from('profiles').select('is_platform_admin').eq('id', user.id).single();
+  const isPlatformAdmin = !!profile?.is_platform_admin;
+
+  if (!isPlatformAdmin && (!mem || !['owner', 'admin'].includes(mem.role))) return { error: 'Permission denied' };
 
   const parsed = VerificationSchema.safeParse(data);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -144,8 +152,12 @@ export async function updateBusinessSettings(businessId: string, data: z.infer<t
   if (!user) return { error: 'Unauthorized' };
 
   const { data: mem } = await supabase.from('business_memberships').select('role')
-    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').single();
-  if (!mem || !['owner', 'admin'].includes(mem.role)) return { error: 'Permission denied' };
+    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').maybeSingle();
+
+  const { data: profile } = await supabase.from('profiles').select('is_platform_admin').eq('id', user.id).single();
+  const isPlatformAdmin = !!profile?.is_platform_admin;
+
+  if (!isPlatformAdmin && (!mem || !['owner', 'admin'].includes(mem.role))) return { error: 'Permission denied' };
 
   const parsed = SettingsSchema.safeParse(data);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
@@ -163,8 +175,12 @@ export async function inviteTeamMember(businessId: string, email: string, role: 
   if (!user) return { error: 'Unauthorized' };
 
   const { data: mem } = await supabase.from('business_memberships').select('role')
-    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').single();
-  if (!mem || !['owner', 'admin'].includes(mem.role)) return { error: 'Permission denied' };
+    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').maybeSingle();
+  
+  const { data: profile } = await supabase.from('profiles').select('is_platform_admin').eq('id', user.id).single();
+  const isPlatformAdmin = !!profile?.is_platform_admin;
+
+  if (!isPlatformAdmin && (!mem || !['owner', 'admin'].includes(mem.role))) return { error: 'Permission denied' };
 
   const validRoles = ['admin', 'accountant', 'staff', 'viewer'];
   if (!validRoles.includes(role)) return { error: 'Invalid role' };
@@ -207,8 +223,12 @@ export async function removeTeamMember(businessId: string, membershipId: string)
   if (!user) return { error: 'Unauthorized' };
 
   const { data: mem } = await supabase.from('business_memberships').select('role')
-    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').single();
-  if (!mem || !['owner', 'admin'].includes(mem.role)) return { error: 'Permission denied' };
+    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').maybeSingle();
+  
+  const { data: profile } = await supabase.from('profiles').select('is_platform_admin').eq('id', user.id).single();
+  const isPlatformAdmin = !!profile?.is_platform_admin;
+
+  if (!isPlatformAdmin && (!mem || !['owner', 'admin'].includes(mem.role))) return { error: 'Permission denied' };
 
   const { error } = await supabase.from('business_memberships').delete()
     .eq('id', membershipId).eq('business_id', businessId).neq('role', 'owner');
