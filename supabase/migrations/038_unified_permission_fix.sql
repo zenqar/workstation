@@ -1,16 +1,40 @@
 -- =============================================================
--- Migration 038: UNIFIED Permission & RLS Repair
+-- Migration 038: UNIFIED Permission & RLS Super-Repair
 -- Purpose: Consolidates all security fixes into a single reliable file.
---          1. Creates public helpers.
---          2. Updates all RLS policies to use them.
---          3. Resolves "function does not exist" and "permission denied" errors.
+--          1. Self-heals missing tables/columns/types needed for RLS.
+--          2. Creates public helpers for permission management.
+--          3. Resets and updates all platform RLS policies.
 -- =============================================================
 
--- 0. REPAIR: Ensure profiles table has the is_platform_admin column
+-- 0. PRE-FLIGHT REPAIR: Ensure all core types and tables exist
 DO $$
 BEGIN
+  -- A. Ensure is_platform_admin column exists in profiles
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'is_platform_admin') THEN
     ALTER TABLE public.profiles ADD COLUMN is_platform_admin BOOLEAN NOT NULL DEFAULT false;
+  END IF;
+
+  -- B. Ensure platform_admins table exists
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'platform_admins') THEN
+    CREATE TABLE public.platform_admins (
+      id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id     uuid        NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+      added_by    uuid        REFERENCES auth.users(id),
+      notes       text,
+      is_active   boolean     NOT NULL DEFAULT true,
+      created_at  timestamptz NOT NULL DEFAULT now(),
+      updated_at  timestamptz NOT NULL DEFAULT now()
+    );
+  END IF;
+
+  -- C. Ensure business_settings table exists
+  IF NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'business_settings') THEN
+    CREATE TABLE public.business_settings (
+      business_id uuid PRIMARY KEY REFERENCES public.businesses(id) ON DELETE CASCADE,
+      invoice_due_days INTEGER DEFAULT 30,
+      invoice_footer_note TEXT,
+      updated_at timestamptz DEFAULT now()
+    );
   END IF;
 END $$;
 
@@ -53,6 +77,7 @@ AS $$
   SELECT EXISTS (
     SELECT 1 FROM profiles WHERE id = auth.uid() AND is_platform_admin = true
     UNION
+    -- Use dynamic SQL or check table existence again to be ultra safe inside function
     SELECT 1 FROM platform_admins WHERE user_id = auth.uid() AND is_active = true
   );
 $$;
@@ -88,6 +113,7 @@ $$;
 -- 2. RESET & UPDATE ALL RLS POLICIES
 
 -- BUSINESS SETTINGS
+ALTER TABLE business_settings ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "settings: member read" ON business_settings;
 DROP POLICY IF EXISTS "settings: owner/admin write" ON business_settings;
 DROP POLICY IF EXISTS "settings: read" ON business_settings;
@@ -101,6 +127,7 @@ CREATE POLICY "settings: update" ON business_settings FOR UPDATE USING (public.u
 CREATE POLICY "settings: delete" ON business_settings FOR DELETE USING (public.user_role_in_business(business_id) = 'owner' OR public.is_platform_admin());
 
 -- BUSINESSES
+ALTER TABLE businesses ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "businesses: member read" ON businesses;
 DROP POLICY IF EXISTS "businesses: owner/admin update" ON businesses;
 DROP POLICY IF EXISTS "businesses: admin read" ON businesses;
@@ -110,6 +137,7 @@ CREATE POLICY "businesses: admin read" ON businesses FOR SELECT USING (public.us
 CREATE POLICY "businesses: admin update" ON businesses FOR UPDATE USING (public.user_role_in_business(id) IN ('owner', 'admin') OR public.is_platform_admin());
 
 -- MEMBERSHIPS
+ALTER TABLE business_memberships ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "memberships: owner/admin manage" ON business_memberships;
 DROP POLICY IF EXISTS "memberships: owner/admin update" ON business_memberships;
 DROP POLICY IF EXISTS "memberships: admin insert" ON business_memberships;
@@ -121,6 +149,7 @@ CREATE POLICY "memberships: admin insert" ON business_memberships FOR INSERT WIT
 CREATE POLICY "memberships: admin update" ON business_memberships FOR UPDATE USING (public.user_role_in_business(business_id) IN ('owner', 'admin') OR public.is_platform_admin());
 
 -- ACCOUNTS
+ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "accounts: read" ON accounts;
 DROP POLICY IF EXISTS "accounts: manager insert" ON accounts;
 DROP POLICY IF EXISTS "accounts: manager update" ON accounts;
@@ -135,6 +164,7 @@ CREATE POLICY "accounts: manage update" ON accounts FOR UPDATE USING (public.rol
 CREATE POLICY "accounts: manage delete" ON accounts FOR DELETE USING (public.role_can_manage(business_id));
 
 -- CONTACTS
+ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "contacts: read" ON contacts;
 DROP POLICY IF EXISTS "contacts: writer insert" ON contacts;
 DROP POLICY IF EXISTS "contacts: writer update" ON contacts;
@@ -146,6 +176,7 @@ CREATE POLICY "contacts: writer update" ON contacts FOR UPDATE USING (public.rol
 CREATE POLICY "contacts: manage delete" ON contacts FOR DELETE USING (public.role_can_manage(business_id));
 
 -- INVOICES
+ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "invoices: read" ON invoices;
 DROP POLICY IF EXISTS "invoices: writer insert" ON invoices;
 DROP POLICY IF EXISTS "invoices: writer update" ON invoices;
@@ -157,6 +188,7 @@ CREATE POLICY "invoices: writer update" ON invoices FOR UPDATE USING (public.rol
 CREATE POLICY "invoices: manage delete" ON invoices FOR DELETE USING (public.role_can_manage(business_id));
 
 -- INVOICE ITEMS
+ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "items: read" ON invoice_items;
 DROP POLICY IF EXISTS "items: writer insert" ON invoice_items;
 DROP POLICY IF EXISTS "items: writer update" ON invoice_items;
@@ -168,6 +200,7 @@ CREATE POLICY "items: writer update" ON invoice_items FOR UPDATE USING (public.r
 CREATE POLICY "items: writer delete" ON invoice_items FOR DELETE USING (public.role_can_write(business_id));
 
 -- EXPENSES
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "expenses: read" ON expenses;
 DROP POLICY IF EXISTS "expenses: writer insert" ON expenses;
 DROP POLICY IF EXISTS "expenses: writer update" ON expenses;
@@ -179,6 +212,7 @@ CREATE POLICY "expenses: writer update" ON expenses FOR UPDATE USING (public.rol
 CREATE POLICY "expenses: manage delete" ON expenses FOR DELETE USING (public.role_can_manage(business_id));
 
 -- MONEY TRANSACTIONS
+ALTER TABLE money_transactions ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "transactions: read" ON money_transactions;
 DROP POLICY IF EXISTS "transactions: writer insert" ON money_transactions;
 
@@ -186,6 +220,7 @@ CREATE POLICY "transactions: read" ON money_transactions FOR SELECT USING (publi
 CREATE POLICY "transactions: writer insert" ON money_transactions FOR INSERT WITH CHECK (public.role_can_write(business_id));
 
 -- PAYMENTS
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "payments: read" ON payments;
 DROP POLICY IF EXISTS "payments: insert" ON payments;
 DROP POLICY IF EXISTS "payments: update" ON payments;
