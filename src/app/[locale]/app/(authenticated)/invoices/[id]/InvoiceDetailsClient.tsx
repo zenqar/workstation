@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
-import { issueInvoice, cancelInvoice, recordPayment } from '@/lib/actions/invoices';
+import { issueInvoice, cancelInvoice, recordPayment, payIncomingInvoice } from '@/lib/actions/invoices';
 import { ArrowLeft, CheckCircle, XCircle, DollarSign, Download, Printer, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency, formatDate, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
@@ -21,6 +21,8 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
     reference: '',
     note: ''
   });
+
+  const isIncoming = invoice.business_id !== businessId;
 
   const handleIssue = async () => {
     if (!confirm(t('invoices.issueInvoiceConfirm'))) return;
@@ -43,10 +45,16 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const res = await recordPayment(businessId, invoice.id, {
+    
+    const payload = {
       ...paymentForm,
       currency: invoice.currency
-    });
+    };
+
+    const res = isIncoming 
+      ? await payIncomingInvoice(businessId, invoice.id, payload)
+      : await recordPayment(businessId, invoice.id, payload);
+
     if (res?.error) {
       alert(res.error);
       setLoading(false);
@@ -98,7 +106,7 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {invoice.status === 'draft' && (
+          {invoice.status === 'draft' && !isIncoming && (
             <button onClick={handleIssue} disabled={loading} className="btn-primary">
               <CheckCircle className="w-4 h-4" />
               <span>{t('invoices.issueInvoice')}</span>
@@ -107,10 +115,10 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
           {['issued', 'sent', 'partially_paid'].includes(invoice.status) && (
             <button onClick={() => setShowPaymentModal(true)} className="btn-primary">
               <DollarSign className="w-4 h-4" />
-              <span>{t('invoices.recordPayment')}</span>
+              <span>{isIncoming ? 'Pay Invoice' : t('invoices.recordPayment')}</span>
             </button>
           )}
-          {invoice.status !== 'draft' && invoice.status !== 'cancelled' && (
+          {invoice.status !== 'draft' && invoice.status !== 'cancelled' && !isIncoming && (
             <button onClick={handleCancel} disabled={loading} className="btn-secondary text-red-400 hover:bg-red-500/10 border-red-500/20">
               <XCircle className="w-4 h-4" />
               <span>{t('invoices.cancelInvoice')}</span>
@@ -240,10 +248,10 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
       {showPaymentModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="glass-card w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-xl font-bold text-white mb-6">{t('invoices.recordPayment')}</h3>
+            <h3 className="text-xl font-bold text-white mb-6">{isIncoming ? 'Pay Invoice' : t('invoices.recordPayment')}</h3>
             <form onSubmit={handlePayment} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm text-white/60">{t('payments.receivedInto')}</label>
+                <label className="text-sm text-white/60">{isIncoming ? 'Pay From Account' : t('payments.receivedInto')}</label>
                 <select 
                   className="input-glass"
                   value={paymentForm.account_id}

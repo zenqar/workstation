@@ -422,6 +422,56 @@ export async function recordPayment(
 }
 
 // ============================================================
+// Pay Incoming Invoice (Cross-Business)
+// ============================================================
+
+export async function payIncomingInvoice(
+  businessId: string,
+  invoiceId: string,
+  data: {
+    account_id: string;
+    amount: number;
+    currency: 'IQD' | 'USD';
+    payment_date: string;
+    reference?: string;
+    note?: string;
+  }
+): Promise<ActionResult> {
+  const { supabase, user, role } = await requireBusinessUser(businessId);
+
+  if (!['owner', 'admin', 'accountant'].includes(role)) {
+    return { error: 'Permission denied' };
+  }
+
+  const parsed = PaymentSchema.safeParse(data);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const d = parsed.data;
+  const { error } = await supabase.rpc(
+    'pay_incoming_invoice',
+    {
+      p_invoice_id:         invoiceId,
+      p_payer_business_id:  businessId,
+      p_payer_account_id:   d.account_id,
+      p_amount:             d.amount,
+      p_payment_date:       d.payment_date,
+      p_reference:          d.reference ?? null,
+      p_note:               d.note ?? null,
+      p_created_by:         user.id,
+    }
+  );
+
+  if (error) return { error: error.message || 'Failed to pay invoice' };
+
+  revalidatePath(`/app/invoices/${invoiceId}`);
+  revalidatePath('/app/invoices');
+  revalidatePath('/app/expenses');
+  revalidatePath('/app/accounts');
+  revalidatePath('/app/dashboard');
+  return {};
+}
+
+// ============================================================
 // Get Invoices (list)
 // ============================================================
 
