@@ -39,6 +39,8 @@ export default async function UserWatchdogPage(props: { params: Promise<{ id: st
     .select('*, businesses(*)')
     .eq('user_id', id);
 
+  const { data: targetProfile } = await admin.from('profiles').select('*').eq('id', id).single();
+
   // 3. Fetch Aggregate Data across all businesses
   const businessIds = memberships?.map(m => m.business_id) || [];
   
@@ -153,7 +155,7 @@ export default async function UserWatchdogPage(props: { params: Promise<{ id: st
             <UserControls 
               userId={id} 
               email={user.email!} 
-              isAdmin={!!profile?.is_platform_admin} 
+              isAdmin={!!targetProfile?.is_platform_admin} 
               locale={locale} 
             />
           </div>
