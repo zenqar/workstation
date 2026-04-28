@@ -13,7 +13,7 @@ export async function getServerEnv() {
     // Using async: true is the most reliable way in the latest OpenNext versions
     const cf = await getCloudflareContext({ async: true });
     if (cf && cf.env) {
-      return cf.env as any;
+      return { ...process.env, ...cf.env } as any;
     }
   } catch (e) {
     if (process.env.NODE_ENV === 'development') {

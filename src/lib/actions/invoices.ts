@@ -431,13 +431,23 @@ export async function getInvoices(businessId: string, status?: string) {
     if (!role) return [];
 
     const admin = await createAdminClient();
+    
+    // Find all contacts that are connected to this business (meaning this business is the customer)
+    const { data: connectedContacts } = await admin.from('contacts').select('id').eq('connected_business_id', businessId);
+    const connectedContactIds = (connectedContacts || []).map(c => c.id);
+
+    let filterStr = `business_id.eq.${businessId}`;
+    if (connectedContactIds.length > 0) {
+      filterStr = `business_id.eq.${businessId},contact_id.in.(${connectedContactIds.join(',')})`;
+    }
+
     let query = admin
       .from('invoices')
       .select(`
         *,
         contact:contacts(id, name, company_name)
       `)
-      .eq('business_id', businessId)
+      .or(filterStr)
       .order('created_at', { ascending: false });
 
     if (status) {
@@ -474,13 +484,18 @@ export async function getInvoice(businessId: string, invoiceId: string) {
         invoice_items(*)
       `)
       .eq('id', invoiceId)
-      .eq('business_id', businessId)
       .single();
 
-    if (error) {
+    if (error || !data) {
       console.error('[getInvoice] error:', error);
       return null;
     }
+
+    // Verify access: either we issued it, or it was issued to us via a connected contact
+    if (data.business_id !== businessId && data.contact?.connected_business_id !== businessId) {
+      return null;
+    }
+
     return data;
   } catch (err) {
     console.error('[getInvoice] runtime error:', err);

@@ -88,10 +88,15 @@ export default function InvoicesClient({ defaultBusinessId, initialInvoices = []
                         </Link>
                       </td>
                       <td>
-                        <div className="text-white/80">
+                        <div className="text-white/80 flex items-center gap-2">
                           {inv.contact?.name || inv.custom_customer_name || '—'}
                           {inv.custom_customer_type && !inv.contact && (
-                            <span className="text-white/40 text-xs ml-2 capitalize">({inv.custom_customer_type})</span>
+                            <span className="text-white/40 text-xs capitalize">({inv.custom_customer_type})</span>
+                          )}
+                          {inv.business_id !== activeBusiness.id ? (
+                            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/20">Received</span>
+                          ) : (
+                            <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-white/10 text-white/50">Sent</span>
                           )}
                         </div>
                       </td>
