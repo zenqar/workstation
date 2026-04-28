@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { MessageSquare, Building2, ChevronRight, Clock } from 'lucide-react';
+import { MessageSquare, Building2, ChevronRight, Clock, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AdminSupportInbox(props: { params: Promise<{ locale: string }> }) {
