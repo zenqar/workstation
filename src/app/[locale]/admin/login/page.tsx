@@ -45,7 +45,7 @@ export default async function AdminLoginPage(props: {
     const cookieStore = await cookies();
     cookieStore.set('zenqar_admin_verified', sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_APP_URL?.startsWith('https'),
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 1 week
       path: '/',
