@@ -36,8 +36,9 @@ begin
     into v_receiver_business_id, v_biz_name, v_biz_legal_name, v_biz_phone, v_biz_address, v_biz_city, v_biz_country
     from public.businesses b
     join public.business_memberships bm on bm.business_id = b.id
-    where bm.email = new.receiver_email
-      and bm.role = 'owner'
+    where lower(bm.email) = lower(new.receiver_email)
+      and bm.status = 'active'
+    order by (case when bm.role = 'owner' then 1 else 2 end)
     limit 1;
 
     -- 3. Update the sender's contact record with the receiver's business info
