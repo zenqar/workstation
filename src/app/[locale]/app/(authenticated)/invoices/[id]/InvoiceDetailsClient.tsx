@@ -259,6 +259,22 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
               )}
             </div>
           </div>
+
+          {(invoice.payment_account_ids?.length > 0) && (
+            <div className="glass-card p-6 space-y-4">
+              <h4 className="text-sm font-semibold text-white mb-2 uppercase tracking-wider">Payment Instructions</h4>
+              <div className="space-y-3">
+                {accounts.filter((a: any) => invoice.payment_account_ids.includes(a.id)).map((acc: any) => (
+                  <div key={acc.id} className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
+                    <p className="text-[10px] uppercase font-bold text-zenqar-400">{acc.name}</p>
+                    {acc.bank_name && <p className="text-xs text-white font-medium">{acc.bank_name}</p>}
+                    <p className="text-xs text-white/80 font-mono tracking-wider">{acc.display_detail || 'No details provided'}</p>
+                    <p className="text-[10px] text-white/30 uppercase">{acc.account_type} • {acc.currency}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

@@ -46,6 +46,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
     is_external: false,
     external_source: '',
     external_id: '',
+    payment_account_ids: [] as string[],
   });
 
   const [items, setItems] = useState([
@@ -373,6 +374,39 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
                 placeholder={t('common.optional')}
               />
             </div>
+          </div>
+
+          <div className="glass-card p-6 space-y-4">
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-2">Display Payment Options</h3>
+            <p className="text-xs text-white/40 mb-4">Choose which accounts to show as payment instructions on this invoice.</p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(initialContext?.accounts || []).map((acc: any) => (
+                <label key={acc.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors group">
+                  <div className="relative flex items-center justify-center w-5 h-5 rounded border border-white/20 bg-black/20 group-hover:border-zenqar-400 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      className="peer sr-only"
+                      checked={form.payment_account_ids.includes(acc.id)}
+                      onChange={e => {
+                        const newIds = e.target.checked 
+                          ? [...form.payment_account_ids, acc.id]
+                          : form.payment_account_ids.filter(id => id !== acc.id);
+                        setForm({ ...form, payment_account_ids: newIds });
+                      }}
+                    />
+                    {form.payment_account_ids.includes(acc.id) && <div className="absolute inset-0 m-1 bg-zenqar-500 rounded-sm"></div>}
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-white">{acc.name}</span>
+                    <p className="text-[10px] text-white/30 uppercase tracking-wider">{acc.account_type} • {acc.currency}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+            {initialContext?.accounts?.length === 0 && (
+              <p className="text-xs text-white/30 italic">No accounts found. Create accounts in Settings first.</p>
+            )}
           </div>
 
           <div className="glass-card p-6">

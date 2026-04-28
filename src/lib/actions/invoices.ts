@@ -34,6 +34,7 @@ const InvoiceSchema = z.object({
   is_external:    z.boolean().default(false),
   external_source: z.string().nullable().optional(),
   external_id:    z.string().nullable().optional(),
+  payment_account_ids: z.array(z.string().uuid()).optional().default([]),
 });
 
 // ============================================================
@@ -160,6 +161,7 @@ export async function createInvoice(
       is_external: d.is_external,
       external_source: d.external_source,
       external_id: d.external_id,
+      payment_account_ids: d.payment_account_ids,
     })
     .select('id')
     .single();
@@ -283,6 +285,7 @@ export async function updateInvoice(
       total,
       notes:            d.notes,
       internal_notes:   d.internal_notes,
+      payment_account_ids: d.payment_account_ids,
     })
     .eq('id', invoiceId)
     .eq('business_id', businessId)

@@ -26,10 +26,19 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
       .limit(1)
       .single();
     
-    if (fallbackInvoice) {
-      invoice = fallbackInvoice;
+      if (fallbackInvoice) {
+        invoice = fallbackInvoice;
+      }
     }
-  }
+
+    let paymentAccounts: any[] = [];
+    if (invoice?.payment_account_ids?.length > 0) {
+      const { data: accs } = await supabase
+        .from('accounts')
+        .select('*')
+        .in('id', invoice.payment_account_ids);
+      paymentAccounts = accs || [];
+    }
 
   const isValid = invoice && invoice.status !== 'draft' && invoice.status !== 'cancelled';
 
@@ -154,6 +163,29 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
                   </div>
                 </div>
               </div>
+              {invoice.payment_account_ids?.length > 0 && (
+                <div className="pt-8 border-t border-white/10">
+                  <h3 className="text-[10px] font-black text-white/40 mb-4 uppercase tracking-[0.2em]">Payment Instructions</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {paymentAccounts.map((acc: any) => (
+                      <div key={acc.id} className="relative overflow-hidden p-4 rounded-2xl bg-white/[0.03] border border-white/10 group hover:border-zenqar-500/50 transition-all duration-300">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-zenqar-500/5 blur-[40px] rounded-full -mr-12 -mt-12 group-hover:bg-zenqar-500/10 transition-colors" />
+                        <div className="relative z-10 space-y-3">
+                          <div className="flex justify-between items-start">
+                            <p className="text-[10px] font-bold text-zenqar-400 uppercase tracking-widest">{acc.name}</p>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/40 font-bold uppercase">{acc.currency}</span>
+                          </div>
+                          <div>
+                            {acc.bank_name && <p className="text-sm font-semibold text-white mb-1">{acc.bank_name}</p>}
+                            <p className="text-base font-mono tracking-wider text-white select-all">{acc.display_detail || 'N/A'}</p>
+                          </div>
+                          <p className="text-[10px] text-white/20 uppercase font-bold">{acc.account_type}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ) : (

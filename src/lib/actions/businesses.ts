@@ -38,14 +38,15 @@ export async function getBusinessContext(businessId: string): Promise<BusinessCo
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: membership }, { data: business }, { data: settings }] = await Promise.all([
+  const [{ data: membership }, { data: business }, { data: settings }, { data: accounts }] = await Promise.all([
     supabase.from('business_memberships').select('*').eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').maybeSingle(),
     supabase.from('businesses').select('*').eq('id', businessId).single(),
     supabase.from('business_settings').select('*').eq('business_id', businessId).maybeSingle(),
+    supabase.from('accounts').select('*').eq('business_id', businessId).eq('is_active', true),
   ]);
 
   if (!membership || !business) return null;
-  return { business, membership, role: membership.role, settings: settings ?? null };
+  return { business, membership, role: membership.role, settings: settings ?? null, accounts: accounts ?? [] };
 }
 
 // ── Update business settings ───────────────────────────────────
