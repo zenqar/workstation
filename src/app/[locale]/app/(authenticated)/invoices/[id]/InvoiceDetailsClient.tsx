@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { issueInvoice, cancelInvoice, recordPayment, payIncomingInvoice } from '@/lib/actions/invoices';
-import { ArrowLeft, CheckCircle, XCircle, DollarSign, Download, Printer, Share2, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, DollarSign, Download, Printer, Share2, Plus, Trash2, Wallet, ThumbsUp } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency, formatDate, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
 

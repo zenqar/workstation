@@ -426,6 +426,12 @@ export async function recordPayment(
     }
   }
 
+  // Finalize confirmation timestamp
+  const admin = await createAdminClient();
+  await admin.from('invoices').update({ 
+    payment_confirmed_at: new Date().toISOString() 
+  }).eq('id', invoiceId);
+
   revalidatePath(`/app/invoices/${invoiceId}`);
   revalidatePath('/app/payments');
   revalidatePath('/app/accounts');
