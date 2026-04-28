@@ -577,7 +577,7 @@ export async function acceptInvoicePublic(token: string): Promise<ActionResult> 
   const admin = await createAdminClient();
   const { data: invoice, error: fetchError } = await admin
     .from('invoices')
-    .select('id, status, business_id')
+    .select('id, status, business_id, invoice_number')
     .eq('verification_token', token)
     .single();
 
@@ -612,7 +612,7 @@ export async function claimPaymentPublic(token: string, note?: string): Promise<
   const admin = await createAdminClient();
   const { data: invoice, error: fetchError } = await admin
     .from('invoices')
-    .select('id, status, business_id')
+    .select('id, status, business_id, invoice_number')
     .eq('verification_token', token)
     .single();
 
