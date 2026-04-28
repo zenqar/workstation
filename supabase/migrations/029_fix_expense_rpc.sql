@@ -80,7 +80,8 @@ begin
     currency,
     description,
     transaction_date,
-    reference,
+    reference_id,
+    reference_table,
     created_by
   )
   values (
@@ -91,7 +92,8 @@ begin
     p_currency::currency_code,
     'Expense: ' || p_category || ' - ' || p_description,
     v_date,
-    v_expense_id::text,
+    v_expense_id,
+    'expenses',
     p_created_by
   );
 
