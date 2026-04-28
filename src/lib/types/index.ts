@@ -45,6 +45,12 @@ export interface Business {
   default_currency: CurrencyCode;
   default_language: AppLanguage;
   timezone: string;
+  verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected';
+  verification_notes?: string | null;
+  tax_id_number?: string | null;
+  business_registration_number?: string | null;
+  incorporation_date?: string | null;
+  industry?: string | null;
   is_active: boolean;
   created_by: string | null;
   created_at: string;
