@@ -66,7 +66,7 @@ export default function NotificationBell() {
     const res = await handleContactRequest(id, action);
     if (res?.error) alert(res.error);
     else {
-      await fetchRequests();
+      await fetchNotifications();
       router.refresh();
     }
     setLoading(null);
