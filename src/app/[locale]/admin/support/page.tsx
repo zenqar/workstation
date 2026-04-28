@@ -6,30 +6,35 @@ export default async function AdminSupportInbox(props: { params: Promise<{ local
   const { locale } = await props.params;
   const admin = await createAdminClient();
 
-  // Fetch all support messages with business info
+  // Fetch all support messages with business and user info
   const { data: messages } = await admin
     .from('support_messages')
-    .select('*, businesses(id, name)')
+    .select('*, businesses(id, name), auth_users:recipient_user_id(id, email)')
     .order('created_at', { ascending: false });
 
-  // Group messages by business
-  const businessConversations = messages?.reduce((acc, msg) => {
-    const bId = msg.business_id;
-    if (!acc[bId]) {
-      acc[bId] = {
-        business: msg.businesses,
+  // Group messages by conversation (Business or Direct User)
+  const conversationsMap = messages?.reduce((acc, msg) => {
+    const key = msg.business_id || `user_${msg.recipient_user_id}`;
+    if (!acc[key]) {
+      acc[key] = {
+        id: key,
+        title: msg.businesses?.name || msg.auth_users?.email || 'System Message',
+        isUser: !msg.business_id,
+        link: msg.business_id 
+          ? `/${locale}/admin/businesses/${msg.business_id}` 
+          : `/${locale}/admin/users/${msg.recipient_user_id}`,
         lastMessage: msg,
-        unreadCount: msg.is_read ? 0 : (msg.sender_type === 'business' ? 1 : 0)
+        unreadCount: msg.is_read ? 0 : (msg.sender_type !== 'admin' ? 1 : 0)
       };
     } else {
-      if (!msg.is_read && msg.sender_type === 'business') {
-        acc[bId].unreadCount++;
+      if (!msg.is_read && msg.sender_type !== 'admin') {
+        acc[key].unreadCount++;
       }
     }
     return acc;
   }, {} as Record<string, any>);
 
-  const conversations = Object.values(businessConversations || {});
+  const conversations = Object.values(conversationsMap || {});
 
   return (
     <div className="space-y-6 animate-in">
@@ -51,20 +56,25 @@ export default async function AdminSupportInbox(props: { params: Promise<{ local
           ) : (
             conversations.map((conv: any) => (
               <Link 
-                key={conv.business.id} 
-                href={`/${locale}/admin/businesses/${conv.business.id}`}
+                key={conv.id} 
+                href={conv.link}
                 className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors group"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 group-hover:text-zenqar-400 transition-colors">
-                    <Building2 className="w-6 h-6" />
+                    {conv.isUser ? <Users className="w-6 h-6" /> : <Building2 className="w-6 h-6" />}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-white">{conv.business.name}</h3>
+                      <h3 className="font-bold text-white">{conv.title}</h3>
                       {conv.unreadCount > 0 && (
                         <span className="px-1.5 py-0.5 rounded-full bg-zenqar-500 text-white text-[10px] font-black">
                           {conv.unreadCount} NEW
+                        </span>
+                      )}
+                      {conv.isUser && (
+                        <span className="px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-[8px] font-black uppercase text-blue-400 tracking-widest">
+                          Direct User
                         </span>
                       )}
                     </div>
