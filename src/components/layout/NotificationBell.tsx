@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Bell, BellRing, UserPlus, Check, X, MessageSquare, Receipt, AlertCircle } from 'lucide-react';
 import { getIncomingContactRequests, handleContactRequest } from '@/lib/actions/connections';
 import { getNotifications, markAsRead } from '@/lib/actions/notifications';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
