@@ -166,7 +166,7 @@ export default function SupportClient() {
                     {msg.message}
                   </div>
                   <span className="text-[10px] text-white/20 font-medium px-1">
-                    {msg.sender_type === 'admin' ? 'Zenqar Support' : 'You'} • {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-numeric', minute: '2-numeric' })}
+                    {msg.sender_type === 'admin' ? 'Zenqar Support' : 'You'} • {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
               ))

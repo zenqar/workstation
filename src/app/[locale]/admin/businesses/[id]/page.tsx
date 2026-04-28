@@ -142,7 +142,7 @@ export default async function BusinessDetailsPage(props: { params: Promise<{ id:
                   >
                     <p>{msg.message}</p>
                     <p className="text-[10px] opacity-40 mt-1">
-                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-numeric', minute: '2-numeric' })}
+                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 ))
