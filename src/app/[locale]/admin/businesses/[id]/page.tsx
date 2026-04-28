@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { cn } from '@/lib/utils';
 import DeleteBusinessButton from './DeleteBusinessButton';
 import { sendAdminSupportMessage } from './actions';
