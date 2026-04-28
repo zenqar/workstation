@@ -150,8 +150,8 @@ export async function updateBusinessSettings(businessId: string, data: z.infer<t
   const parsed = SettingsSchema.safeParse(data);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  const { error } = await supabase.from('business_settings').update(parsed.data).eq('business_id', businessId);
-  if (error) return { error: 'Failed to update settings' };
+  const { error } = await supabase.from('business_settings').upsert({ business_id: businessId, ...parsed.data });
+  if (error) return { error: 'Failed to update settings: ' + error.message };
   revalidatePath('/app/settings');
   return {};
 }
@@ -176,9 +176,14 @@ export async function inviteTeamMember(businessId: string, email: string, role: 
   if (existing) return { error: 'This email is already a team member' };
 
   // Check if user exists by email (look up profile)
-  const admin = await createAdminClient();
-  const { data: users } = await admin.auth.admin.listUsers();
-  const existingUser = users?.users?.find((u) => u.email === email);
+  let existingUser = null;
+  try {
+    const admin = await createAdminClient();
+    const { data: users } = await admin.auth.admin.listUsers();
+    existingUser = users?.users?.find((u) => u.email === email);
+  } catch (err) {
+    console.warn('[inviteTeamMember] Admin client failed, falling back to pending status:', err);
+  }
 
   const { error } = await supabase.from('business_memberships').insert({
     business_id: businessId,

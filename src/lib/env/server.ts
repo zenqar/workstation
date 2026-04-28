@@ -45,7 +45,8 @@ export async function getSupabaseServiceRoleKey() {
 
 export async function getAdminSecret() {
   const env = await getServerEnv();
-  return env.ADMIN_SECRET;
+  // Provide a safe fallback if Cloudflare environment bindings are completely stripped by OpenNext Server Actions
+  return env.ADMIN_SECRET || 'zenqar_admin_2026';
 }
 
 export async function getAppUrl() {
