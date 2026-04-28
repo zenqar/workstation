@@ -102,7 +102,7 @@ export default async function AdminUsersPage(props: { searchParams: Promise<{ q?
                             await client.auth.admin.deleteUser(u.id);
                             redirect('/en/admin/users');
                           }}>
-                            <button type="submit" className="btn-secondary text-red-400 hover:bg-red-500/10 border-red-500/20 text-xs px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { if(!confirm('Are you sure you want to completely delete this user?')) e.preventDefault(); }}>
+                            <button type="submit" className="btn-secondary text-red-400 hover:bg-red-500/10 border-red-500/20 text-xs px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               Delete
                             </button>
                           </form>

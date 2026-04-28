@@ -98,7 +98,7 @@ export default async function AdminBusinessesPage(props: { searchParams: Promise
                             await client.from('businesses').delete().eq('id', b.id);
                             redirect('/en/admin/businesses');
                           }}>
-                            <button type="submit" className="btn-secondary text-red-400 hover:bg-red-500/10 border-red-500/20 text-xs px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { if(!confirm('Are you absolutely sure? This destroys all their data.')) e.preventDefault(); }}>
+                            <button type="submit" className="btn-secondary text-red-400 hover:bg-red-500/10 border-red-500/20 text-xs px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               Delete Network
                             </button>
                           </form>
