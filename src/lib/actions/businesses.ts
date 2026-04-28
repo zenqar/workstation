@@ -200,19 +200,19 @@ export async function getDashboardStats(businessId: string) {
       supabase.from('invoices').select('id, status, total, currency, due_date').eq('business_id', businessId),
       supabase.from('payments').select('amount, currency, payment_date').eq('business_id', businessId).gte('payment_date', monthStart),
       supabase.from('expenses').select('amount, currency, expense_date').eq('business_id', businessId).gte('expense_date', monthStart),
-      supabase.rpc('get_business_balances', { p_business_id: businessId }),
+      supabase.from('accounts').select('balance, currency').eq('business_id', businessId),
       supabase.from('fx_rate_snapshots').select('rate, fetched_at').order('fetched_at', { ascending: false }).limit(1).maybeSingle(),
     ]);
 
     const invoices = invoicesRes.data || [];
     const payments = paymentsRes.data || [];
     const expenses = expensesRes.data || [];
-    const balances = balancesRes.data || [];
+    const accounts = balancesRes.data || [];
     const fx = fxRes.data;
 
     const fxRate = fx?.rate ?? 1310;
-    const totalIqd = (balances.find((b: { currency: string; total_balance: number }) => b.currency === 'IQD')?.total_balance) ?? 0;
-    const totalUsd = (balances.find((b: { currency: string; total_balance: number }) => b.currency === 'USD')?.total_balance) ?? 0;
+    const totalIqd = accounts.filter((a: any) => a.currency === 'IQD').reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+    const totalUsd = accounts.filter((a: any) => a.currency === 'USD').reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
 
     return {
       totalBalanceIqd: totalIqd,
