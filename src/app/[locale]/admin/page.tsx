@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Shield, Users, Building2, Activity, Key, ChevronRight } from 'lucide-react';
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 
 export default async function AdminDashboard(props: { params: Promise<{ locale: string }> }) {
@@ -193,23 +194,27 @@ export default async function AdminDashboard(props: { params: Promise<{ locale: 
                     </div>
                   </Link>
                   <div className="flex gap-2">
-                    <form action={async () => {
-                      'use server';
-                      const admin = await createAdminClient();
-                      await admin.from('businesses').update({ verification_status: 'verified' }).eq('id', b.id);
-                    }}>
+                    <form 
+                      action={async () => {
+                        'use server';
+                        const admin = await createAdminClient();
+                        await admin.from('businesses').update({ verification_status: 'verified' }).eq('id', b.id);
+                        revalidatePath(`/${locale}/admin`);
+                      }}>
                       <button type="submit" className="btn-primary bg-emerald-500 hover:bg-emerald-600 text-xs px-3 py-1.5 border-none">
                         Approve
                       </button>
                     </form>
-                    <form action={async () => {
-                      'use server';
-                      const admin = await createAdminClient();
-                      await admin.from('businesses').update({ 
-                        verification_status: 'rejected',
-                        verification_notes: 'Missing or invalid documentation. Please review your details and resubmit.'
-                      }).eq('id', b.id);
-                    }}>
+                    <form 
+                      action={async () => {
+                        'use server';
+                        const admin = await createAdminClient();
+                        await admin.from('businesses').update({ 
+                          verification_status: 'rejected',
+                          verification_notes: 'Missing or invalid documentation. Please review your details and resubmit.'
+                        }).eq('id', b.id);
+                        revalidatePath(`/${locale}/admin`);
+                      }}>
                       <button type="submit" className="btn-secondary text-red-400 hover:bg-red-500/10 border-red-500/20 text-xs px-3 py-1.5">
                         Reject
                       </button>

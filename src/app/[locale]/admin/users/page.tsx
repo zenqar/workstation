@@ -3,7 +3,8 @@ import { Users, Search, AlertCircle, Key, MessageSquare } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-export default async function AdminUsersPage(props: { searchParams: Promise<{ q?: string }> }) {
+export default async function AdminUsersPage(props: { params: Promise<{ locale: string }>, searchParams: Promise<{ q?: string }> }) {
+  const { locale } = await props.params;
   const searchParams = await props.searchParams;
   const query = searchParams.q || '';
   const admin = await createAdminClient();
@@ -16,7 +17,7 @@ export default async function AdminUsersPage(props: { searchParams: Promise<{ q?
     filteredUsers = filteredUsers.filter(u => 
       u.email?.toLowerCase().includes(qLower) || 
       u.phone?.toLowerCase().includes(qLower) ||
-      u.id.includes(query)
+      (u.id && u.id.toLowerCase().includes(qLower))
     );
   }
 
@@ -30,7 +31,7 @@ export default async function AdminUsersPage(props: { searchParams: Promise<{ q?
           </h1>
           <p className="text-white/50 text-sm mt-1">View, search, and manage platform users.</p>
         </div>
-        <form className="relative" action="/en/admin/users">
+        <form className="relative" action={`/${locale}/admin/users`}>
           <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
           <input 
             type="search" 
@@ -70,7 +71,7 @@ export default async function AdminUsersPage(props: { searchParams: Promise<{ q?
                   filteredUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-white/[0.02] transition-colors group">
                       <td className="px-6 py-4">
-                        <Link href={`/en/admin/users/${u.id}`} className="group/link">
+                        <Link href={`/${locale}/admin/users/${u.id}`} className="group/link">
                           <div className="font-medium text-white group-hover/link:text-zenqar-400 transition-colors">{u.email || 'No email'}</div>
                           <div className="text-xs text-white/40 mt-1 font-mono">{u.id}</div>
                         </Link>
@@ -83,10 +84,10 @@ export default async function AdminUsersPage(props: { searchParams: Promise<{ q?
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <Link href={`/en/admin/users/${u.id}`} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-zenqar-400 transition-all shadow-glow-sm" title="Message User">
+                          <Link href={`/${locale}/admin/users/${u.id}`} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-zenqar-400 transition-all shadow-glow-sm" title="Message User">
                             <MessageSquare className="w-4 h-4" />
                           </Link>
-                          <Link href={`/en/admin/users/${u.id}`} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all shadow-glow-sm" title="User Settings">
+                          <Link href={`/${locale}/admin/users/${u.id}`} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all shadow-glow-sm" title="User Settings">
                             <Search className="w-4 h-4" />
                           </Link>
                         </div>
@@ -98,7 +99,6 @@ export default async function AdminUsersPage(props: { searchParams: Promise<{ q?
             </table>
           </div>
         </div>
-      )}
     </div>
   );
 }

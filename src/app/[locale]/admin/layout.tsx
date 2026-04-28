@@ -56,8 +56,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link href={getLocalizedPath(locale, '/admin/businesses')} className="p-2 text-white/50 hover:text-white transition-colors">
                 <Building2 className="w-4 h-4" />
               </Link>
-              <Link href={getLocalizedPath(locale, '/admin/users')} className="p-2 text-white/50 hover:text-white transition-colors">
+              <Link href={getLocalizedPath(locale, '/admin/users')} className="p-2 text-white/50 hover:text-white transition-colors" title="Users">
                 <Users className="w-4 h-4" />
+              </Link>
+              <Link href={getLocalizedPath(locale, '/admin/support')} className="p-2 text-white/50 hover:text-white transition-colors" title="Messages">
+                <MessageSquare className="w-4 h-4" />
               </Link>
             </nav>
             <div className="w-px h-4 bg-white/10" />

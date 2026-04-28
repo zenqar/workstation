@@ -23,6 +23,23 @@ export async function sendAdminUserMessage(userId: string, message: string) {
   return { success: true };
 }
 
+export async function toggleAdminStatus(userId: string, currentStatus: boolean) {
+  const admin = await createAdminClient();
+
+  const { error } = await admin
+    .from('profiles')
+    .update({ is_platform_admin: !currentStatus })
+    .eq('id', userId);
+
+  if (error) {
+    console.error('Failed to toggle admin status:', error);
+    return { error: error.message };
+  }
+
+  revalidatePath(`/admin/users/${userId}`);
+  return { success: true };
+}
+
 export async function deleteUserAccount(userId: string) {
   const admin = await createAdminClient();
 

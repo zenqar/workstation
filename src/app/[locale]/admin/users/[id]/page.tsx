@@ -19,6 +19,7 @@ import {
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import UserControls from './UserControls';
 import { sendAdminUserMessage } from '../actions';
 
 const IQD_RATE = 1500; // Fallback rate
@@ -148,33 +149,13 @@ export default async function UserWatchdogPage(props: { params: Promise<{ id: st
             </div>
           </div>
 
-          <div className="glass-card p-6 space-y-3">
-            <h2 className="text-sm font-black text-white/40 uppercase tracking-widest mb-2">Platform Controls</h2>
-            <form action={async () => {
-              'use server';
-              const admin = await createAdminClient();
-              const { getAppUrl } = await import('@/lib/env/server');
-              const appUrl = await getAppUrl();
-              await admin.auth.admin.generateLink({
-                type: 'recovery',
-                email: user.email!,
-                options: { redirectTo: `${appUrl}/${locale}/auth/callback?next=/${locale}/reset-password` },
-              });
-            }}>
-              <button type="submit" className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-xs font-bold text-white group">
-                Reset Password <Key className="w-4 h-4 text-white/20 group-hover:text-zenqar-400" />
-              </button>
-            </form>
-            
-            <button className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-xs font-bold text-white group">
-              Manage Roles <ShieldCheck className="w-4 h-4 text-white/20 group-hover:text-blue-400" />
-            </button>
-            
-            <div className="pt-4 mt-4 border-t border-white/5">
-              <button className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-xl border border-red-500/20 transition-all">
-                Terminate Access
-              </button>
-            </div>
+          <div className="glass-card p-6">
+            <UserControls 
+              userId={id} 
+              email={user.email!} 
+              isAdmin={!!profile?.is_platform_admin} 
+              locale={locale} 
+            />
           </div>
         </div>
 

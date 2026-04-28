@@ -1,9 +1,12 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { Building2, Search, AlertCircle, ShieldCheck, Clock, Activity } from 'lucide-react';
+import { Building2, Search, AlertCircle, ShieldCheck, Clock, Activity, ChevronRight } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { deleteBusinessNetwork } from './[id]/actions';
 
-export default async function AdminBusinessesPage(props: { searchParams: Promise<{ q?: string }> }) {
+export default async function AdminBusinessesPage(props: { params: Promise<{ locale: string }>, searchParams: Promise<{ q?: string }> }) {
+  const { locale } = await props.params;
   const searchParams = await props.searchParams;
   const query = searchParams.q || '';
   const admin = await createAdminClient();
@@ -25,7 +28,7 @@ export default async function AdminBusinessesPage(props: { searchParams: Promise
           </h1>
           <p className="text-white/50 text-sm mt-1">Manage and audit all platform businesses.</p>
         </div>
-        <form className="relative" action="/en/admin/businesses">
+        <form className="relative" action={`/${locale}/admin/businesses`}>
           <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
           <input 
             type="search" 
@@ -64,11 +67,16 @@ export default async function AdminBusinessesPage(props: { searchParams: Promise
                   </tr>
                 ) : (
                   businesses.map((b) => (
-                    <tr key={b.id} className="hover:bg-white/[0.02] transition-colors group">
+                    <tr key={b.id} className="hover:bg-white/[0.02] transition-colors group relative">
                       <td className="px-6 py-4">
-                        <div className="font-bold text-white">{b.name}</div>
-                        {b.legal_name && <div className="text-xs text-white/50 mt-1">{b.legal_name}</div>}
-                        <div className="text-xs text-white/30 font-mono mt-1">ID: {b.id.substring(0,8)}...</div>
+                        <Link href={`/${locale}/admin/businesses/${b.id}`} className="block group/link">
+                          <div className="font-bold text-white group-hover/link:text-zenqar-400 transition-colors flex items-center gap-2">
+                            {b.name}
+                            <ChevronRight className="w-3 h-3 text-white/10 group-hover/link:text-zenqar-400 opacity-0 group-hover/link:opacity-100 transition-all" />
+                          </div>
+                          {b.legal_name && <div className="text-xs text-white/50 mt-1">{b.legal_name}</div>}
+                          <div className="text-xs text-white/30 font-mono mt-1">ID: {b.id.substring(0,8)}...</div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4">
                         <span className={cn(
@@ -76,11 +84,11 @@ export default async function AdminBusinessesPage(props: { searchParams: Promise
                           b.verification_status === 'verified' && "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
                           b.verification_status === 'pending' && "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
                           b.verification_status === 'rejected' && "bg-red-500/10 text-red-400 border-red-500/20",
-                          b.verification_status === 'unverified' && "bg-white/5 text-white/40 border-white/10"
+                          (b.verification_status === 'unverified' || !b.verification_status) && "bg-white/5 text-white/40 border-white/10"
                         )}>
                           {b.verification_status === 'verified' && <ShieldCheck className="w-3 h-3" />}
                           {b.verification_status === 'pending' && <Clock className="w-3 h-3" />}
-                          {b.verification_status === 'unverified' && <Activity className="w-3 h-3" />}
+                          {(b.verification_status === 'unverified' || !b.verification_status) && <Activity className="w-3 h-3" />}
                           {b.verification_status || 'unverified'}
                         </span>
                       </td>
@@ -91,15 +99,13 @@ export default async function AdminBusinessesPage(props: { searchParams: Promise
                         {new Date(b.created_at).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-2 relative z-10">
                           <form action={async () => {
                             'use server';
-                            const client = await createAdminClient();
-                            await client.from('businesses').delete().eq('id', b.id);
-                            redirect('/en/admin/businesses');
+                            await deleteBusinessNetwork(b.id);
                           }}>
-                            <button type="submit" className="btn-secondary text-red-400 hover:bg-red-500/10 border-red-500/20 text-xs px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                              Delete Network
+                            <button type="submit" className="btn-secondary text-red-400 hover:bg-red-500/10 border-red-500/20 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              Robust Delete
                             </button>
                           </form>
                         </div>
