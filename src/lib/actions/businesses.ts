@@ -38,7 +38,7 @@ export async function getBusinessContext(businessId: string): Promise<BusinessCo
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const [{ data: membership }, { data: business }, { data: settings }, { data: accounts }] = await Promise.all([
+  const [{ data: membership }, { data: business }, { data: settings }, { data: accounts }, { data: fx }] = await Promise.all([
     supabase.from('business_memberships').select('*').eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').maybeSingle(),
     supabase.from('businesses').select('*').eq('id', businessId).single(),
     supabase.from('business_settings').select('*').eq('business_id', businessId).maybeSingle(),
