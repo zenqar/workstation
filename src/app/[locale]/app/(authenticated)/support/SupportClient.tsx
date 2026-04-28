@@ -26,15 +26,20 @@ export default function SupportClient() {
   const supabase = createClient();
 
   useEffect(() => {
-    if (!activeBusiness) return;
-
     // Load initial messages
     const fetchMessages = async () => {
-      const { data } = await supabase
-        .from('support_messages')
-        .select('*')
-        .eq('business_id', activeBusiness.id)
-        .order('created_at', { ascending: true });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      let query = supabase.from('support_messages').select('*');
+      
+      if (activeBusiness) {
+        query = query.or(`business_id.eq.${activeBusiness.id},recipient_user_id.eq.${user.id}`);
+      } else {
+        query = query.eq('recipient_user_id', user.id);
+      }
+
+      const { data } = await query.order('created_at', { ascending: true });
       
       if (data) setMessages(data);
       setLoading(false);
@@ -43,7 +48,7 @@ export default function SupportClient() {
 
     fetchMessages();
 
-    // Subscribe to new messages
+    // Subscribe to new messages for this user/business
     const channel = supabase
       .channel('support-realtime')
       .on(
@@ -52,11 +57,19 @@ export default function SupportClient() {
           event: 'INSERT',
           schema: 'public',
           table: 'support_messages',
-          filter: `business_id=eq.${activeBusiness.id}`
         },
-        (payload) => {
-          setMessages(prev => [...prev, payload.new]);
-          scrollToBottom();
+        async (payload) => {
+          const { data: { user } } = await supabase.auth.getUser();
+          const msg = payload.new;
+          
+          // Only show if it belongs to this business or this user directly
+          const isForThisBusiness = activeBusiness && msg.business_id === activeBusiness.id;
+          const isForThisUser = user && msg.recipient_user_id === user.id;
+
+          if (isForThisBusiness || isForThisUser) {
+            setMessages(prev => [...prev, msg]);
+            scrollToBottom();
+          }
         }
       )
       .subscribe();
@@ -77,15 +90,31 @@ export default function SupportClient() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !activeBusiness || sending) return;
+    if (!newMessage.trim() || sending) return;
 
     setSending(true);
-    const { error } = await supabase.from('support_messages').insert({
-      business_id: activeBusiness.id,
-      sender_type: 'business',
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const payload: any = {
+      sender_type: activeBusiness ? 'business' : 'user',
       message: newMessage,
-      is_read: false
-    });
+      is_read: false,
+      sender_user_id: user?.id
+    };
+
+    if (activeBusiness) {
+      payload.business_id = activeBusiness.id;
+    } else if (user) {
+      // If no business, we link it to the user's direct channel
+      payload.recipient_user_id = user.id; 
+      // Wait, recipient_user_id is who the message is FOR. 
+      // For a user sending to admin, business_id being null is enough 
+      // if we want admin to see it in a "Global User Support" area.
+      // But we use recipient_user_id to group direct chats.
+      payload.recipient_user_id = user.id;
+    }
+
+    const { error } = await supabase.from('support_messages').insert(payload);
 
     if (error) {
       alert('Failed to send message: ' + error.message);
@@ -95,7 +124,6 @@ export default function SupportClient() {
     setSending(false);
   };
 
-  if (!activeBusiness) return null;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-8 animate-in fade-in duration-500">
