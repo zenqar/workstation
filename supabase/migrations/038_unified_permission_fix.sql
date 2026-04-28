@@ -6,6 +6,14 @@
 --          3. Resolves "function does not exist" and "permission denied" errors.
 -- =============================================================
 
+-- 0. REPAIR: Ensure profiles table has the is_platform_admin column
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'is_platform_admin') THEN
+    ALTER TABLE public.profiles ADD COLUMN is_platform_admin BOOLEAN NOT NULL DEFAULT false;
+  END IF;
+END $$;
+
 -- 1. Create ALL permission helpers in PUBLIC schema
 -- Ensure we are using the correct search path
 SET search_path = public, auth;
