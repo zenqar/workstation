@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { ActionResult, Invoice, InvoiceFormData } from '@/lib/types';
 import { z } from 'zod';
+import { notify } from './notifications';
 
 // ============================================================
 // Validation
@@ -593,6 +594,15 @@ export async function acceptInvoicePublic(token: string): Promise<ActionResult> 
 
   if (updateError) return { error: 'Failed to accept invoice' };
   
+  // Notify the issuing business
+  await notify(
+    invoice.business_id,
+    'invoice_accepted',
+    'Invoice Accepted',
+    `Invoice ${invoice.invoice_number || 'N/A'} was accepted by the customer.`,
+    `/app/invoices/${invoice.id}`
+  );
+
   revalidatePath('/[locale]/verify/[token]', 'page');
   revalidatePath('/[locale]/app/(authenticated)/invoices/[id]', 'page');
   return {};
@@ -619,6 +629,15 @@ export async function claimPaymentPublic(token: string, note?: string): Promise<
 
   if (updateError) return { error: 'Failed to mark as paid' };
   
+  // Notify the issuing business
+  await notify(
+    invoice.business_id,
+    'invoice_payment_claimed',
+    'Payment Claimed',
+    `The customer claimed they paid Invoice ${invoice.invoice_number || 'N/A'}. Please confirm.`,
+    `/app/invoices/${invoice.id}`
+  );
+
   revalidatePath('/[locale]/verify/[token]', 'page');
   revalidatePath('/[locale]/app/(authenticated)/invoices/[id]', 'page');
   return {};

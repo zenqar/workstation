@@ -25,12 +25,34 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
     if (!contact) notFound();
 
     // Fetch invoices for this contact
-    const { data: invoices } = await supabase
+    // 1. Invoices issued BY me TO them
+    // 2. Invoices issued BY them TO me (if connected)
+    
+    let invoices: any[] = [];
+    
+    // Outgoing
+    const { data: outgoing } = await supabase
       .from('invoices')
-      .select('*')
+      .select('*, business:businesses(name)')
       .eq('contact_id', id)
-      .eq('business_id', businessId)
-      .order('issue_date', { ascending: false });
+      .eq('business_id', businessId);
+      
+    invoices = [...(outgoing || [])];
+    
+    // Incoming (if connected)
+    if (contact.connected_business_id) {
+      // Find the contact in their business that represents US
+      // Usually there is a contact record in their system with connected_business_id = OUR businessId
+      const { data: incoming } = await supabase
+        .from('invoices')
+        .select('*, business:businesses(name)')
+        .eq('business_id', contact.connected_business_id)
+        .eq('contact_id', (await supabase.from('contacts').select('id').eq('business_id', contact.connected_business_id).eq('connected_business_id', businessId).single()).data?.id || 'none');
+        
+      if (incoming) invoices = [...invoices, ...incoming];
+    }
+
+    invoices.sort((a, b) => new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime());
 
     return (
       <ContactDetailsClient 

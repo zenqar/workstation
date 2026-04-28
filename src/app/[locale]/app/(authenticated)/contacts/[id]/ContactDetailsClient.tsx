@@ -155,10 +155,15 @@ export default function ContactDetailsClient({ contact, invoices, businessId, cu
                       {invoices.map((inv: any) => (
                         <tr key={inv.id}>
                           <td>
-                            <Link href={`/${locale}/app/invoices/${inv.id}`} className="text-sm text-white font-medium hover:text-zenqar-400 transition-colors">
-                              {inv.invoice_number}
-                            </Link>
-                            <div className="text-[10px] text-white/30">{formatDate(inv.issue_date)}</div>
+                            <div className="flex items-center gap-2">
+                              <Link href={`/${locale}/app/invoices/${inv.id}`} className="text-sm text-white font-medium hover:text-zenqar-400 transition-colors">
+                                {inv.invoice_number}
+                              </Link>
+                              {inv.business_id !== businessId && (
+                                <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-black uppercase tracking-widest">Incoming</span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-white/30">{formatDate(inv.issue_date)} • {inv.business?.name}</div>
                           </td>
                           <td>
                             <span className={cn('badge', INVOICE_STATUS_COLORS[inv.status as keyof typeof INVOICE_STATUS_COLORS])}>

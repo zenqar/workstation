@@ -1,12 +1,16 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Bell, UserPlus, Check, X, MessageSquare } from 'lucide-react';
+import { Bell, BellRing, UserPlus, Check, X, MessageSquare, Receipt, AlertCircle } from 'lucide-react';
 import { getIncomingContactRequests, handleContactRequest } from '@/lib/actions/connections';
+import { getNotifications, markAsRead } from '@/lib/actions/notifications';
 import { cn } from '@/lib/utils';
 import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+
+const PING_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -15,40 +19,63 @@ export default function NotificationBell() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playPing = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio(PING_SOUND_URL);
+    }
+    audioRef.current.play().catch(e => console.log('Audio play blocked by browser', e));
+  };
+
   const fetchNotifications = async () => {
-    // 1. Fetch Contact Requests
-    const contactData = await getIncomingContactRequests();
-    
-    // 2. Fetch Unread Support Messages
-    const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    
-    let supportData: any[] = [];
-    if (user) {
-      const { data } = await supabase
-        .from('support_messages')
-        .select('id, message, created_at, business_id')
-        .eq('is_read', false)
-        .eq('sender_type', 'admin')
-        .or(`recipient_user_id.eq.${user.id}`);
-      
-      if (data) supportData = data;
-    }
+    if (!user) return;
 
-    // Combine them
+    // Fetch business ID from profile/membership
+    const { data: membership } = await supabase
+      .from('business_memberships')
+      .select('business_id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!membership) return;
+
+    const [dbNotifs, contactRequests] = await Promise.all([
+      getNotifications(membership.business_id),
+      getIncomingContactRequests()
+    ]);
+
     const combined = [
-      ...(contactData || []).map(c => ({ ...c, type: 'contact' })),
-      ...supportData.map(s => ({ ...s, type: 'support' }))
-    ];
+      ...(contactRequests || []).map(c => ({ ...c, type: 'contact_request' })),
+      ...(dbNotifs || []).map(n => ({ ...n, is_db: true }))
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     setNotifications(combined);
   };
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000); // Check every 30s
-    return () => clearInterval(interval);
+
+    const supabase = createClient();
+    
+    const channel = supabase
+      .channel('notifications_changes')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'notifications' 
+      }, (payload) => {
+        fetchNotifications();
+        playPing();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -72,7 +99,7 @@ export default function NotificationBell() {
     setLoading(null);
   };
 
-  const count = notifications.length;
+  const count = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -99,12 +126,12 @@ export default function NotificationBell() {
           </div>
           
           <div className="max-h-96 overflow-y-auto space-y-2 custom-scrollbar">
-            {notifications.length === 0 ? (
+            {notifications.filter(n => !n.is_read).length === 0 ? (
               <div className="p-4 text-center text-xs text-white/40 italic">No new notifications</div>
             ) : (
-              notifications.map((notif: any) => (
-                <div key={`${notif.type}-${notif.id}`}>
-                  {notif.type === 'contact' ? (
+              notifications.filter(n => !n.is_read).map((notif: any) => (
+                <div key={notif.id}>
+                  {notif.type === 'contact_request' ? (
                     <div className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-zenqar-500/30 transition-colors">
                       <div className="flex gap-3">
                         <div className="w-8 h-8 shrink-0 rounded-lg bg-zenqar-500/20 flex items-center justify-center mt-0.5">
@@ -134,18 +161,22 @@ export default function NotificationBell() {
                     </div>
                   ) : (
                     <Link 
-                      href={`/${useLocale()}/app/support`}
-                      onClick={() => setIsOpen(false)}
-                      className="block p-3 rounded-xl bg-white/5 border border-white/5 hover:border-blue-500/30 transition-colors group"
+                      href={notif.link || '#'}
+                      onClick={async () => {
+                        setIsOpen(false);
+                        if (notif.id) await markAsRead(notif.id);
+                        fetchNotifications();
+                      }}
+                      className="block p-3 rounded-xl bg-white/5 border border-white/5 hover:border-zenqar-500/30 transition-colors group"
                     >
                       <div className="flex gap-3">
-                        <div className="w-8 h-8 shrink-0 rounded-lg bg-blue-500/20 flex items-center justify-center mt-0.5 group-hover:bg-blue-500/30 transition-colors">
-                          <MessageSquare className="w-4 h-4 text-blue-400" />
+                        <div className="w-8 h-8 shrink-0 rounded-lg bg-white/10 flex items-center justify-center mt-0.5 group-hover:bg-white/20 transition-colors">
+                          {notif.type.includes('invoice') ? <Receipt className="w-4 h-4 text-emerald-400" /> : <AlertCircle className="w-4 h-4 text-blue-400" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-white font-bold">New Support Message</p>
-                          <p className="text-[10px] text-white/50 mt-0.5 truncate">{notif.message}</p>
-                          <p className="text-[9px] text-white/20 mt-1 uppercase font-black tracking-widest">Just now</p>
+                          <p className="text-xs text-white font-bold">{notif.title}</p>
+                          <p className="text-[10px] text-white/50 mt-0.5 line-clamp-2">{notif.message}</p>
+                          <p className="text-[9px] text-white/20 mt-1 uppercase font-black tracking-widest">{formatDate(notif.created_at)}</p>
                         </div>
                       </div>
                     </Link>

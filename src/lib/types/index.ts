@@ -249,6 +249,20 @@ export interface BusinessContext {
   accounts: Account[];
 }
 
+export type NotificationType = 'invoice_new' | 'invoice_accepted' | 'invoice_paid' | 'invoice_payment_claimed' | 'contact_request' | 'message_new';
+
+export interface Notification {
+  id: string;
+  business_id: string;
+  user_id: string | null;
+  type: NotificationType;
+  title: string;
+  message: string;
+  link: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
 export interface DashboardStats {
   totalBalanceIqd: number;
   totalBalanceUsd: number;
