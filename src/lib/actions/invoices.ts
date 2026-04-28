@@ -366,9 +366,13 @@ export async function cancelInvoice(
 // Record Payment
 // ============================================================
 
-const PaymentSchema = z.object({
+const PaymentEntrySchema = z.object({
   account_id:   z.string().uuid(),
   amount:       z.number().positive('Amount must be positive'),
+});
+
+const MultiPaymentSchema = z.object({
+  payments:     z.array(PaymentEntrySchema).min(1),
   currency:     z.enum(['IQD', 'USD']),
   payment_date: z.string(),
   reference:    z.string().nullable().optional(),
@@ -379,58 +383,58 @@ export async function recordPayment(
   businessId: string,
   invoiceId: string,
   data: {
-    account_id: string;
-    amount: number;
+    payments: { account_id: string; amount: number }[];
     currency: 'IQD' | 'USD';
     payment_date: string;
     reference?: string;
     note?: string;
   }
-): Promise<ActionResult<{ paymentId: string }>> {
+): Promise<ActionResult> {
   const { supabase, user, role } = await requireBusinessUser(businessId);
 
   if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) {
     return { error: 'Permission denied' };
   }
 
-  const parsed = PaymentSchema.safeParse(data);
+  const parsed = MultiPaymentSchema.safeParse(data);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const d = parsed.data;
-  const { data: paymentId, error } = await supabase.rpc(
-    'record_payment_and_update_invoice',
-    {
-      p_business_id:  businessId,
-      p_invoice_id:   invoiceId,
-      p_account_id:   d.account_id,
-      p_amount:       d.amount,
-      p_currency:     d.currency,
-      p_payment_date: d.payment_date,
-      p_reference:    d.reference ?? null,
-      p_note:         d.note ?? null,
-      p_created_by:   user.id,
-    }
-  );
+  
+  for (const entry of d.payments) {
+    const { error } = await supabase.rpc(
+      'record_payment_and_update_invoice',
+      {
+        p_business_id:  businessId,
+        p_invoice_id:   invoiceId,
+        p_account_id:   entry.account_id,
+        p_amount:       entry.amount,
+        p_currency:     d.currency,
+        p_payment_date: d.payment_date,
+        p_reference:    d.reference ?? null,
+        p_note:         d.note ?? null,
+        p_created_by:   user.id,
+      }
+    );
 
-  if (error) return { error: error.message || 'Failed to record payment' };
+    if (error) {
+      console.error('[recordPayment] Error recording part of payment:', error);
+      return { error: `Partial success: Failed at one of the entries: ${error.message}` };
+    }
+  }
 
   revalidatePath(`/app/invoices/${invoiceId}`);
   revalidatePath('/app/payments');
   revalidatePath('/app/accounts');
   revalidatePath('/app/dashboard');
-  return { data: { paymentId } };
+  return {};
 }
-
-// ============================================================
-// Pay Incoming Invoice (Cross-Business)
-// ============================================================
 
 export async function payIncomingInvoice(
   businessId: string,
   invoiceId: string,
   data: {
-    account_id: string;
-    amount: number;
+    payments: { account_id: string; amount: number }[];
     currency: 'IQD' | 'USD';
     payment_date: string;
     reference?: string;
@@ -443,29 +447,31 @@ export async function payIncomingInvoice(
     return { error: 'Permission denied' };
   }
 
-  const parsed = PaymentSchema.safeParse(data);
+  const parsed = MultiPaymentSchema.safeParse(data);
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
   const d = parsed.data;
-  const { error } = await supabase.rpc(
-    'pay_incoming_invoice',
-    {
-      p_invoice_id:         invoiceId,
-      p_payer_business_id:  businessId,
-      p_payer_account_id:   d.account_id,
-      p_amount:             d.amount,
-      p_payment_date:       d.payment_date,
-      p_reference:          d.reference ?? null,
-      p_note:               d.note ?? null,
-      p_created_by:         user.id,
-    }
-  );
 
-  if (error) return { error: error.message || 'Failed to pay invoice' };
+  for (const entry of d.payments) {
+    const { error } = await supabase.rpc(
+      'pay_incoming_invoice',
+      {
+        p_invoice_id:         invoiceId,
+        p_payer_business_id:  businessId,
+        p_payer_account_id:   entry.account_id,
+        p_amount:             entry.amount,
+        p_payment_date:       d.payment_date,
+        p_reference:          d.reference ?? null,
+        p_note:               d.note ?? null,
+        p_created_by:         user.id,
+      }
+    );
+
+    if (error) return { error: `Partial success: ${error.message}` };
+  }
 
   revalidatePath(`/app/invoices/${invoiceId}`);
-  revalidatePath('/app/invoices');
-  revalidatePath('/app/expenses');
+  revalidatePath('/app/payments');
   revalidatePath('/app/accounts');
   revalidatePath('/app/dashboard');
   return {};

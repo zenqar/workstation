@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { issueInvoice, cancelInvoice, recordPayment, payIncomingInvoice } from '@/lib/actions/invoices';
-import { ArrowLeft, CheckCircle, XCircle, DollarSign, Download, Printer, Share2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, DollarSign, Download, Printer, Share2, Plus, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency, formatDate, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
 
@@ -15,14 +15,32 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
   const [loading, setLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
-    account_id: '',
-    amount: invoice.total - (invoice.amount_paid || 0),
+    payments: [{ account_id: '', amount: invoice.total - (invoice.amount_paid || 0) }],
     payment_date: new Date().toISOString().split('T')[0],
     reference: '',
     note: ''
   });
 
   const isIncoming = invoice.business_id !== businessId;
+
+  const addPaymentSource = () => {
+    setPaymentForm({
+      ...paymentForm,
+      payments: [...paymentForm.payments, { account_id: '', amount: 0 }]
+    });
+  };
+
+  const removePaymentSource = (index: number) => {
+    const newPayments = [...paymentForm.payments];
+    newPayments.splice(index, 1);
+    setPaymentForm({ ...paymentForm, payments: newPayments });
+  };
+
+  const updatePaymentEntry = (index: number, field: string, value: any) => {
+    const newPayments = [...paymentForm.payments];
+    newPayments[index] = { ...newPayments[index], [field]: value };
+    setPaymentForm({ ...paymentForm, payments: newPayments });
+  };
 
   const handleIssue = async () => {
     if (!confirm(t('invoices.issueInvoiceConfirm'))) return;
@@ -247,62 +265,102 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
       {/* Payment Modal */}
       {showPaymentModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass-card w-full max-w-md p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-xl font-bold text-white mb-6">{isIncoming ? 'Pay Invoice' : t('invoices.recordPayment')}</h3>
-            <form onSubmit={handlePayment} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-sm text-white/60">{isIncoming ? 'Pay From Account' : t('payments.receivedInto')}</label>
-                <select 
-                  className="input-glass"
-                  value={paymentForm.account_id}
-                  onChange={e => setPaymentForm({...paymentForm, account_id: e.target.value})}
-                  required
-                >
-                  <option value="">{t('common.selectOption')}</option>
-                  {accounts.filter((a: any) => a.currency === invoice.currency).map((acc: any) => (
-                    <option key={acc.id} value={acc.id}>{acc.name} ({formatCurrency(acc.balance, acc.currency)})</option>
-                  ))}
-                </select>
+          <div className="glass-card w-full max-w-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-white">{isIncoming ? 'Pay Invoice' : t('invoices.recordPayment')}</h3>
+              <button onClick={() => setShowPaymentModal(false)} className="text-white/40 hover:text-white">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handlePayment} className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-semibold text-white/60 uppercase tracking-wider">Payment Sources</label>
+                  <button 
+                    type="button" 
+                    onClick={addPaymentSource}
+                    className="flex items-center gap-1.5 text-xs font-bold text-zenqar-400 hover:text-zenqar-300 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Split Payment
+                  </button>
+                </div>
+
+                {paymentForm.payments.map((entry, idx) => (
+                  <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end p-3 rounded-xl bg-white/5 border border-white/5">
+                    <div className="sm:col-span-7 space-y-1.5">
+                      <label className="text-[10px] uppercase font-bold text-white/40">{isIncoming ? 'Pay From Account' : 'Received Into'}</label>
+                      <select 
+                        className="input-glass text-sm"
+                        value={entry.account_id}
+                        onChange={e => updatePaymentEntry(idx, 'account_id', e.target.value)}
+                        required
+                      >
+                        <option value="">Select Account</option>
+                        {accounts.filter((a: any) => a.currency === invoice.currency).map((acc: any) => (
+                          <option key={acc.id} value={acc.id}>{acc.name} ({formatCurrency(acc.balance, acc.currency)})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="sm:col-span-4 space-y-1.5">
+                      <label className="text-[10px] uppercase font-bold text-white/40">{t('common.amount')}</label>
+                      <div className="relative">
+                        <input 
+                          type="number" 
+                          step="0.01"
+                          className="input-glass text-sm pr-12"
+                          value={entry.amount}
+                          onChange={e => updatePaymentEntry(idx, 'amount', parseFloat(e.target.value) || 0)}
+                          required
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white/20">{invoice.currency}</span>
+                      </div>
+                    </div>
+                    <div className="sm:col-span-1 flex justify-center pb-2">
+                      {paymentForm.payments.length > 1 && (
+                        <button 
+                          type="button" 
+                          onClick={() => removePaymentSource(idx)}
+                          className="p-2 text-white/20 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="space-y-1.5">
-                <label className="text-sm text-white/60">{t('common.amount')}</label>
-                <div className="relative">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-white/40">{t('payments.paymentDate')}</label>
                   <input 
-                    type="number" 
-                    step="0.01"
+                    type="date" 
                     className="input-glass"
-                    value={paymentForm.amount}
-                    onChange={e => setPaymentForm({...paymentForm, amount: parseFloat(e.target.value) || 0})}
+                    value={paymentForm.payment_date}
+                    onChange={e => setPaymentForm({...paymentForm, payment_date: e.target.value})}
                     required
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/40">{invoice.currency}</span>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-white/40">{t('payments.reference')}</label>
+                  <input 
+                    type="text" 
+                    className="input-glass"
+                    value={paymentForm.reference}
+                    onChange={e => setPaymentForm({...paymentForm, reference: e.target.value})}
+                    placeholder="e.g. Check #, Transfer Ref"
+                  />
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-sm text-white/60">{t('payments.paymentDate')}</label>
-                <input 
-                  type="date" 
-                  className="input-glass"
-                  value={paymentForm.payment_date}
-                  onChange={e => setPaymentForm({...paymentForm, payment_date: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm text-white/60">{t('payments.reference')}</label>
-                <input 
-                  type="text" 
-                  className="input-glass"
-                  value={paymentForm.reference}
-                  onChange={e => setPaymentForm({...paymentForm, reference: e.target.value})}
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
+
+              <div className="flex gap-3 pt-6 border-t border-white/5">
                 <button type="button" onClick={() => setShowPaymentModal(false)} className="btn-secondary flex-1">
                   {t('common.cancel')}
                 </button>
                 <button type="submit" disabled={loading} className="btn-primary flex-1">
-                  {loading ? t('common.loading') : t('common.save')}
+                  {loading ? t('common.loading') : 'Confirm Payment'}
                 </button>
               </div>
             </form>
