@@ -5,6 +5,7 @@ import { getLocalizedPath } from '@/lib/utils/locale';
 import InvoiceDetailsClient from './InvoiceDetailsClient';
 import { getInvoice } from '@/lib/actions/invoices';
 import { getAccountsWithBalances } from '@/lib/actions/accounts';
+import { getBusinessContext } from '@/lib/actions/businesses';
 
 export default async function InvoicePage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { id, locale } = await params;
