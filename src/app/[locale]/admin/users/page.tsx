@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { Users, Search, AlertCircle, Key } from 'lucide-react';
+import { Users, Search, AlertCircle, Key, MessageSquare } from 'lucide-react';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 export default async function AdminUsersPage(props: { searchParams: Promise<{ q?: string }> }) {
   const searchParams = await props.searchParams;
@@ -69,8 +70,10 @@ export default async function AdminUsersPage(props: { searchParams: Promise<{ q?
                   filteredUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-white/[0.02] transition-colors group">
                       <td className="px-6 py-4">
-                        <div className="font-medium text-white">{u.email || 'No email'}</div>
-                        <div className="text-xs text-white/40 mt-1 font-mono">{u.id}</div>
+                        <Link href={`/en/admin/users/${u.id}`} className="group/link">
+                          <div className="font-medium text-white group-hover/link:text-zenqar-400 transition-colors">{u.email || 'No email'}</div>
+                          <div className="text-xs text-white/40 mt-1 font-mono">{u.id}</div>
+                        </Link>
                       </td>
                       <td className="px-6 py-4 text-white/70">
                         {new Date(u.created_at).toLocaleDateString()}
@@ -80,32 +83,12 @@ export default async function AdminUsersPage(props: { searchParams: Promise<{ q?
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <form action={async () => {
-                            'use server';
-                            const client = await createAdminClient();
-                            const { getAppUrl } = await import('@/lib/env/server');
-                            const appUrl = await getAppUrl();
-                            await client.auth.admin.generateLink({
-                              type: 'recovery',
-                              email: u.email!,
-                              options: { redirectTo: `${appUrl}/en/auth/callback?next=/en/reset-password` },
-                            });
-                          }}>
-                            <button type="submit" className="btn-secondary text-xs px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Key className="w-3 h-3 mr-1" /> Reset Pwd
-                            </button>
-                          </form>
-                          
-                          <form action={async () => {
-                            'use server';
-                            const client = await createAdminClient();
-                            await client.auth.admin.deleteUser(u.id);
-                            redirect('/en/admin/users');
-                          }}>
-                            <button type="submit" className="btn-secondary text-red-400 hover:bg-red-500/10 border-red-500/20 text-xs px-3 py-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                              Delete
-                            </button>
-                          </form>
+                          <Link href={`/en/admin/users/${u.id}`} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-zenqar-400 transition-all shadow-glow-sm" title="Message User">
+                            <MessageSquare className="w-4 h-4" />
+                          </Link>
+                          <Link href={`/en/admin/users/${u.id}`} className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-all shadow-glow-sm" title="User Settings">
+                            <Search className="w-4 h-4" />
+                          </Link>
                         </div>
                       </td>
                     </tr>
