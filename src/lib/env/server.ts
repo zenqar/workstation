@@ -8,21 +8,24 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
  */
 
 export async function getServerEnv() {
+  let cfEnv = {};
   try {
-    // OpenNext specific: getCloudflareContext provides access to Worker bindings
-    // Using async: true is the most reliable way in the latest OpenNext versions
     const cf = await getCloudflareContext({ async: true });
-    if (cf && cf.env) {
-      return { ...process.env, ...cf.env } as any;
-    }
+    if (cf && cf.env) cfEnv = cf.env;
   } catch (e) {
     if (process.env.NODE_ENV === 'development') {
       console.warn('[getServerEnv] getCloudflareContext failed, falling back to process.env');
     }
   }
 
-  // Fallback to process.env for local development
-  return process.env as any;
+  // Aggressively merge all possible environment variable sources.
+  // Cloudflare Pages can inject secrets in various ways depending on the runtime context.
+  return {
+    ...(globalThis as any),
+    ...(globalThis?.process?.env || {}),
+    ...(process?.env || {}),
+    ...cfEnv
+  } as any;
 }
 
 export async function getSupabaseUrl() {
