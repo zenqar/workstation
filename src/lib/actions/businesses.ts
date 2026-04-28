@@ -83,6 +83,45 @@ export async function updateBusiness(businessId: string, data: z.infer<typeof Bu
   return {};
 }
 
+// ── Submit KYC Verification Request ────────────────────────────
+const VerificationSchema = z.object({
+  legal_name: z.string().min(1),
+  tax_id_number: z.string().min(1),
+  business_registration_number: z.string().min(1),
+  incorporation_date: z.string().min(1),
+  industry: z.string().min(1),
+  website: z.string().nullable().optional(),
+});
+
+export async function submitVerificationRequest(businessId: string, data: z.infer<typeof VerificationSchema>): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Unauthorized' };
+
+  const { data: mem } = await supabase.from('business_memberships').select('role')
+    .eq('business_id', businessId).eq('user_id', user.id).eq('status', 'active').single();
+  if (!mem || !['owner', 'admin'].includes(mem.role)) return { error: 'Permission denied' };
+
+  const parsed = VerificationSchema.safeParse(data);
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  // Only allow if unverified or rejected
+  const { data: b } = await supabase.from('businesses').select('verification_status').eq('id', businessId).single();
+  if (b?.verification_status === 'verified' || b?.verification_status === 'pending') {
+    return { error: `Cannot submit. Current status is ${b?.verification_status}` };
+  }
+
+  const { error } = await supabase.from('businesses').update({
+    ...parsed.data,
+    verification_status: 'pending',
+    verification_notes: null, // Clear any past rejection notes
+  }).eq('id', businessId);
+
+  if (error) return { error: 'Failed to submit verification request' };
+  revalidatePath('/app/settings/business');
+  return {};
+}
+
 // ── Update business settings (invoice/payout config) ──────────
 const SettingsSchema = z.object({
   invoice_due_days:         z.number().int().min(0).max(365).optional().default(30),
@@ -221,7 +260,10 @@ export async function getDashboardStats(businessId: string) {
       fxRate,
       fxRateUpdatedAt: fx?.fetched_at ?? null,
       unpaidInvoicesCount: invoices.filter((i) => ['issued', 'sent', 'partially_paid'].includes(i.status)).length,
-      overdueInvoicesCount: invoices.filter((i) => i.status === 'overdue').length,
+      overdueInvoicesCount: invoices.filter((i) => 
+        i.status === 'overdue' || 
+        (['issued', 'sent', 'partially_paid'].includes(i.status) && i.due_date && new Date(i.due_date) < new Date(new Date().setHours(0,0,0,0)))
+      ).length,
       invoicesThisMonth: invoices.filter((i) => i.status !== 'draft' && i.status !== 'cancelled').length,
       paymentsThisMonth: payments.length,
       paymentsAmountIqd: payments.filter((p) => p.currency === 'IQD').reduce((s, p) => s + p.amount, 0),

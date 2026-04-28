@@ -178,9 +178,15 @@ export default function DashboardClient({
                             <div className="text-xs text-white/40 mt-1">{inv.contact?.name || '—'}</div>
                           </td>
                           <td>
-                            <span className={cn('badge', INVOICE_STATUS_COLORS[inv.status as keyof typeof INVOICE_STATUS_COLORS])}>
-                              {t(`invoices.statuses.${inv.status}`)}
-                            </span>
+                            {(() => {
+                              const isOverdue = ['issued', 'sent', 'partially_paid'].includes(inv.status) && inv.due_date && new Date(inv.due_date) < new Date(new Date().setHours(0,0,0,0));
+                              const displayStatus = isOverdue ? 'overdue' : inv.status;
+                              return (
+                                <span className={cn('badge', INVOICE_STATUS_COLORS[displayStatus as keyof typeof INVOICE_STATUS_COLORS])}>
+                                  {t(`invoices.statuses.${displayStatus}`)}
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="text-right">
                             <span className="font-medium tabular-nums">{formatCurrency(inv.total, inv.currency)}</span>

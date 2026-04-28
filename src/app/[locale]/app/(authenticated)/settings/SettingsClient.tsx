@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
-import { getBusinessContext, getTeamMembers, updateBusiness, updateBusinessSettings, inviteTeamMember } from '@/lib/actions/businesses';
-import { Building2, Users, FileText, Globe, Save, Mail, UserPlus } from 'lucide-react';
+import { getBusinessContext, getTeamMembers, updateBusiness, updateBusinessSettings, inviteTeamMember, submitVerificationRequest } from '@/lib/actions/businesses';
+import { Building2, Users, FileText, Globe, Save, Mail, UserPlus, ShieldCheck, AlertCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -23,6 +23,14 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
   // Forms state
   const [bizForm, setBizForm] = useState(initialContext?.business || {});
   const [setForm, setSetForm] = useState(initialContext?.settings || {});
+  const [verificationForm, setVerificationForm] = useState({
+    legal_name: initialContext?.business?.legal_name || initialContext?.business?.name || '',
+    tax_id_number: initialContext?.business?.tax_id_number || '',
+    business_registration_number: initialContext?.business?.business_registration_number || '',
+    incorporation_date: initialContext?.business?.incorporation_date || '',
+    industry: initialContext?.business?.industry || '',
+    website: initialContext?.business?.website || '',
+  });
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState('staff');
 
@@ -38,6 +46,14 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
           setContext(newCtx);
           setBizForm(newCtx?.business || {});
           setSetForm(newCtx?.settings || {});
+          setVerificationForm({
+            legal_name: newCtx?.business?.legal_name || newCtx?.business?.name || '',
+            tax_id_number: newCtx?.business?.tax_id_number || '',
+            business_registration_number: newCtx?.business?.business_registration_number || '',
+            incorporation_date: newCtx?.business?.incorporation_date || '',
+            industry: newCtx?.business?.industry || '',
+            website: newCtx?.business?.website || '',
+          });
           setTeam(newTeam);
           setLoading(false);
         }
@@ -54,6 +70,23 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
     const res = await updateBusiness(activeBusiness.id, bizForm);
     if (res?.error) setMessage({ type: 'error', text: res.error });
     else setMessage({ type: 'success', text: t('settings.savedSuccess') });
+    setSaving(false);
+  };
+
+  const handleSubmitVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeBusiness) return;
+    setSaving(true);
+    setMessage({ type: '', text: '' });
+    const res = await submitVerificationRequest(activeBusiness.id, verificationForm);
+    if (res?.error) setMessage({ type: 'error', text: res.error });
+    else {
+      setMessage({ type: 'success', text: 'Verification request submitted successfully!' });
+      // Refresh context
+      const newCtx = await getBusinessContext(activeBusiness.id);
+      setContext(newCtx);
+      setBizForm(newCtx?.business || {});
+    }
     setSaving(false);
   };
 
@@ -89,6 +122,7 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
   const tabs = [
     { id: 'business', label: t('settings.business'), icon: Building2 },
     { id: 'invoices', label: t('settings.invoiceSettings'), icon: FileText },
+    { id: 'verification', label: 'KYC Verification', icon: Globe },
     { id: 'team', label: t('settings.team'), icon: Users },
   ];
 
@@ -211,6 +245,87 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
                 </div>
               )}
             </form>
+          )}
+
+          {activeTab === 'verification' && (
+            <div className="glass-card p-6 space-y-6">
+              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-zenqar-400" />
+                    Business Verification (KYC)
+                  </h2>
+                  <p className="text-sm text-white/50 mt-1">Verify your business to build trust and unlock higher limits.</p>
+                </div>
+                <div className="text-right">
+                  <span className={cn(
+                    "px-3 py-1 text-xs font-semibold uppercase tracking-wider rounded-full border",
+                    context?.business?.verification_status === 'verified' && "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                    context?.business?.verification_status === 'pending' && "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+                    context?.business?.verification_status === 'rejected' && "bg-red-500/10 text-red-400 border-red-500/20",
+                    context?.business?.verification_status === 'unverified' && "bg-white/5 text-white/40 border-white/10"
+                  )}>
+                    {context?.business?.verification_status || 'unverified'}
+                  </span>
+                </div>
+              </div>
+
+              {context?.business?.verification_notes && context?.business?.verification_status === 'rejected' && (
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex gap-3 text-red-400">
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  <div className="text-sm">
+                    <strong className="block mb-1">Verification Rejected</strong>
+                    {context.business.verification_notes}
+                  </div>
+                </div>
+              )}
+
+              {context?.business?.verification_status === 'pending' && (
+                <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex gap-3 text-yellow-400">
+                  <Clock className="w-5 h-5 shrink-0" />
+                  <div className="text-sm">
+                    Your verification application is currently under review by our compliance team. This typically takes 1-2 business days.
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmitVerification} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-white/60">Legal Business Name</label>
+                    <input type="text" className="input-glass" value={verificationForm.legal_name} onChange={e => setVerificationForm({...verificationForm, legal_name: e.target.value})} disabled={!canEdit || context?.business?.verification_status === 'pending' || context?.business?.verification_status === 'verified'} required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-white/60">Tax ID Number</label>
+                    <input type="text" className="input-glass" value={verificationForm.tax_id_number} onChange={e => setVerificationForm({...verificationForm, tax_id_number: e.target.value})} disabled={!canEdit || context?.business?.verification_status === 'pending' || context?.business?.verification_status === 'verified'} required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-white/60">Business Registration Number</label>
+                    <input type="text" className="input-glass" value={verificationForm.business_registration_number} onChange={e => setVerificationForm({...verificationForm, business_registration_number: e.target.value})} disabled={!canEdit || context?.business?.verification_status === 'pending' || context?.business?.verification_status === 'verified'} required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-white/60">Incorporation Date</label>
+                    <input type="date" className="input-glass" value={verificationForm.incorporation_date} onChange={e => setVerificationForm({...verificationForm, incorporation_date: e.target.value})} disabled={!canEdit || context?.business?.verification_status === 'pending' || context?.business?.verification_status === 'verified'} required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-white/60">Industry</label>
+                    <input type="text" className="input-glass" value={verificationForm.industry} onChange={e => setVerificationForm({...verificationForm, industry: e.target.value})} disabled={!canEdit || context?.business?.verification_status === 'pending' || context?.business?.verification_status === 'verified'} required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm text-white/60">Website</label>
+                    <input type="url" className="input-glass" placeholder="https://" value={verificationForm.website} onChange={e => setVerificationForm({...verificationForm, website: e.target.value})} disabled={!canEdit || context?.business?.verification_status === 'pending' || context?.business?.verification_status === 'verified'} />
+                  </div>
+                </div>
+
+                {canEdit && (!context?.business?.verification_status || context?.business?.verification_status === 'unverified' || context?.business?.verification_status === 'rejected') && (
+                  <div className="flex justify-end pt-4 border-t border-white/5">
+                    <button type="submit" disabled={saving} className="btn-primary">
+                      <ShieldCheck className="w-4 h-4" /> {saving ? t('common.loading') : 'Submit for Verification'}
+                    </button>
+                  </div>
+                )}
+              </form>
+            </div>
           )}
 
           {activeTab === 'team' && (

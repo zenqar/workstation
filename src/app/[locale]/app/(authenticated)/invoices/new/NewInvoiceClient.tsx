@@ -20,6 +20,16 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const getInitialDueDate = () => {
+    const days = initialContext?.settings?.invoice_due_days;
+    if (typeof days === 'number' && days > 0) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().split('T')[0];
+    }
+    return '';
+  };
+
   const [form, setForm] = useState({
     customer_mode: 'existing' as 'existing' | 'custom',
     contact_id: '',
@@ -28,7 +38,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
     save_to_contacts: false,
     currency: initialContext?.settings?.default_currency || 'IQD',
     issue_date: new Date().toISOString().split('T')[0],
-    due_date: '',
+    due_date: getInitialDueDate(),
     discount_percent: 0,
     tax_rate: initialContext?.settings?.invoice_tax_rate || 0,
     notes: initialContext?.settings?.invoice_footer_note || '',
