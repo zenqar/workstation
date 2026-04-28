@@ -78,6 +78,8 @@ export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
   sent:           'Sent',
   partially_paid: 'Partially Paid',
   paid:           'Paid',
+  accepted:       'Accepted',
+  payment_claimed: 'Payment Claimed',
   overdue:        'Overdue',
   cancelled:      'Cancelled',
 };
@@ -88,6 +90,8 @@ export const INVOICE_STATUS_COLORS: Record<InvoiceStatus, string> = {
   sent:           'text-violet-400 bg-violet-400/10 border-violet-400/20',
   partially_paid: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
   paid:           'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+  accepted:       'text-teal-400 bg-teal-400/10 border-teal-400/20',
+  payment_claimed: 'text-orange-400 bg-orange-400/10 border-orange-400/20',
   overdue:        'text-red-400 bg-red-400/10 border-red-400/20',
   cancelled:      'text-gray-500 bg-gray-500/10 border-gray-500/20',
 };
