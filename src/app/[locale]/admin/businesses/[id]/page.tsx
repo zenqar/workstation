@@ -54,12 +54,30 @@ export default async function BusinessDetailsPage(props: { params: Promise<{ id:
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold text-white tracking-tight">{business.name}</h1>
-            <span className={cn(
-              "px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded border",
-              business.verification_status === 'verified' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-white/5 text-white/40 border-white/10"
-            )}>
-              {business.verification_status || 'unverified'}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={cn(
+                "px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded border",
+                business.verification_status === 'verified' ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-white/5 text-white/40 border-white/10"
+              )}>
+                {business.verification_status || 'unverified'}
+              </span>
+              
+              {business.verification_status !== 'verified' && (
+                <form action={async () => {
+                  'use server';
+                  const admin = await createAdminClient();
+                  await admin.from('businesses').update({ 
+                    verification_status: 'verified',
+                    verified_at: new Date().toISOString()
+                  }).eq('id', id);
+                  revalidatePath(`/admin/businesses/${id}`);
+                }}>
+                  <button type="submit" className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500/30 transition-all">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Verify Business
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
           <p className="text-white/40 text-sm font-mono mt-1">{business.id}</p>
         </div>

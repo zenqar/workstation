@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { formatCurrency, formatDate, INVOICE_STATUS_COLORS } from '@/lib/utils';
 import { getTranslations } from 'next-intl/server';
-import { CheckCircle2, XCircle, Building2, Receipt } from 'lucide-react';
+import { CheckCircle2, XCircle, Building2, Receipt, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function VerifyInvoicePage({ params }: { params: Promise<{ token: string; locale: string }> }) {
@@ -61,10 +61,15 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
               <div className="flex flex-col md:flex-row justify-between gap-6 pb-8 border-b border-white/10">
                 <div>
                   <p className="text-sm text-white/50 mb-1">{t('verification.issuedBy')}</p>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-5 h-5 text-white/70" />
-                    <span className="text-lg font-semibold text-white">{invoice.business.name}</span>
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg font-semibold text-white">{invoice.business.name}</span>
+                      {invoice.business.verification_status === 'verified' && (
+                        <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-yellow-500/10 border border-yellow-500/20 text-[9px] font-black uppercase tracking-widest text-yellow-500" title="This company is Zenqar Verified">
+                          <ShieldCheck className="w-3 h-3" />
+                          Verified
+                        </div>
+                      )}
+                    </div>
                   {invoice.business.legal_name && (
                     <p className="text-sm text-white/50 mt-1">{invoice.business.legal_name}</p>
                   )}
