@@ -446,9 +446,21 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
 
               <div className="pt-4 border-t border-white/10 flex items-center justify-between">
                 <span className="text-lg font-bold text-white">{t('common.total')}</span>
-                <span className="text-2xl font-bold text-white tabular-nums">
-                  {total.toLocaleString()} <span className="text-sm text-white/50 font-normal ml-1">{form.currency}</span>
-                </span>
+                <div className="flex flex-col items-end">
+                  <span className="font-bold text-2xl text-white tabular-nums">
+                    {total.toLocaleString()} {form.currency}
+                  </span>
+                  {form.currency === 'USD' && (
+                    <div className="flex flex-col items-end mt-1">
+                      <span className="text-sm font-semibold text-zenqar-400 tabular-nums">
+                        ≈ {Math.round(total * (initialContext?.fxRate || 1310)).toLocaleString()} IQD
+                      </span>
+                      <span className="text-[9px] text-white/30 uppercase tracking-widest mt-0.5">
+                        Market Rate: 1 USD = {(initialContext?.fxRate || 1310).toLocaleString()} IQD
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

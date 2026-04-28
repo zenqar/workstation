@@ -43,10 +43,18 @@ export async function getBusinessContext(businessId: string): Promise<BusinessCo
     supabase.from('businesses').select('*').eq('id', businessId).single(),
     supabase.from('business_settings').select('*').eq('business_id', businessId).maybeSingle(),
     supabase.from('accounts').select('*').eq('business_id', businessId).eq('is_active', true),
+    supabase.from('fx_rate_snapshots').select('rate').order('fetched_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
 
   if (!membership || !business) return null;
-  return { business, membership, role: membership.role, settings: settings ?? null, accounts: accounts ?? [] };
+  return { 
+    business, 
+    membership, 
+    role: membership.role, 
+    settings: settings ?? null, 
+    accounts: accounts ?? [],
+    fxRate: fx?.rate ?? 1310 
+  };
 }
 
 // ── Update business settings ───────────────────────────────────
@@ -258,6 +266,11 @@ export async function getTeamMembers(businessId: string) {
 export async function getDashboardStats(businessId: string) {
   try {
     const supabase = await createClient();
+    
+    // Automatically try to refresh FX rate if stale
+    const { refreshFxRate } = await import('./fx');
+    await refreshFxRate();
+
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
 

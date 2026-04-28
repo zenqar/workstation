@@ -23,9 +23,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ locale
   const businessId = memberships[0].business_id;
 
   try {
-    const [invoice, accounts] = await Promise.all([
+    const [invoice, accounts, businessContext] = await Promise.all([
       getInvoice(businessId, id),
-      getAccountsWithBalances(businessId)
+      getAccountsWithBalances(businessId),
+      getBusinessContext(businessId)
     ]);
 
     if (!invoice) notFound();
@@ -35,6 +36,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ locale
         invoice={invoice}
         accounts={accounts}
         businessId={businessId}
+        fxRate={businessContext?.fxRate || 1310}
       />
     );
   } catch (error) {

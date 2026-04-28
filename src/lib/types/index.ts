@@ -247,6 +247,7 @@ export interface BusinessContext {
   role: UserRole;
   settings: BusinessSettings | null;
   accounts: Account[];
+  fxRate: number;
 }
 
 export type NotificationType = 'invoice_new' | 'invoice_accepted' | 'invoice_paid' | 'invoice_payment_claimed' | 'contact_request' | 'message_new';

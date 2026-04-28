@@ -34,12 +34,15 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
     }
 
     let paymentAccounts: any[] = [];
+    let fxRate = 1310;
+
     if (invoice?.payment_account_ids?.length > 0) {
-      const { data: accs } = await supabase
-        .from('accounts')
-        .select('*')
-        .in('id', invoice.payment_account_ids);
-      paymentAccounts = accs || [];
+      const [accsRes, fxRes] = await Promise.all([
+        supabase.from('accounts').select('*').in('id', invoice.payment_account_ids),
+        supabase.from('fx_rate_snapshots').select('rate').order('fetched_at', { ascending: false }).limit(1).maybeSingle()
+      ]);
+      paymentAccounts = accsRes.data || [];
+      fxRate = fxRes.data?.rate || 1310;
     }
 
   const isValid = invoice && invoice.status !== 'draft' && invoice.status !== 'cancelled';
@@ -161,7 +164,15 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
                   )}
                   <div className="flex justify-between pt-3 border-t border-white/10">
                     <span className="font-semibold text-white">{t('verification.total')}</span>
-                    <span className="font-bold text-lg text-white tabular-nums">{formatCurrency(invoice.total, invoice.currency)}</span>
+                    <div className="text-right">
+                      <span className="font-bold text-lg text-white tabular-nums">{formatCurrency(invoice.total, invoice.currency)}</span>
+                      {invoice.currency === 'USD' && (
+                        <p className="text-[10px] font-bold text-zenqar-400 mt-0.5">
+                          ≈ {Math.round(invoice.total * fxRate).toLocaleString()} IQD
+                          <span className="block text-[8px] text-white/20 uppercase tracking-tighter">Market Street Price (+10%)</span>
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

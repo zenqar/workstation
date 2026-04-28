@@ -8,7 +8,7 @@ import { ArrowLeft, CheckCircle, XCircle, DollarSign, Download, Printer, Share2,
 import Link from 'next/link';
 import { formatCurrency, formatDate, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
 
-export default function InvoiceDetailsClient({ invoice, accounts, businessId }: any) {
+export default function InvoiceDetailsClient({ invoice, accounts, businessId, fxRate }: any) {
   const t = useTranslations();
   const router = useRouter();
   const locale = useLocale();
@@ -230,6 +230,12 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId }: 
                 <p className="text-2xl font-bold text-white tabular-nums">
                   {formatCurrency(invoice.total, invoice.currency)}
                 </p>
+                {invoice.currency === 'USD' && (
+                  <p className="text-xs font-semibold text-zenqar-400 mt-1">
+                    ≈ {Math.round(invoice.total * (fxRate || 1310)).toLocaleString()} IQD
+                    <span className="block text-[8px] text-white/30 uppercase font-bold tracking-tighter mt-0.5">Street Price (+10%)</span>
+                  </p>
+                )}
                 {invoice.amount_paid > 0 && (
                   <p className="text-xs text-emerald-400 mt-1">
                     {t('invoices.amountPaid')}: {formatCurrency(invoice.amount_paid, invoice.currency)}
