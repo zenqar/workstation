@@ -99,6 +99,7 @@ export default async function AdminUsersPage(props: { params: Promise<{ locale: 
             </table>
           </div>
         </div>
+      )}
     </div>
   );
 }
