@@ -51,7 +51,7 @@ export default async function UserWatchdogPage(props: { params: Promise<{ id: st
     admin.from('invoices').select('*, businesses(name)').in('business_id', businessIds),
     admin.from('accounts').select('*').in('business_id', businessIds),
     admin.from('audit_logs').select('*, businesses(name)').eq('actor_user_id', id).order('created_at', { ascending: false }).limit(20),
-    admin.from('messages').select('*, sender:sender_id(email), receiver:receiver_id(email)').or(`sender_id.eq.${id},receiver_id.eq.${id}`).order('created_at', { ascending: false }).limit(20),
+    admin.from('messages').select('*, profiles!sender_id(email), businesses(name)').in('business_id', businessIds).order('created_at', { ascending: false }).limit(50),
     admin.from('support_messages').select('*').eq('recipient_user_id', id).order('created_at', { ascending: true })
   ]);
 
@@ -268,7 +268,7 @@ export default async function UserWatchdogPage(props: { params: Promise<{ id: st
                       {msg.content}
                     </div>
                     <span className="text-[9px] text-white/20 uppercase font-black tracking-widest">
-                      {msg.sender_id === id ? 'User' : msg.sender?.email?.split('@')[0] || 'Peer'} • {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {msg.sender_id === id ? 'User' : msg.profiles?.email?.split('@')[0] || 'Peer'} in {msg.businesses?.name || 'Unknown'} • {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                 )) : (
