@@ -1,6 +1,6 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import Link from 'next/link';
-import { Shield, Home, LogOut } from 'lucide-react';
+import { Shield, Home, LogOut, Building2, Users } from 'lucide-react';
 import { getLocalizedPath } from '@/lib/utils/locale';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
