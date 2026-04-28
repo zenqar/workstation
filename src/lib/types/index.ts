@@ -149,6 +149,7 @@ export interface Invoice {
   snapshot_json: Record<string, unknown> | null;
   snapshot_taken_at: string | null;
   verification_token: string;
+  payment_account_ids: string[];
   created_by: string | null;
   issued_by: string | null;
   issued_at: string | null;
@@ -242,6 +243,7 @@ export interface BusinessContext {
   membership: BusinessMembership;
   role: UserRole;
   settings: BusinessSettings | null;
+  accounts: Account[];
 }
 
 export interface DashboardStats {
@@ -275,6 +277,7 @@ export interface InvoiceFormData {
   tax_rate: number;
   notes: string | null;
   internal_notes: string | null;
+  payment_account_ids?: string[];
 }
 
 export interface InvoiceItemFormData {
