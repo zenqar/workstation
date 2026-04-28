@@ -32,11 +32,16 @@ export async function deleteBusinessNetwork(businessId: string) {
 
     console.log(`Successfully deleted business: ${businessId}`);
     revalidatePath('/admin/businesses');
-    redirect('/en/admin/businesses');
   } catch (err: any) {
+    // If it's a redirect error, rethrow it so Next.js can handle it
+    if (err.digest?.includes('NEXT_REDIRECT')) throw err;
+    
     console.error('Robust delete failed:', err);
     throw new Error('Deletion failed: ' + (err.message || 'Unknown error'));
   }
+
+  // Redirect MUST be outside try/catch
+  redirect('/en/admin/businesses');
 }
 
 export async function sendAdminSupportMessage(businessId: string, message: string) {

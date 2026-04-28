@@ -194,8 +194,8 @@ export default async function UserDetailsPage(props: { params: Promise<{ id: str
             </p>
             <form action={async () => {
               'use server';
-              const admin = await createAdminClient();
-              await admin.auth.admin.deleteUser(user.id);
+              const { deleteUserAccount } = await import('../actions');
+              await deleteUserAccount(id);
             }}>
               <button type="submit" className="w-full py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded shadow-lg shadow-red-500/20 transition-all">
                 PERMANENTLY DELETE USER

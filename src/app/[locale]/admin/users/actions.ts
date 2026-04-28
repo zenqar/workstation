@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 export async function sendAdminUserMessage(userId: string, message: string) {
   const admin = await createAdminClient();
@@ -25,13 +26,19 @@ export async function sendAdminUserMessage(userId: string, message: string) {
 export async function deleteUserAccount(userId: string) {
   const admin = await createAdminClient();
 
-  const { error } = await admin.auth.admin.deleteUser(userId);
+  try {
+    const { error } = await admin.auth.admin.deleteUser(userId);
 
-  if (error) {
-    console.error('Failed to delete user:', error);
-    return { error: error.message };
+    if (error) {
+      console.error('Failed to delete user:', error);
+      return { error: error.message };
+    }
+
+    revalidatePath('/admin/users');
+  } catch (err: any) {
+    if (err.digest?.includes('NEXT_REDIRECT')) throw err;
+    return { error: err.message };
   }
 
-  revalidatePath('/admin/users');
-  return { success: true };
+  redirect('/en/admin/users');
 }
