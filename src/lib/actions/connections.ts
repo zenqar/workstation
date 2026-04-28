@@ -13,7 +13,7 @@ export async function getIncomingContactRequests() {
   const { data, error } = await supabase
     .from('contact_requests')
     .select('*, sender_business:businesses(*)')
-    .eq('receiver_email', user.email)
+    .ilike('receiver_email', user.email || '')
     .eq('status', 'pending');
 
   if (error) {
@@ -34,7 +34,7 @@ export async function handleContactRequest(requestId: string, action: 'accept' |
       .from('contact_requests')
       .select('*')
       .eq('id', requestId)
-      .eq('receiver_email', user.email)
+      .ilike('receiver_email', user.email || '')
       .single();
 
     if (!request) return { error: 'Request not found' };
