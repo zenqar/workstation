@@ -119,21 +119,19 @@ $$;
 -- 3. Retroactively fix existing connected contacts
 do $$
 begin
-  -- Forward contacts
+  -- For any connected contact that lacks a connected_business_id, 
+  -- find the primary business of their connected_user_id.
   update public.contacts c
-  set connected_business_id = cr.receiver_business_id
-  from public.contact_requests cr
-  where c.business_id = cr.sender_business_id
-    and c.email = cr.receiver_email
-    and cr.status = 'accepted'
-    and c.connected_business_id is null;
-    
-  -- Reverse contacts
-  update public.contacts c
-  set connected_business_id = cr.sender_business_id
-  from public.contact_requests cr
-  where c.business_id = cr.receiver_business_id
-    and cr.status = 'accepted'
+  set connected_business_id = (
+    select bm.business_id 
+    from public.business_memberships bm 
+    where bm.user_id = c.connected_user_id 
+      and bm.status = 'active' 
+    order by (case when bm.role = 'owner' then 1 else 2 end) 
+    limit 1
+  )
+  where c.connection_status = 'connected'
+    and c.connected_user_id is not null
     and c.connected_business_id is null;
 end $$;
 
