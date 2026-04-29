@@ -50,13 +50,19 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
         .maybeSingle();
 
       if (reverseContact) {
+        console.log(`[ContactPage] Found reverse contact ${reverseContact.id} in business ${contact.connected_business_id}`);
         const { data: incoming } = await supabase
           .from('invoices')
           .select('*, business:businesses(name)')
           .eq('business_id', contact.connected_business_id)
           .eq('contact_id', reverseContact.id);
           
-        if (incoming) invoices = [...invoices, ...incoming];
+        if (incoming) {
+          console.log(`[ContactPage] Found ${incoming.length} incoming invoices`);
+          invoices = [...invoices, ...incoming];
+        }
+      } else {
+        console.log(`[ContactPage] No reverse contact found for business ${businessId} in ${contact.connected_business_id}`);
       }
     }
 

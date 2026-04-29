@@ -15,6 +15,7 @@ import VariableProximity from '@/components/landing/VariableProximity';
 import ScrollReveal from '@/components/landing/ScrollReveal';
 import DashboardMockup from '@/components/landing/DashboardMockup';
 import DecryptedText from '@/components/landing/DecryptedText';
+import AIChatBot from '@/components/layout/AIChatBot';
 
 // Import CSS
 import '@/app/[locale]/landing.css';
@@ -376,7 +377,7 @@ function VerifyCard({ t }: any) {
   };
 
   return (
-    <ElectricBorder className="verify-card" color="#8b7dff" borderRadius={28}>
+    <ElectricBorder className="verify-card" color="#8b7dff" borderRadius={28} style={{}}>
       <div className="verify-card-inner">
         <div>
           <span className="eyebrow">{t.verifyEyebrow}</span>
@@ -505,7 +506,7 @@ export default function LandingClient() {
             <p>{t.pricingBody}</p>
           </div>
           <div className="pricing-grid single-plan">
-            <ElectricBorder className="pricing-card featured" color="#ff66d9" borderRadius={28}>
+            <ElectricBorder className="pricing-card featured" color="#ff66d9" borderRadius={28} style={{}}>
               <div className="pricing-inner">
                 <div className="badge">{t.nav.free}</div>
                 <h3>{t.pricingName}</h3>
@@ -543,6 +544,7 @@ export default function LandingClient() {
           </BorderGlow>
         </section>
       </main>
+      <AIChatBot />
     </div>
   )
 }

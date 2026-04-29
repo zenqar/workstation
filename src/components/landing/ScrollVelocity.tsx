@@ -10,7 +10,7 @@ import {
 } from 'motion/react';
 import './ScrollVelocity.css';
 
-function useElementWidth(ref) {
+function useElementWidth(ref: any) {
   const [width, setWidth] = useState(0);
 
   useLayoutEffect(() => {
@@ -40,7 +40,7 @@ export const ScrollVelocity = ({
   scrollerClassName = 'scroller',
   parallaxStyle,
   scrollerStyle
-}) => {
+}: any) => {
   function VelocityText({
     children,
     baseVelocity = velocity,
@@ -54,7 +54,7 @@ export const ScrollVelocity = ({
     scrollerClassName,
     parallaxStyle,
     scrollerStyle
-  }) {
+  }: any) {
     const baseX = useMotionValue(0);
     const scrollOptions = scrollContainerRef ? { container: scrollContainerRef } : {};
     const { scrollY } = useScroll(scrollOptions);
@@ -73,28 +73,28 @@ export const ScrollVelocity = ({
     const copyRef = useRef(null);
     const copyWidth = useElementWidth(copyRef);
 
-    function wrap(min, max, v) {
+    function wrap(min: number, max: number, v: number) {
       const range = max - min;
       const mod = (((v - min) % range) + range) % range;
       return mod + min;
     }
 
-    const x = useTransform(baseX, v => {
+    const x = useTransform(baseX, (v: any) => {
       if (copyWidth === 0) return '0px';
       return `${wrap(-copyWidth, 0, v)}px`;
     });
 
     const directionFactor = useRef(1);
-    useAnimationFrame((t, delta) => {
+    useAnimationFrame((t: any, delta: any) => {
       let moveBy = directionFactor.current * baseVelocity * (delta / 1000);
 
-      if (velocityFactor.get() < 0) {
+      if ((velocityFactor as any).get() < 0) {
         directionFactor.current = -1;
-      } else if (velocityFactor.get() > 0) {
+      } else if ((velocityFactor as any).get() > 0) {
         directionFactor.current = 1;
       }
 
-      moveBy += directionFactor.current * moveBy * velocityFactor.get();
+      moveBy += directionFactor.current * moveBy * (velocityFactor as any).get();
       baseX.set(baseX.get() + moveBy);
     });
 
@@ -118,7 +118,7 @@ export const ScrollVelocity = ({
 
   return (
     <section>
-      {texts.map((text, index) => (
+      {texts.map((text: any, index: any) => (
         <VelocityText
           key={index}
           className={className}

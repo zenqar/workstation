@@ -6,6 +6,7 @@ import type { Profile, UserRole, Business } from '@/lib/types';
 import { BusinessProvider } from '@/lib/contexts/BusinessContext';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
+import AIChatBot from './AIChatBot';
 
 interface AppShellProps {
   user: User;
@@ -38,6 +39,7 @@ export default function AppShell({ user, profile, businesses, children }: AppShe
             </div>
           </main>
         </div>
+        <AIChatBot />
       </div>
     </BusinessProvider>
   );

@@ -17,12 +17,12 @@ const ScrollReveal = ({
   textClassName = '',
   rotationEnd = 'bottom bottom',
   wordAnimationEnd = 'bottom bottom'
-}) => {
-  const containerRef = useRef(null);
+}: any) => {
+  const containerRef = useRef<any>(null);
 
   const splitText = useMemo(() => {
     const text = typeof children === 'string' ? children : '';
-    return text.split(/(\s+)/).map((word, index) => {
+    return text.split(/(\s+)/).map((word: any, index: any) => {
       if (word.match(/^\s+$/)) return word;
       return (
         <span className="word" key={index}>

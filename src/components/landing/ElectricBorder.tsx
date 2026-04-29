@@ -1,21 +1,21 @@
 import { useEffect, useRef, useCallback } from 'react';
 import './ElectricBorder.css';
 
-const ElectricBorder = ({ children, color = '#5227FF', speed = 1, chaos = 0.12, borderRadius = 24, className, style }) => {
-  const canvasRef = useRef(null);
-  const containerRef = useRef(null);
-  const animationRef = useRef(null);
+const ElectricBorder = ({ children, color = '#5227FF', speed = 1, chaos = 0.12, borderRadius = 24, className, style }: any) => {
+  const canvasRef = useRef<any>(null);
+  const containerRef = useRef<any>(null);
+  const animationRef = useRef<any>(null);
   const timeRef = useRef(0);
   const lastFrameTimeRef = useRef(0);
 
-  const random = useCallback(x => (Math.sin(x * 12.9898) * 43758.5453) % 1, []);
-  const noise2D = useCallback((x, y) => {
+  const random = useCallback((x: any) => (Math.sin(x * 12.9898) * 43758.5453) % 1, []);
+  const noise2D = useCallback((x: any, y: any) => {
     const i = Math.floor(x), j = Math.floor(y), fx = x - i, fy = y - j;
     const a = random(i + j * 57), b = random(i + 1 + j * 57), c = random(i + (j + 1) * 57), d = random(i + 1 + (j + 1) * 57);
     const ux = fx * fx * (3.0 - 2.0 * fx), uy = fy * fy * (3.0 - 2.0 * fy);
     return a * (1 - ux) * (1 - uy) + b * ux * (1 - uy) + c * (1 - ux) * uy + d * ux * uy;
   }, [random]);
-  const octavedNoise = useCallback((x, octaves, lacunarity, gain, baseAmplitude, baseFrequency, time, seed, baseFlatness) => {
+  const octavedNoise = useCallback((x: any, octaves: any, lacunarity: any, gain: any, baseAmplitude: any, baseFrequency: any, time: any, seed: any, baseFlatness: any) => {
     let y = 0, amplitude = baseAmplitude, frequency = baseFrequency;
     for (let i = 0; i < octaves; i++) {
       let octaveAmplitude = amplitude;
@@ -25,11 +25,11 @@ const ElectricBorder = ({ children, color = '#5227FF', speed = 1, chaos = 0.12, 
     }
     return y;
   }, [noise2D]);
-  const getCornerPoint = useCallback((centerX, centerY, radius, startAngle, arcLength, progress) => {
+  const getCornerPoint = useCallback((centerX: any, centerY: any, radius: any, startAngle: any, arcLength: any, progress: any) => {
     const angle = startAngle + progress * arcLength;
     return { x: centerX + radius * Math.cos(angle), y: centerY + radius * Math.sin(angle) };
   }, []);
-  const getRoundedRectPoint = useCallback((t, left, top, width, height, radius) => {
+  const getRoundedRectPoint = useCallback((t: any, left: any, top: any, width: any, height: any, radius: any) => {
     const straightWidth = width - 2 * radius, straightHeight = height - 2 * radius, cornerArc = (Math.PI * radius) / 2;
     const totalPerimeter = 2 * straightWidth + 2 * straightHeight + 4 * cornerArc, distance = t * totalPerimeter;
     let accumulated = 0;
@@ -62,7 +62,7 @@ const ElectricBorder = ({ children, color = '#5227FF', speed = 1, chaos = 0.12, 
       canvas.width = width * dpr; canvas.height = height * dpr; canvas.style.width = `${width}px`; canvas.style.height = `${height}px`; ctx.scale(dpr, dpr); return { width, height };
     };
     let { width, height } = updateSize();
-    const drawElectricBorder = currentTime => {
+    const drawElectricBorder = (currentTime: any) => {
       const deltaTime = (currentTime - lastFrameTimeRef.current) / 1000; timeRef.current += deltaTime * speed; lastFrameTimeRef.current = currentTime;
       const dpr = Math.min(window.devicePixelRatio || 1, 2); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.scale(dpr, dpr);
       ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
@@ -83,7 +83,7 @@ const ElectricBorder = ({ children, color = '#5227FF', speed = 1, chaos = 0.12, 
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); resizeObserver.disconnect(); };
   }, [color, speed, chaos, borderRadius, octavedNoise, getRoundedRectPoint]);
 
-  const vars = { '--electric-border-color': color, borderRadius };
+  const vars: any = { '--electric-border-color': color, borderRadius };
   return <div ref={containerRef} className={`electric-border ${className ?? ''}`} style={{ ...vars, ...style }}><div className="eb-canvas-container"><canvas ref={canvasRef} className="eb-canvas" /></div><div className="eb-layers"><div className="eb-glow-1" /><div className="eb-glow-2" /><div className="eb-background-glow" /></div><div className="eb-content">{children}</div></div>;
 };
 

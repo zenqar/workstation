@@ -28,6 +28,25 @@ export default function NotificationBell() {
     audioRef.current.play().catch(e => console.log('Audio play blocked by browser', e));
   };
 
+  const showBrowserNotification = (title: string, body: string, link?: string) => {
+    if (!("Notification" in window)) return;
+    
+    if (Notification.permission === "granted") {
+      const notif = new Notification(title, {
+        body,
+        icon: '/zenqar-icon.png',
+        tag: 'zenqar-notification',
+      });
+      notif.onclick = () => {
+        window.focus();
+        if (link) router.push(link);
+        notif.close();
+      };
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+  };
+
   const fetchNotifications = async () => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -57,6 +76,9 @@ export default function NotificationBell() {
   };
 
   useEffect(() => {
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
     fetchNotifications();
 
     const supabase = createClient();
@@ -67,9 +89,12 @@ export default function NotificationBell() {
         event: 'INSERT', 
         schema: 'public', 
         table: 'notifications' 
-      }, (payload) => {
+      }, (payload: any) => {
         fetchNotifications();
         playPing();
+        if (payload.new) {
+          showBrowserNotification(payload.new.title, payload.new.message, payload.new.link);
+        }
       })
       .subscribe();
 
@@ -122,7 +147,19 @@ export default function NotificationBell() {
         <div className="absolute right-0 mt-2 w-80 glass-card shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 border-white/10">
           <div className="px-3 py-2 border-b border-white/5 mb-2 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-white">Notifications</h3>
-            {count > 0 && <span className="text-[10px] text-zenqar-400 font-bold uppercase tracking-widest">{count} NEW</span>}
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  playPing();
+                  showBrowserNotification("Test Notification", "Zenqar sounds and notifications are active!", "/app/dashboard");
+                }}
+                className="text-[10px] text-white/40 hover:text-white transition-colors uppercase font-bold"
+              >
+                Test
+              </button>
+              {count > 0 && <span className="text-[10px] text-zenqar-400 font-bold uppercase tracking-widest">{count} NEW</span>}
+            </div>
           </div>
           
           <div className="max-h-96 overflow-y-auto space-y-2 custom-scrollbar">

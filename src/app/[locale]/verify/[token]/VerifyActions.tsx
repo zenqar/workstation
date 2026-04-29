@@ -27,7 +27,7 @@ export default function VerifyActions({ token, status, locale }: { token: string
     router.refresh();
   };
 
-  if (status === 'paid' || status === 'cancelled') return null;
+  if (status === 'cancelled') return null;
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-8 border-t border-white/10">
@@ -61,8 +61,29 @@ export default function VerifyActions({ token, status, locale }: { token: string
       )}
       
       {status === 'accepted' && (
-        <div className="w-full text-center py-2 text-[10px] uppercase font-black text-emerald-400/60 tracking-widest">
-           You accepted this invoice. Please proceed with payment.
+        <div className="w-full text-center py-4 px-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+          <p className="text-sm font-bold text-emerald-400">Invoice Accepted</p>
+          <p className="text-[10px] uppercase font-black text-emerald-400/60 tracking-widest mt-1">
+             Please proceed with payment using the instructions above.
+          </p>
+        </div>
+      )}
+
+      {status === 'paid' && (
+        <div className="w-full text-center py-4 px-6 rounded-2xl bg-emerald-500/20 border border-emerald-500/40">
+          <p className="text-sm font-bold text-emerald-400">Invoice Paid & Confirmed</p>
+          <p className="text-[10px] uppercase font-black text-emerald-400/60 tracking-widest mt-1">
+             Thank you for your business.
+          </p>
+        </div>
+      )}
+
+      {status === 'draft' && (
+        <div className="w-full text-center py-4 px-6 rounded-2xl bg-white/5 border border-white/10">
+          <p className="text-sm font-bold text-white/60">Invoice Draft</p>
+          <p className="text-[10px] uppercase font-black text-white/30 tracking-widest mt-1">
+             This invoice has not been issued to the customer yet.
+          </p>
         </div>
       )}
     </div>

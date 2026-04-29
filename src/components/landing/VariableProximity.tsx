@@ -2,9 +2,9 @@ import { forwardRef, useMemo, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import './VariableProximity.css';
 
-function useAnimationFrame(callback) {
+function useAnimationFrame(callback: any) {
   useEffect(() => {
-    let frameId;
+    let frameId: any;
     const loop = () => {
       callback();
       frameId = requestAnimationFrame(loop);
@@ -14,11 +14,11 @@ function useAnimationFrame(callback) {
   }, [callback]);
 }
 
-function useMousePositionRef(containerRef) {
+function useMousePositionRef(containerRef: any) {
   const positionRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    const updatePosition = (x, y) => {
+    const updatePosition = (x: any, y: any) => {
       if (containerRef?.current) {
         const rect = containerRef.current.getBoundingClientRect();
         positionRef.current = { x: x - rect.left, y: y - rect.top };
@@ -27,8 +27,8 @@ function useMousePositionRef(containerRef) {
       }
     };
 
-    const handleMouseMove = ev => updatePosition(ev.clientX, ev.clientY);
-    const handleTouchMove = ev => {
+    const handleMouseMove = (ev: any) => updatePosition(ev.clientX, ev.clientY);
+    const handleTouchMove = (ev: any) => {
       const touch = ev.touches[0];
       updatePosition(touch.clientX, touch.clientY);
     };
@@ -44,7 +44,7 @@ function useMousePositionRef(containerRef) {
   return positionRef;
 }
 
-const VariableProximity = forwardRef((props, ref) => {
+const VariableProximity = forwardRef((props: any, ref) => {
   const {
     label,
     fromFontVariationSettings,
@@ -58,18 +58,18 @@ const VariableProximity = forwardRef((props, ref) => {
     ...restProps
   } = props;
 
-  const letterRefs = useRef([]);
-  const interpolatedSettingsRef = useRef([]);
+  const letterRefs = useRef<any>([]);
+  const interpolatedSettingsRef = useRef<any>([]);
   const mousePositionRef = useMousePositionRef(containerRef);
-  const lastPositionRef = useRef({ x: null, y: null });
+  const lastPositionRef = useRef<any>({ x: null, y: null });
 
   const parsedSettings = useMemo(() => {
-    const parseSettings = settingsStr =>
+    const parseSettings = (settingsStr: any) =>
       new Map(
         settingsStr
           .split(',')
-          .map(s => s.trim())
-          .map(s => {
+          .map((s: any) => s.trim())
+          .map((s: any) => {
             const [name, value] = s.split(' ');
             return [name.replace(/["']/g, ''), parseFloat(value)];
           })
@@ -78,16 +78,16 @@ const VariableProximity = forwardRef((props, ref) => {
     const fromSettings = parseSettings(fromFontVariationSettings);
     const toSettings = parseSettings(toFontVariationSettings);
 
-    return Array.from(fromSettings.entries()).map(([axis, fromValue]) => ({
+    return Array.from(fromSettings.entries()).map(([axis, fromValue]: any) => ({
       axis,
       fromValue,
       toValue: toSettings.get(axis) ?? fromValue
     }));
   }, [fromFontVariationSettings, toFontVariationSettings]);
 
-  const calculateDistance = (x1, y1, x2, y2) => Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+  const calculateDistance = (x1: any, y1: any, x2: any, y2: any) => Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 
-  const calculateFalloff = distance => {
+  const calculateFalloff = (distance: any) => {
     const norm = Math.min(Math.max(1 - distance / radius, 0), 1);
     switch (falloff) {
       case 'exponential':
@@ -109,7 +109,7 @@ const VariableProximity = forwardRef((props, ref) => {
     }
     lastPositionRef.current = { x, y };
 
-    letterRefs.current.forEach((letterRef, index) => {
+    letterRefs.current.forEach((letterRef: any, index: any) => {
       if (!letterRef) return;
 
       const rect = letterRef.getBoundingClientRect();
@@ -130,8 +130,8 @@ const VariableProximity = forwardRef((props, ref) => {
 
       const falloffValue = calculateFalloff(distance);
       const newSettings = parsedSettings
-        .map(({ axis, fromValue, toValue }) => {
-          const interpolatedValue = fromValue + (toValue - fromValue) * falloffValue;
+        .map(({ axis, fromValue, toValue }: any) => {
+          const interpolatedValue = (fromValue as any) + ((toValue as any) - (fromValue as any)) * falloffValue;
           return `'${axis}' ${interpolatedValue}`;
         })
         .join(', ');
@@ -152,9 +152,9 @@ const VariableProximity = forwardRef((props, ref) => {
       style={{ display: 'inline', ...style }}
       {...restProps}
     >
-      {words.map((word, wordIndex) => (
+      {words.map((word: any, wordIndex: any) => (
         <span key={wordIndex} style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
-          {word.split('').map(letter => {
+          {word.split('').map((letter: any) => {
             const currentLetterIndex = letterIndex++;
             return (
               <motion.span
