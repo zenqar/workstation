@@ -329,7 +329,7 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
-  }
+}
 .chat-shield {
   padding: 8px 12px;
   border-radius: 999px;
@@ -619,9 +619,7 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
 }
 
 @media (max-width: 760px) {
-  .hero-visual {
-    min-height: 360px !important;
-  }
+  .hero-visual,
   .hero-stage {
     min-height: 360px !important;
   }
@@ -666,9 +664,7 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
 }
 
 @media (max-width: 520px) {
-  .hero-visual {
-    min-height: 310px !important;
-  }
+  .hero-visual,
   .hero-stage {
     min-height: 310px !important;
   }
@@ -682,5 +678,163 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   }
   .hero-dashboard-shell {
     padding: 6px !important;
+  }
+}
+
+/* Better mobile header + dashboard fit */
+@media (max-width: 760px) {
+  .site-header {
+    width: calc(100% - 16px) !important;
+    margin-top: 6px !important;
+    padding: 10px 12px !important;
+    gap: 10px !important;
+    border-radius: 20px !important;
+    top: 6px !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    align-items: center !important;
+  }
+
+  .brand-link {
+    min-width: 0 !important;
+    width: auto !important;
+    justify-content: flex-start !important;
+  }
+
+  .brand-wordmark.single {
+    height: 20px !important;
+  }
+
+  nav {
+    grid-column: 1 / -1 !important;
+    order: 3 !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 10px 14px !important;
+    flex-wrap: wrap !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+
+  .header-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    justify-content: flex-end !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .lang-toggle {
+    padding: 3px !important;
+    gap: 3px !important;
+  }
+
+  .lang-btn {
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+    min-width: 34px !important;
+  }
+
+  .header-btn {
+    min-width: 0 !important;
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .verify-header-btn {
+    display: none !important;
+  }
+
+  .hero-visual,
+  .hero-stage {
+    min-height: 300px !important;
+  }
+
+  .hero-dashboard-shell {
+    padding: 6px !important;
+    border-radius: 18px !important;
+    width: 100% !important;
+  }
+
+  .hero-dashboard-mobile-fit,
+  .dashboard-section-mobile-fit {
+    --dash-scale: min(0.48, calc((100vw - 44px) / 980));
+    height: calc(620px * var(--dash-scale)) !important;
+  }
+
+  .hero-dashboard-mobile-fit .dashboard-scale,
+  .dashboard-section-mobile-fit .dashboard-scale {
+    transform: scale(var(--dash-scale)) !important;
+    margin-bottom: 0 !important;
+  }
+
+  .dashboard-scale-wrap {
+    overflow: hidden !important;
+  }
+
+  .dashboard-scale {
+    width: 980px !important;
+    transform-origin: top left !important;
+    margin-inline-start: 0 !important;
+  }
+
+  .dashboard-ui {
+    min-height: 620px !important;
+  }
+
+  .dashboard-body {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-sidebar {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    padding: 10px !important;
+    border-bottom: 1px solid rgba(255,255,255,.06) !important;
+    border-inline-end: 0 !important;
+  }
+
+  .sidebar-item {
+    padding: 8px !important;
+    font-size: 11px !important;
+    text-align: center !important;
+  }
+
+  .dashboard-main {
+    padding: 10px !important;
+    gap: 10px !important;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  .stat-card {
+    padding: 10px !important;
+  }
+
+  .stat-card strong {
+    font-size: 1.15rem !important;
+  }
+
+  .chart-row,
+  .bottom-row {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .panel {
+    padding: 12px !important;
+  }
+
+  .invoice-row {
+    grid-template-columns: 1fr 1fr auto !important;
+    font-size: 11px !important;
+  }
+
+  .invoice-row span:nth-child(2) {
+    display: none !important;
   }
 }

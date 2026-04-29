@@ -50,9 +50,9 @@ export default function AIChatBot() {
     <div className={cn("fixed bottom-6 z-[100]", isRtl ? "left-6" : "right-6")} dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Chat Window */}
       {isOpen && (
-        <div className="absolute bottom-20 right-0 w-[350px] sm:w-[400px] h-[500px] glass-card-elevated flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 shadow-2xl border-white/10">
+        <div className="absolute bottom-20 right-0 w-[350px] sm:w-[400px] h-[500px] bg-slate-950/95 glass-card-elevated flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 shadow-2xl border-white/10">
           {/* Header */}
-          <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+          <div className="p-4 border-b border-white/5 bg-black/40 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary-gradient flex items-center justify-center">
                 <Bot className="w-5 h-5 text-white" />
@@ -76,8 +76,8 @@ export default function AIChatBot() {
                 <div className={cn(
                   "max-w-[85%] p-3 rounded-2xl text-sm",
                   msg.role === 'user' 
-                    ? "bg-zenqar-600 text-white rounded-br-none" 
-                    : "bg-white/5 border border-white/10 text-white/80 rounded-bl-none"
+                    ? "bg-zenqar-600 text-white rounded-br-none shadow-lg" 
+                    : "bg-slate-900/90 border border-white/10 text-white rounded-bl-none shadow-md"
                 )}>
                   {msg.content}
                 </div>
@@ -85,7 +85,7 @@ export default function AIChatBot() {
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-white/5 border border-white/10 p-3 rounded-2xl rounded-bl-none">
+                <div className="bg-slate-900/90 border border-white/10 p-3 rounded-2xl rounded-bl-none">
                   <div className="flex gap-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce" />
                     <div className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce [animation-delay:0.2s]" />
@@ -97,7 +97,7 @@ export default function AIChatBot() {
           </div>
 
           {/* Input */}
-          <form onSubmit={handleSubmit} className="p-4 border-t border-white/5 bg-white/[0.02]">
+          <form onSubmit={handleSubmit} className="p-4 border-t border-white/5 bg-black/60">
             <div className="relative">
               <input 
                 type="text"

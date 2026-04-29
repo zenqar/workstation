@@ -412,7 +412,7 @@ export default function LandingClient() {
 
       <header className="site-header reveal">
         <Link className="brand brand-link" href="/"><img src="/zenqar-wordmark.png" alt="Zenqar" className="brand-wordmark single" /></Link>
-        <nav className="hidden md:flex">
+        <nav>
           <a href="#features">{t.nav.features}</a>
           <a href="#verify">{t.nav.verify}</a>
           <a href="#workflow">{t.nav.workflow}</a>
