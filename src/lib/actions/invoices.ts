@@ -333,6 +333,28 @@ export async function issueInvoice(
 
   if (error) return { error: error.message || 'Failed to issue invoice' };
 
+  // Notify the customer if they are a connected business
+  try {
+    const admin = await createAdminClient();
+    const { data: inv } = await admin
+      .from('invoices')
+      .select('*, contact:contacts(connected_business_id)')
+      .eq('id', invoiceId)
+      .single();
+
+    if (inv?.contact?.connected_business_id) {
+      await notify(
+        inv.contact.connected_business_id,
+        'invoice_new',
+        'New Invoice Received',
+        `You have received a new invoice ${inv.invoice_number} from ${inv.business_id}.`,
+        `/app/invoices/${inv.id}`
+      );
+    }
+  } catch (err) {
+    console.error('[issueInvoice] Notification failed:', err);
+  }
+
   revalidatePath(`/app/invoices/${invoiceId}`);
   revalidatePath('/app/invoices');
   return {};

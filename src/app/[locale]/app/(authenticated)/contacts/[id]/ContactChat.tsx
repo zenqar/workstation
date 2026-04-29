@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Send, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { sendMessage } from '@/lib/actions/messages';
 
 export default function ContactChat({ contactId, currentUserId, connectedUserId }: { contactId: string; currentUserId: string; connectedUserId: string | null }) {
   const [messages, setMessages] = useState<any[]>([]);
@@ -70,7 +71,7 @@ export default function ContactChat({ contactId, currentUserId, connectedUserId 
     setMessages(prev => [...prev, tempMsg]);
     setNewMessage('');
 
-    const { error } = await supabase.from('messages').insert(msg);
+    const { error } = await sendMessage(contactId, newMessage);
     if (error) {
       console.error('Send error:', error);
       // Remove optimistic msg on error
