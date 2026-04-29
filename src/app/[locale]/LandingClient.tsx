@@ -60,7 +60,7 @@ const copy = {
     ],
     verifyEyebrow: 'Invoice verification',
     verifyTitle: 'Make invoice checking obvious and easy.',
-    verifyBody: 'Give customers and partners a clear way to verify invoice authenticity. Enter your invoice code below.',
+    verifyBody: 'Give customers and partners a clear way to verify invoice authenticity. You can later connect this button to your own verification route.',
     verifyInput: 'Enter invoice number',
     verifyBtn: 'Verify invoice',
     workflowEyebrow: 'How it works',
@@ -127,7 +127,7 @@ const copy = {
     ],
     verifyEyebrow: 'التحقق من الفاتورة',
     verifyTitle: 'اجعل فحص الفاتورة واضحًا وسهلًا.',
-    verifyBody: 'امنح العملاء والشركاء طريقة واضحة للتحقق من صحة الفاتورة. أدخل رقم الفاتورة أدناه.',
+    verifyBody: 'امنح العملاء والشركاء طريقة واضحة للتحقق من صحة الفاتورة. يمكنك لاحقًا ربط هذا الزر بمسار التحقق الخاص بك.',
     verifyInput: 'أدخل رقم الفاتورة',
     verifyBtn: 'تحقق من الفاتورة',
     workflowEyebrow: 'كيف يعمل',
@@ -172,7 +172,7 @@ const copy = {
     featureCards: [
       ['فاکتورکردنی خێرا', 'فاکتوری جوان دروست بکە، دۆخەکەی یەکسەر ببینە و بەبێ ئامرازی زیادە لەسەر پارەدانەکان ئاگاداربە.'],
       ['شوێنی دارایی پارێزراو', 'مامەڵە و خەرجی و ڕاپۆرت و پەیوەندییەکان لە یەک شوێنی ڕوون و ڕێکخراودا کۆبکەوە.'],
-      ['ڕاپۆرت ئامادەی بڕیار', 'ئەو ژمارانە ببینە کە گرنگن لە دیزاینێکدا کە یارمەتیت دەدات بە خێرایی و دڵنیایی بڕیار بدەیت.']
+      ['ڕاپۆرتی ئامادەی بڕیار', 'ئەو ژمارانە ببینە کە گرنگن لە دیزاینێکدا کە یارمەتیت دەدات بە خێرایی و دڵنیایی بڕیار بدەیت.']
     ],
     chatEyebrow: 'پەیوەندی پارێزراو',
     chatTitle: 'گفتوگۆی فاکتور نزیک لە کارەکە بپارێزە.',
@@ -194,7 +194,7 @@ const copy = {
     ],
     verifyEyebrow: 'پشتڕاستکردنەوەی فاکتور',
     verifyTitle: 'پشکنینی فاکتور ئاسان و ڕوون بکە.',
-    verifyBody: 'ڕێگایەکی ڕوون بدە بە کڕیار و هاوبەشەکان بۆ پشتڕاستکردنەوەی دروستی فاکتور. ژمارەی فاکتور لێرە بنووسە.',
+    verifyBody: 'ڕێگایەکی ڕوون بدە بە کڕیار و هاوبەشەکان بۆ پشتڕاستکردنەوەی دروستی فاکتور. دواتر دەتوانیت ئەم دوگمەیە بە ڕێڕەوی خۆت ببەستیت.',
     verifyInput: 'ژمارەی فاکتور بنووسە',
     verifyBtn: 'فاکتور پشتڕاست بکە',
     workflowEyebrow: 'چۆنیەتی کارکردن',
@@ -261,7 +261,7 @@ const copy = {
     ],
     verifyEyebrow: 'Arve kinnitamine',
     verifyTitle: 'Muuda arve kontrollimine ilmselgeks ja lihtsaks.',
-    verifyBody: 'Anna klientidele ja partneritele selge viis arve ehtsuse kontrollimiseks. Sisesta oma arve kood allpool.',
+    verifyBody: 'Anna klientidele ja partneritele selge viis arve ehtsuse kontrollimiseks. Saate selle hiljem ühendada oma kinnitusmarsruudiga.',
     verifyInput: 'Sisesta arve number',
     verifyBtn: 'Kinnita arve',
     workflowEyebrow: 'Kuidas see töötab',
@@ -368,7 +368,6 @@ function SecureChatMock({ t, lang }: any) {
 function VerifyCard({ t }: any) {
   const [code, setCode] = useState('');
   const router = useRouter();
-  const locale = useLocale();
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
@@ -377,7 +376,7 @@ function VerifyCard({ t }: any) {
   };
 
   return (
-    <ElectricBorder className="verify-card" color="#8b7dff" borderRadius={28} style={{}}>
+    <ElectricBorder className="verify-card" color="#8b7dff" borderRadius={28}>
       <div className="verify-card-inner">
         <div>
           <span className="eyebrow">{t.verifyEyebrow}</span>
@@ -404,7 +403,6 @@ export default function LandingClient() {
   const heroTextRef = useRef(null)
   const locale = useLocale() as keyof typeof copy;
   const t = copy[locale] || copy.en;
-  const router = useRouter();
 
   return (
     <div className={`page-shell ${t.dir === 'rtl' ? 'rtl' : ''}`} dir={t.dir}>
@@ -446,7 +444,13 @@ export default function LandingClient() {
             <div className="hero-stage">
               <div className="ghost-atmosphere"><GhostCursor color="#b497cf" brightness={1.35} edgeIntensity={0} trailLength={62} inertia={0.55} grainIntensity={0.03} bloomStrength={0.22} bloomRadius={1.1} bloomThreshold={0.02} fadeDelayMs={1100} fadeDurationMs={1600} mixBlendMode="screen" zIndex={1} /></div>
               <div className="beam-column" />
-              <div className="hero-dashboard-shell"><DashboardMockup /></div>
+              <div className="hero-dashboard-shell">
+                <div className="dashboard-scale-wrap hero-dashboard-mobile-fit">
+                  <div className="dashboard-scale">
+                    <DashboardMockup />
+                  </div>
+                </div>
+              </div>
               <div className="laser-overlay"><LaserFlow color="#ff79c6" horizontalBeamOffset={0.54} verticalBeamOffset={0.02} flowSpeed={0.28} fogIntensity={0.64} horizontalSizing={0.75} verticalSizing={2.15} style={{ zIndex: 5 }} /></div>
               <div className="hero-badge badge-left">{t.heroBadges[0]}</div>
               <div className="hero-badge badge-right">{t.heroBadges[1]}</div>
@@ -506,7 +510,7 @@ export default function LandingClient() {
             <p>{t.pricingBody}</p>
           </div>
           <div className="pricing-grid single-plan">
-            <ElectricBorder className="pricing-card featured" color="#ff66d9" borderRadius={28} style={{}}>
+            <ElectricBorder className="pricing-card featured" color="#ff66d9" borderRadius={28}>
               <div className="pricing-inner">
                 <div className="badge">{t.nav.free}</div>
                 <h3>{t.pricingName}</h3>
