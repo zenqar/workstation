@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import Sidebar from './Sidebar';
 import { useParams } from 'next/navigation';
 import NotificationBell from './NotificationBell';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function TopBar({ user, profile }: { user: User; profile: Profile | null }) {
   const t = useTranslations('common');
@@ -81,6 +82,7 @@ export default function TopBar({ user, profile }: { user: User; profile: Profile
         </div>
 
         <div className="flex items-center gap-2">
+          <LanguageSwitcher />
           <NotificationBell />
           <div className="w-px h-6 bg-white/5 mx-1" />
           <form action={signOut}>
