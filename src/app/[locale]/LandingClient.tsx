@@ -14,6 +14,7 @@ import GlassSurface from '@/components/landing/GlassSurface';
 import VariableProximity from '@/components/landing/VariableProximity';
 import ScrollReveal from '@/components/landing/ScrollReveal';
 import DashboardMockup from '@/components/landing/DashboardMockup';
+import MobileDashboardMockup from '@/components/landing/MobileDashboardMockup';
 import DecryptedText from '@/components/landing/DecryptedText';
 import AIChatBot from '@/components/layout/AIChatBot';
 
@@ -445,11 +446,8 @@ export default function LandingClient() {
               <div className="ghost-atmosphere"><GhostCursor color="#b497cf" brightness={1.35} edgeIntensity={0} trailLength={62} inertia={0.55} grainIntensity={0.03} bloomStrength={0.22} bloomRadius={1.1} bloomThreshold={0.02} fadeDelayMs={1100} fadeDurationMs={1600} mixBlendMode="screen" zIndex={1} /></div>
               <div className="beam-column" />
               <div className="hero-dashboard-shell">
-                <div className="dashboard-scale-wrap hero-dashboard-mobile-fit">
-                  <div className="dashboard-scale">
-                    <DashboardMockup />
-                  </div>
-                </div>
+                <div className="dashboard-desktop-view"><DashboardMockup /></div>
+                <div className="dashboard-mobile-view"><MobileDashboardMockup /></div>
               </div>
               <div className="laser-overlay"><LaserFlow color="#ff79c6" horizontalBeamOffset={0.54} verticalBeamOffset={0.02} flowSpeed={0.28} fogIntensity={0.64} horizontalSizing={0.75} verticalSizing={2.15} style={{ zIndex: 5 }} /></div>
               <div className="hero-badge badge-left">{t.heroBadges[0]}</div>
