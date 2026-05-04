@@ -558,6 +558,7 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   .bubble { max-width: 100%; }
 }
 
+
 .page-shell.rtl { text-align: right; }
 .site-header { margin: 0 auto; top: 12px; }
 .brand-wordmark.single { height: 28px; width: auto; object-fit: contain; }
@@ -594,6 +595,7 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   .lang-toggle { order: -1; }
 }
 
+
 /* Mobile dashboard fit fix */
 .dashboard-scale-wrap {
   width: 100%;
@@ -619,7 +621,9 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
 }
 
 @media (max-width: 760px) {
-  .hero-visual,
+  .hero-visual {
+    min-height: 360px !important;
+  }
   .hero-stage {
     min-height: 360px !important;
   }
@@ -664,7 +668,9 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
 }
 
 @media (max-width: 520px) {
-  .hero-visual,
+  .hero-visual {
+    min-height: 310px !important;
+  }
   .hero-stage {
     min-height: 310px !important;
   }
@@ -680,6 +686,7 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
     padding: 6px !important;
   }
 }
+
 
 /* Better mobile header + dashboard fit */
 @media (max-width: 760px) {
@@ -796,8 +803,8 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   }
 
   .sidebar-item {
-    padding: 8px !important;
     font-size: 11px !important;
+    padding: 8px 6px !important;
     text-align: center !important;
   }
 
@@ -807,7 +814,7 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   }
 
   .stat-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 8px !important;
   }
 
@@ -816,30 +823,81 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   }
 
   .stat-card strong {
-    font-size: 1.15rem !important;
+    font-size: 1rem !important;
   }
 
   .chart-row,
   .bottom-row {
     grid-template-columns: 1fr !important;
-    gap: 10px !important;
+    gap: 8px !important;
   }
 
   .panel {
-    padding: 12px !important;
+    padding: 10px !important;
+  }
+
+  .line-chart {
+    height: 150px !important;
+  }
+
+  .line-chart svg {
+    height: 120px !important;
+  }
+
+  .bars {
+    height: 140px !important;
+  }
+
+  .donut {
+    width: 110px !important;
+    height: 110px !important;
+    -webkit-mask: radial-gradient(circle, transparent 0 38px, #000 39px) !important;
+    mask: radial-gradient(circle, transparent 0 38px, #000 39px) !important;
   }
 
   .invoice-row {
-    grid-template-columns: 1fr 1fr auto !important;
-    font-size: 11px !important;
+    grid-template-columns: 1fr 1fr !important;
+    row-gap: 6px !important;
   }
 
-  .invoice-row span:nth-child(2) {
+  .hero-badge {
     display: none !important;
   }
 }
 
-/* New Mobile Dashboard Mockup Styles */
+@media (max-width: 520px) {
+  .site-header {
+    width: calc(100% - 12px) !important;
+    padding: 8px 10px !important;
+  }
+
+  .brand-wordmark.single {
+    height: 18px !important;
+  }
+
+  nav {
+    gap: 8px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .header-btn {
+    padding: 7px 9px !important;
+    font-size: 10px !important;
+  }
+
+  .hero-dashboard-mobile-fit,
+  .dashboard-section-mobile-fit {
+    --dash-scale: min(0.39, calc((100vw - 28px) / 980));
+  }
+
+  .hero-visual,
+  .hero-stage {
+    min-height: 250px !important;
+  }
+}
+
+
+/* Dedicated mobile dashboard + tighter mobile header */
 .dashboard-mobile-view { display: none; }
 .dashboard-desktop-view { display: block; }
 
@@ -962,16 +1020,122 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
 }
 
 @media (max-width: 760px) {
+  .site-header {
+    width: calc(100% - 12px) !important;
+    margin-top: 4px !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+    border-radius: 18px !important;
+    top: 4px !important;
+    display: grid !important;
+    grid-template-columns: 1fr auto !important;
+    align-items: center !important;
+  }
+
+  .brand-link {
+    min-width: 0 !important;
+    width: auto !important;
+    justify-content: flex-start !important;
+  }
+
+  .brand-wordmark.single {
+    height: 18px !important;
+  }
+
+  nav {
+    grid-column: 1 / -1 !important;
+    order: 3 !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    gap: 8px 10px !important;
+    flex-wrap: wrap !important;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+  }
+
+  .header-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    justify-content: flex-end !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .lang-toggle {
+    padding: 2px !important;
+    gap: 2px !important;
+  }
+
+  .lang-btn {
+    padding: 5px 7px !important;
+    font-size: 10px !important;
+    min-width: 30px !important;
+  }
+
+  .header-btn {
+    min-width: 0 !important;
+    padding: 7px 8px !important;
+    font-size: 10px !important;
+  }
+
+  .verify-header-btn {
+    display: none !important;
+  }
+
+  .hero-visual,
+  .hero-stage {
+    min-height: 280px !important;
+  }
+
+  .hero-dashboard-shell {
+    padding: 6px !important;
+    border-radius: 20px !important;
+    width: 100% !important;
+  }
+
   .dashboard-desktop-view {
     display: none !important;
   }
+
   .dashboard-mobile-view {
     display: block !important;
+  }
+
+  .hero-badge {
+    display: none !important;
+  }
+
+  .brand-rail-grid {
+    grid-template-columns: 1fr 1fr !important;
   }
 }
 
 @media (max-width: 520px) {
+  .site-header {
+    width: calc(100% - 10px) !important;
+    padding: 7px 8px !important;
+  }
+
+  .brand-wordmark.single {
+    height: 16px !important;
+  }
+
+  nav {
+    gap: 6px 8px !important;
+    font-size: 10px !important;
+  }
+
+  .header-btn {
+    padding: 6px 7px !important;
+    font-size: 9px !important;
+  }
+
   .mobile-stat-grid {
     grid-template-columns: 1fr !important;
+  }
+
+  .hero-visual,
+  .hero-stage {
+    min-height: 250px !important;
   }
 }

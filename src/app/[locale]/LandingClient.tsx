@@ -290,7 +290,7 @@ const copy = {
     finalTitle: 'Too finantstöö fookusesse.',
     finalBody: 'Alusta Zenqariga ja anna kasutajatele puhtam viis arveldamise, suhtluse, kinnitamise ja nähtavuse haldamiseks.'
   }
-}
+};
 
 function PoweredBy({ t }: any) {
   return (
@@ -307,7 +307,7 @@ function PoweredBy({ t }: any) {
 
 function LanguageToggle({ currentLocale }: { currentLocale: string }) {
   const router = useRouter();
-  const items = [['en', 'EN'], ['ar', 'AR'], ['ku', 'KU'], ['et', 'ET']]
+  const items = [['en', 'EN'], ['ar', 'AR'], ['ku', 'KU'], ['et', 'ET']];
   
   return (
     <div className="lang-toggle" aria-label="Language switcher">
@@ -326,13 +326,13 @@ function LanguageToggle({ currentLocale }: { currentLocale: string }) {
 }
 
 function SecureChatMock({ t, lang }: any) {
-  const [visibleCount, setVisibleCount] = useState(1)
+  const [visibleCount, setVisibleCount] = useState(1);
 
   useEffect(() => {
-    setVisibleCount(1)
-    const timers = [setTimeout(() => setVisibleCount(2), 700), setTimeout(() => setVisibleCount(3), 1450)]
-    return () => timers.forEach(clearTimeout)
-  }, [lang])
+    setVisibleCount(1);
+    const timers = [setTimeout(() => setVisibleCount(2), 700), setTimeout(() => setVisibleCount(3), 1450)];
+    return () => timers.forEach(clearTimeout);
+  }, [lang]);
 
   return (
     <div className="chat-ui">
@@ -391,7 +391,6 @@ function VerifyCard({ t }: any) {
             placeholder={t.verifyInput}
             value={code}
             onChange={e => setCode(e.target.value)}
-            style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', outline: 'none' }}
           />
           <button type="submit" className="cta-btn cta-primary verify-btn">{t.verifyBtn}</button>
         </form>
@@ -401,9 +400,10 @@ function VerifyCard({ t }: any) {
 }
 
 export default function LandingClient() {
-  const heroTextRef = useRef(null)
+  const heroTextRef = useRef(null);
   const locale = useLocale() as keyof typeof copy;
   const t = copy[locale] || copy.en;
+  const heroT = copy.en;
 
   return (
     <div className={`page-shell ${t.dir === 'rtl' ? 'rtl' : ''}`} dir={t.dir}>
@@ -422,23 +422,26 @@ export default function LandingClient() {
         </nav>
         <div className="header-actions">
           <LanguageToggle currentLocale={locale} />
+          <a className="header-btn verify-header-btn" href="#verify">{t.verifyBtn}</a>
           <Link className="header-btn" href="/login">Login</Link>
-          <BorderGlow className="mini-glow"><Link className="header-btn primary" href="/signup">{t.nav.start}</Link></BorderGlow>
+          <BorderGlow className="mini-glow">
+            <Link className="header-btn primary" href="/signup">{t.nav.start}</Link>
+          </BorderGlow>
         </div>
       </header>
 
       <main id="top">
         <section className="hero reveal">
           <div className="hero-copy" ref={heroTextRef}>
-            <div className="hero-kicker"><img src="/zenqar-icon.png" alt="" className="hero-kicker-icon" /><span>{t.heroKicker}</span></div>
-            <h1><VariableProximity label={t.heroTitle} className={'hero-variable'} fromFontVariationSettings="'wght' 500, 'opsz' 14" toFontVariationSettings="'wght' 1000, 'opsz' 40" containerRef={heroTextRef} radius={150} falloff='gaussian' /></h1>
-            <p>{t.heroBody}</p>
-            <div className="chip-row">{t.heroChips.map((chip) => <span key={chip}>{chip}</span>)}</div>
+            <div className="hero-kicker"><img src="/zenqar-icon.png" alt="" className="hero-kicker-icon" /><span>{heroT.heroKicker}</span></div>
+            <h1><VariableProximity label={heroT.heroTitle} className={'hero-variable'} fromFontVariationSettings="'wght' 500, 'opsz' 14" toFontVariationSettings="'wght' 1000, 'opsz' 40" containerRef={heroTextRef} radius={150} falloff='gaussian' /></h1>
+            <p>{heroT.heroBody}</p>
+            <div className="chip-row">{heroT.heroChips.map((chip) => <span key={chip}>{chip}</span>)}</div>
             <div className="cta-row">
               <BorderGlow className="cta-wrap"><Link className="cta-btn cta-primary" href="/signup">{t.nav.start}</Link></BorderGlow>
               <a className="cta-btn verify-cta" href="#verify">{t.verifyBtn}</a>
             </div>
-            <div className="proof-points">{t.proof.map((item) => <span key={item}>{item}</span>)}</div>
+            <div className="proof-points">{heroT.proof.map((item) => <span key={item}>{item}</span>)}</div>
           </div>
 
           <div className="hero-visual" id="dashboard">
@@ -450,9 +453,9 @@ export default function LandingClient() {
                 <div className="dashboard-mobile-view"><MobileDashboardMockup /></div>
               </div>
               <div className="laser-overlay"><LaserFlow color="#ff79c6" horizontalBeamOffset={0.54} verticalBeamOffset={0.02} flowSpeed={0.28} fogIntensity={0.64} horizontalSizing={0.75} verticalSizing={2.15} style={{ zIndex: 5 }} /></div>
-              <div className="hero-badge badge-left">{t.heroBadges[0]}</div>
-              <div className="hero-badge badge-right">{t.heroBadges[1]}</div>
-              <div className="hero-badge badge-bottom">{t.heroBadges[2]}</div>
+              <div className="hero-badge badge-left">{heroT.heroBadges[0]}</div>
+              <div className="hero-badge badge-right">{heroT.heroBadges[1]}</div>
+              <div className="hero-badge badge-bottom">{heroT.heroBadges[2]}</div>
             </div>
           </div>
         </section>
@@ -513,7 +516,7 @@ export default function LandingClient() {
                 <div className="badge">{t.nav.free}</div>
                 <h3>{t.pricingName}</h3>
                 <div className="price">$0</div>
-                <ul>{t.pricingItems.map((item) => <li key={item}>{item}</li>)}</ul>
+                <ul>{t.pricingItems.map((item: string) => <li key={item}>{item}</li>)}</ul>
                 <div className="cta-row pricing-cta-row">
                   <Link href="/signup" className="plain-btn">{t.nav.start}</Link>
                   <a href="#verify" className="plain-btn subtle">{t.verifyBtn}</a>

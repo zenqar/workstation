@@ -11,10 +11,19 @@ export function generateStaticParams() {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Zenqar — Smart Invoicing & Bookkeeping',
+    default: 'Zenqar — Free Accounting and Invoicing Software',
     template: '%s | Zenqar',
   },
-  description: 'Zenqar is a modern, multilingual bookkeeping and invoicing platform for Iraqi and Kurdish businesses.',
+  description: 'Zenqar is free accounting and invoicing software for modern businesses. Create invoices, track cash flow, manage reporting, and organize finance workflows in one elegant workspace.',
+  keywords: 'free accounting software, free invoicing software, bookkeeping software, cash flow dashboard, reporting software, business finance platform',
+  openGraph: {
+    title: 'Zenqar — Free Accounting and Invoicing Software',
+    description: 'Free accounting and invoicing software with a modern dashboard, glassmorphism interface, reporting, and cash flow visibility.',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
   metadataBase: new URL('https://zenqar.com'),
 };
 
