@@ -50,7 +50,8 @@ export async function getAdminSecret() {
 
 export async function getAppUrl() {
   const env = await getServerEnv();
-  return env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'production' ? 'https://zenqar.com' : 'http://localhost:3000');
+  if (process.env.NODE_ENV === 'production') return 'https://zenqar.com';
+  return (env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
 }
 
 export async function getOpenRouterApiKey() {

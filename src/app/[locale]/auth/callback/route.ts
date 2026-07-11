@@ -2,10 +2,12 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { getSupabaseUrl, getSupabaseAnonKey } from '@/lib/env/server';
+import { getAppUrl } from '@/lib/env/server';
 
 export async function GET(request: Request, { params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const appUrl = await getAppUrl();
   const code = searchParams.get('code');
   let next = searchParams.get('next') ?? `/${locale}/app/dashboard`;
   
@@ -25,7 +27,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     const supabaseAnonKey = await getSupabaseAnonKey();
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      return NextResponse.redirect(`${origin}/${locale}/login?error=Configuration missing`);
+      return NextResponse.redirect(`${appUrl}/${locale}/login?error=Configuration%20missing`);
     }
 
     const supabase = createServerClient(
@@ -46,6 +48,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
     );
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      if (next.endsWith('/reset-password')) {
+        return NextResponse.redirect(`${appUrl}${next}`);
+      }
+
       // Point 8: Check if user has business membership
       const { data: memberships } = await supabase
         .from('business_memberships')
@@ -53,13 +59,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ loca
         .limit(1);
 
       if (!memberships || memberships.length === 0) {
-        return NextResponse.redirect(`${origin}/${locale}/app/onboarding`);
+        return NextResponse.redirect(`${appUrl}/${locale}/app/onboarding`);
       }
 
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${appUrl}${next}`);
     }
   }
 
   // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/${locale}/login?error=Auth verification failed`);
+  return NextResponse.redirect(`${appUrl}/${locale}/login?error=Auth%20verification%20failed`);
 }

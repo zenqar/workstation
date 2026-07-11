@@ -2,7 +2,7 @@
  * Locale Utility Helpers
  */
 
-export const locales = ['en', 'ar', 'ku'];
+export const locales = ['en', 'ar', 'ku', 'et'];
 export const defaultLocale = 'en';
 
 /**
