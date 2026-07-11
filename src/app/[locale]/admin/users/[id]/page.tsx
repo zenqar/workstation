@@ -236,7 +236,7 @@ export default async function UserWatchdogPage(props: { params: Promise<{ id: st
             <div className="glass-card flex flex-col h-[500px]">
               <div className="p-4 border-b border-white/5 flex items-center gap-2 bg-white/[0.02]">
                 <MessageSquare className="w-4 h-4 text-zenqar-400" />
-                <h2 className="text-sm font-black text-white uppercase tracking-widest">Intercepted Chats</h2>
+                <h2 className="text-sm font-black text-white uppercase tracking-widest">Support History</h2>
               </div>
               <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
                 {b2bMessages && b2bMessages.length > 0 ? b2bMessages.map(msg => (

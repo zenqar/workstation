@@ -6,16 +6,19 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { createInvoice } from '@/lib/actions/invoices';
 import { getContacts } from '@/lib/actions/contacts';
-import { Plus, Trash2, ArrowLeft, Save } from 'lucide-react';
+import { getCatalogItems } from '@/lib/actions/catalog';
+import { Plus, Trash2, ArrowLeft, Save, PackagePlus } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-export default function NewInvoiceClient({ defaultBusinessId, initialContacts = [], initialContext }: any) {
+export default function NewInvoiceClient({ defaultBusinessId, initialContacts = [], initialContext, initialCatalog = [] }: any) {
   const t = useTranslations();
   const router = useRouter();
   const locale = useLocale();
   const { activeBusiness } = useBusiness();
   const [contacts, setContacts] = useState(initialContacts || []);
+  const [catalog, setCatalog] = useState(initialCatalog || []);
+  const [selectedCatalogId, setSelectedCatalogId] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -55,7 +58,10 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
 
   useEffect(() => {
     if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
-      getContacts(activeBusiness.id).then(setContacts);
+      Promise.all([getContacts(activeBusiness.id), getCatalogItems(activeBusiness.id)]).then(([nextContacts, nextCatalog]) => {
+        setContacts(nextContacts);
+        setCatalog(nextCatalog);
+      });
     }
   }, [activeBusiness, defaultBusinessId]);
 
@@ -65,6 +71,19 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
   const taxable = subtotal - discountAmount;
   const taxAmount = (taxable * form.tax_rate) / 100;
   const total = taxable + taxAmount;
+
+  const addCatalogItem = () => {
+    const catalogItem = catalog.find((item: any) => item.id === selectedCatalogId);
+    if (!catalogItem) return;
+    const line = {
+      description: catalogItem.description ? `${catalogItem.name} — ${catalogItem.description}` : catalogItem.name,
+      quantity: 1,
+      unit_price: Number(catalogItem.sales_price),
+    };
+    setItems(current => current.length === 1 && !current[0].description && current[0].unit_price === 0 ? [line] : [...current, line]);
+    if (Number(catalogItem.tax_rate) > 0 && form.tax_rate === 0) setForm(current => ({ ...current, tax_rate: Number(catalogItem.tax_rate) }));
+    setSelectedCatalogId('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -274,7 +293,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
 
         <div className="glass-card overflow-hidden">
           <div className="p-5 border-b border-white/5">
-            <h3 className="font-semibold text-white">{t('invoices.lineItems')}</h3>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><h3 className="font-semibold text-white">{t('invoices.lineItems')}</h3><p className="mt-1 text-xs text-white/35">Choose a saved product or service, or enter a custom line below.</p></div><div className="flex flex-col gap-2 sm:flex-row"><select value={selectedCatalogId} onChange={event => setSelectedCatalogId(event.target.value)} className="select-glass min-w-64"><option value="">Add from products & services…</option>{catalog.filter((item: any) => item.currency === form.currency).map((item: any) => <option key={item.id} value={item.id}>{item.name} · {Number(item.sales_price).toLocaleString()} {item.currency}</option>)}</select><button type="button" disabled={!selectedCatalogId} onClick={addCatalogItem} className="btn-secondary disabled:opacity-40"><PackagePlus className="h-4 w-4" /> Add</button></div></div>
           </div>
           <div className="p-0 overflow-x-auto">
             <table className="data-table w-full">

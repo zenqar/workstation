@@ -12,6 +12,7 @@ import {
   Wallet, 
   CreditCard, 
   Receipt, 
+  PackageOpen,
   BarChart3, 
   Settings,
   LifeBuoy
@@ -28,6 +29,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
     { name: t('dashboard'), href: `/${locale}/app/dashboard`, icon: LayoutDashboard },
     { name: t('invoices'), href: `/${locale}/app/invoices`, icon: FileText },
     { name: t('contacts'), href: `/${locale}/app/contacts`, icon: Users },
+    { name: t('catalog'), href: `/${locale}/app/catalog`, icon: PackageOpen },
     { name: t('accounts'), href: `/${locale}/app/accounts`, icon: Wallet },
     { name: t('payments'), href: `/${locale}/app/payments`, icon: CreditCard },
     { name: t('expenses'), href: `/${locale}/app/expenses`, icon: Receipt },

@@ -75,7 +75,7 @@ const copy = {
     pricingTitle: 'One plan. Free.',
     pricingBody: 'Keep the offer simple, clear, and easy to act on.',
     pricingName: 'Zenqar Free',
-    pricingItems: ['Invoicing and tracking', 'Clear dashboard experience', 'Secure team workflow', 'Invoice verification entry point', 'Modern product interface'],
+    pricingItems: ['Professional invoicing and verification', 'Products and services catalog', 'AI-assisted document scanning', 'Private text and voice chat', 'Cash-flow reports and expense tracking', 'Team and contact collaboration'],
     faqEyebrow: 'FAQ',
     faqTitle: 'Questions about the app',
     faqs: [
@@ -547,10 +547,21 @@ export default function LandingClient() {
             </div>
           </BorderGlow>
         </section>
+        <section className="product-update reveal" aria-labelledby="product-update-title">
+          <div className="section-heading narrow"><span className="eyebrow">Included in Zenqar Free</span><h2 id="product-update-title">More bookkeeping work, with less repeated typing.</h2><p>These additions keep everyday sales, expense, contact, and collaboration work connected in one secure workspace.</p></div>
+          <div className="product-update-grid">
+            <article><h3>Products & services catalog</h3><p>Save descriptions, SKUs, units, prices, costs, currencies, and tax defaults once, then reuse them on invoices.</p></article>
+            <article><h3>Faster business connections</h3><p>Connect by Zenqar account email, approve once, and receive a synced company contact with private chat.</p></article>
+            <article><h3>AI document capture</h3><p>Extract supplier, total, currency, date, and category from receipts or invoices while keeping a human review step.</p></article>
+            <article><h3>Private voice and text chat</h3><p>Keep invoice questions close to the customer record with participant-only messages and signed voice playback.</p></article>
+            <article><h3>Financial reporting</h3><p>See monthly income, expenses, net cash movement, receivables, and category-level spending by currency.</p></article>
+            <article><h3>Safer administration</h3><p>Monitor platform workload and audit events without exposing private business-to-business message content.</p></article>
+          </div>
+        </section>
       </main>
       <footer className="site-footer">
         <p>© {new Date().getFullYear()} Zenqar. Free invoicing and bookkeeping for modern businesses.</p>
-        <p>AI document scanning engineering led by Robin-Kevin Vettik, with Robillionair and Xelvon AI Models.</p>
+        <p>AI document scanning engineering led by Robin-Kevin Vettik, with <a href="https://robillionair.com" target="_blank" rel="noopener noreferrer">Robillionair</a> and Xelvon AI Models. <a href="https://robillionair.com" target="_blank" rel="noopener noreferrer">Explore the AI work</a>.</p>
       </footer>
       <AIChatBot />
     </div>

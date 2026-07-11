@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
-import { BarChart3, CircleDollarSign, Receipt, Scale } from 'lucide-react';
+import { BarChart3, CircleDollarSign, Download, Receipt, Scale } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
 import { formatCurrency } from '@/lib/utils';
@@ -58,7 +58,7 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-8 pb-10">
-      <div><h1 className="text-2xl font-bold text-white">Financial reports</h1><p className="mt-1 text-sm text-white/45">A current-month cash summary and open invoice position, separated by currency.</p></div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><h1 className="text-2xl font-bold text-white">Financial reports</h1><p className="mt-1 text-sm text-white/45">A current-month cash summary and open invoice position, separated by currency.</p></div><a href={`/api/exports/transactions?businessId=${membership.business_id}`} className="btn-secondary"><Download className="h-4 w-4" /> Download bookkeeping CSV</a></div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map(card => <div key={card.label} className="glass-card p-5"><div className="flex items-center justify-between"><p className="text-xs uppercase tracking-wide text-white/40">{card.label}</p><card.icon className={`h-5 w-5 ${card.color}`} /></div><p className="mt-4 text-xl font-bold text-white">{formatCurrency(card.values.IQD, 'IQD')}</p><p className="mt-1 text-sm text-white/55">{formatCurrency(card.values.USD, 'USD')}</p></div>)}
       </div>

@@ -1,10 +1,11 @@
-import { getTranslations, getLocale } from 'next-intl/server';
+import { getLocale } from 'next-intl/server';
 import Link from 'next/link';
-import { Shield, Home, LogOut, Building2, Users, MessageSquare } from 'lucide-react';
+import { Shield, Home, LogOut, Building2, Users, MessageSquare, ScrollText } from 'lucide-react';
 import { getLocalizedPath } from '@/lib/utils/locale';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const t = await getTranslations();
   const locale = await getLocale();
 
   return (
@@ -31,12 +32,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link href={getLocalizedPath(locale, '/admin/support')} className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">
             <MessageSquare className="w-4 h-4" /> Messages
           </Link>
+          <Link href={getLocalizedPath(locale, '/admin/audit')} className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-colors">
+            <ScrollText className="w-4 h-4" /> Operations & Audit
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-white/5">
-          <Link href={getLocalizedPath(locale, '/app/dashboard')} className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-white/50 hover:text-white transition-colors">
-            <LogOut className="w-4 h-4" /> Exit Admin
-          </Link>
+          <form action={async () => { 'use server'; const store = await cookies(); store.delete('zenqar_admin_verified'); redirect(getLocalizedPath(locale, '/admin/login')); }}><button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/5 hover:text-white"><LogOut className="w-4 h-4" /> Secure sign out</button></form>
         </div>
       </aside>
 
@@ -62,6 +64,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link href={getLocalizedPath(locale, '/admin/support')} className="p-2 text-white/50 hover:text-white transition-colors" title="Messages">
                 <MessageSquare className="w-4 h-4" />
               </Link>
+              <Link href={getLocalizedPath(locale, '/admin/audit')} className="p-2 text-white/50 hover:text-white transition-colors" title="Operations and audit"><ScrollText className="w-4 h-4" /></Link>
             </nav>
             <div className="w-px h-4 bg-white/10" />
             <Link href={getLocalizedPath(locale, '/app/dashboard')} className="text-sm text-white/50">Exit</Link>

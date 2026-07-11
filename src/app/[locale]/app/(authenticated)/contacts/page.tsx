@@ -4,6 +4,7 @@ import ContactsClient from './ContactsClient';
 import { getContacts } from '@/lib/actions/contacts';
 import { getLocale } from 'next-intl/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
+import { getIncomingContactRequests } from '@/lib/actions/connections';
 
 export default async function ContactsPage() {
   const locale = await getLocale();
@@ -20,12 +21,13 @@ export default async function ContactsPage() {
   if (!memberships || memberships.length === 0) redirect(getLocalizedPath(locale, '/signup'));
 
   const defaultBusinessId = memberships[0].business_id;
-  const initialContacts = await getContacts(defaultBusinessId);
+  const [initialContacts, initialIncoming] = await Promise.all([getContacts(defaultBusinessId), getIncomingContactRequests()]);
 
   return (
     <ContactsClient 
       defaultBusinessId={defaultBusinessId}
       initialContacts={initialContacts}
+      initialIncoming={initialIncoming}
     />
   );
 }

@@ -5,6 +5,7 @@ import { getLocalizedPath } from '@/lib/utils/locale';
 import NewInvoiceClient from './NewInvoiceClient';
 import { getContacts } from '@/lib/actions/contacts';
 import { getBusinessContext } from '@/lib/actions/businesses';
+import { getCatalogItems } from '@/lib/actions/catalog';
 
 export default async function NewInvoicePage() {
   const locale = await getLocale();
@@ -27,9 +28,10 @@ export default async function NewInvoicePage() {
     redirect(getLocalizedPath(locale, '/app/invoices'));
   }
 
-  const [contacts, businessContext] = await Promise.all([
+  const [contacts, businessContext, catalogItems] = await Promise.all([
     getContacts(defaultBusinessId),
-    getBusinessContext(defaultBusinessId)
+    getBusinessContext(defaultBusinessId),
+    getCatalogItems(defaultBusinessId)
   ]);
 
   return (
@@ -37,6 +39,7 @@ export default async function NewInvoicePage() {
       defaultBusinessId={defaultBusinessId}
       initialContacts={contacts}
       initialContext={businessContext}
+      initialCatalog={catalogItems}
     />
   );
 }

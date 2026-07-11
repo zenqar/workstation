@@ -47,6 +47,7 @@ export default function ContactChat({ contactId, currentUserId, connectedUserId 
         .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${connectedUserId}),and(sender_id.eq.${connectedUserId},receiver_id.eq.${currentUserId})`)
         .order('created_at', { ascending: true });
       const hydrated = await Promise.all((data || []).map(message => addSignedAudioUrl(message as ChatMessage)));
+      await supabase.from('messages').update({ is_read: true }).eq('receiver_id', currentUserId).eq('sender_id', connectedUserId).eq('is_read', false);
       if (active) {
         setMessages(hydrated);
         setLoading(false);
@@ -57,7 +58,10 @@ export default function ContactChat({ contactId, currentUserId, connectedUserId 
     const channel = supabase.channel(`messages:${currentUserId}:${connectedUserId}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${currentUserId}` }, payload => {
         const message = payload.new as ChatMessage;
-        if (message.sender_id === connectedUserId) void addSignedAudioUrl(message).then(hydrated => setMessages(previous => [...previous, hydrated]));
+        if (message.sender_id === connectedUserId) void addSignedAudioUrl(message).then(async hydrated => {
+          setMessages(previous => previous.some(existing => existing.id === hydrated.id) ? previous : [...previous, hydrated]);
+          await supabase.from('messages').update({ is_read: true }).eq('id', hydrated.id).eq('receiver_id', currentUserId);
+        });
       }).subscribe();
     return () => {
       active = false;

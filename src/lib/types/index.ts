@@ -106,6 +106,9 @@ export interface Contact {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  connected_user_id?: string | null;
+  connected_business_id?: string | null;
+  connection_status?: 'none' | 'pending' | 'connected';
 }
 
 export interface Account {
@@ -210,6 +213,24 @@ export interface Expense {
   // Joined
   account?: Account;
   contact?: Contact;
+}
+
+export interface CatalogItem {
+  id: string;
+  business_id: string;
+  item_type: 'product' | 'service';
+  name: string;
+  description: string | null;
+  sku: string | null;
+  unit: string;
+  sales_price: number;
+  purchase_cost: number;
+  currency: CurrencyCode;
+  tax_rate: number;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface MoneyTransaction {
