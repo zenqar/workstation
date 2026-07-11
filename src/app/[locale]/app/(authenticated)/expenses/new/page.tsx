@@ -34,7 +34,6 @@ export default async function NewExpensePage() {
 
   return (
     <NewExpenseClient 
-      defaultBusinessId={defaultBusinessId}
       accounts={accounts}
       contacts={contacts}
     />

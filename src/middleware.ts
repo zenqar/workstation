@@ -3,12 +3,12 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { routing } from './i18n/routing';
  
-export const runtime = 'experimental-edge';
-
 import { getSupabaseUrl, getSupabaseAnonKey, getAdminSecret } from './lib/env/server';
 import { getLocalizedPath } from './lib/utils/locale';
 
 const intlMiddleware = createMiddleware(routing);
+
+export const runtime = 'experimental-edge';
 
 // Routes that don't require Supabase authentication
 const PUBLIC_PATHS = [
@@ -18,11 +18,15 @@ const PUBLIC_PATHS = [
   '/forgot-password',
   '/reset-password',
   '/admin/login',
-  '/api/env-check',
+  '/robots.txt',
+  '/sitemap.xml',
+  '/manifest.webmanifest',
 ];
 
+const LOCALE_PREFIX = /^\/(en|ar|ku|et)(?=\/|$)/;
+
 function isPublicPath(pathname: string): boolean {
-  const withoutLocale = pathname.replace(/^\/(en|ar|ku)/, '') || '/';
+  const withoutLocale = pathname.replace(LOCALE_PREFIX, '') || '/';
   return (
     PUBLIC_PATHS.some((p) => withoutLocale === p || withoutLocale.startsWith(p + '/')) ||
     withoutLocale.startsWith('/verify/') ||
@@ -31,12 +35,12 @@ function isPublicPath(pathname: string): boolean {
 }
 
 function isAdminPath(pathname: string): boolean {
-  const withoutLocale = pathname.replace(/^\/(en|ar|ku)/, '') || '/';
+  const withoutLocale = pathname.replace(LOCALE_PREFIX, '') || '/';
   return withoutLocale.startsWith('/admin') && withoutLocale !== '/admin/login';
 }
 
 function getLocaleFromPathname(pathname: string): string {
-  const match = pathname.match(/^\/(en|ar|ku)/);
+  const match = pathname.match(LOCALE_PREFIX);
   return match ? match[1] : 'en';
 }
 
@@ -119,7 +123,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Redirect authenticated users away from auth pages
-    const withoutLocale = pathname.replace(/^\/(en|ar|ku)/, '') || '/';
+    const withoutLocale = pathname.replace(LOCALE_PREFIX, '') || '/';
     if (user && ['/login', '/signup', '/forgot-password'].includes(withoutLocale)) {
       return NextResponse.redirect(new URL(getLocalizedPath(locale, '/app/dashboard'), request.url));
     }
@@ -133,6 +137,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

@@ -9,23 +9,27 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-export const metadata: Metadata = {
-  title: {
-    default: 'Zenqar — Free Accounting and Invoicing Software',
-    template: '%s | Zenqar',
-  },
-  description: 'Zenqar is free accounting and invoicing software for modern businesses. Create invoices, track cash flow, manage reporting, and organize finance workflows in one elegant workspace.',
-  keywords: 'free accounting software, free invoicing software, bookkeeping software, cash flow dashboard, reporting software, business finance platform',
-  openGraph: {
-    title: 'Zenqar — Free Accounting and Invoicing Software',
-    description: 'Free accounting and invoicing software with a modern dashboard, glassmorphism interface, reporting, and cash flow visibility.',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-  },
-  metadataBase: new URL('https://zenqar.com'),
-};
+const siteDescription = 'Free invoicing and bookkeeping software for small businesses. Track expenses, cash flow, payments, contacts, and reports in one secure workspace.';
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const canonicalLocale = locales.includes(locale as (typeof locales)[number]) ? locale : 'en';
+  return {
+    metadataBase: new URL('https://zenqar.com'),
+    title: { default: 'Zenqar — Free Invoicing and Bookkeeping Software', template: '%s | Zenqar' },
+    description: siteDescription,
+    applicationName: 'Zenqar',
+    authors: [{ name: 'Zenqar Engineering' }, { name: 'Robin-Kevin Vettik' }],
+    creator: 'Zenqar Engineering',
+    publisher: 'Zenqar',
+    keywords: ['free bookkeeping software', 'free invoicing software', 'expense tracking', 'cash flow dashboard', 'invoice scanner', 'small business accounting', 'IQD invoicing', 'USD invoicing'],
+    alternates: { canonical: `/${canonicalLocale}`, languages: Object.fromEntries(locales.map(code => [code, `/${code}`])) },
+    openGraph: { title: 'Zenqar — Free Invoicing and Bookkeeping Software', description: siteDescription, url: `/${canonicalLocale}`, siteName: 'Zenqar', locale: canonicalLocale, type: 'website', images: [{ url: '/zenqar-wordmark.png', width: 1200, height: 630, alt: 'Zenqar bookkeeping workspace' }] },
+    twitter: { card: 'summary_large_image', title: 'Zenqar — Free Invoicing and Bookkeeping Software', description: siteDescription, images: ['/zenqar-wordmark.png'] },
+    robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 } },
+    category: 'business',
+  };
+}
 
 export default async function LocaleLayout({ 
   children,
@@ -36,7 +40,7 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
   
-  if (!locales.includes(locale as any)) {
+  if (!locales.includes(locale as (typeof locales)[number])) {
     notFound();
   }
 

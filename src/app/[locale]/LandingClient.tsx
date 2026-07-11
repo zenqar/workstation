@@ -61,8 +61,8 @@ const copy = {
     ],
     verifyEyebrow: 'Invoice verification',
     verifyTitle: 'Make invoice checking obvious and easy.',
-    verifyBody: 'Give customers and partners a clear way to verify invoice authenticity. You can later connect this button to your own verification route.',
-    verifyInput: 'Enter invoice number',
+    verifyBody: 'Enter an invoice verification code to check its authenticity, issuer, status, and amount securely.',
+    verifyInput: 'Enter verification code',
     verifyBtn: 'Verify invoice',
     workflowEyebrow: 'How it works',
     workflowTitle: 'Built to turn complex finance work into a clear path.',
@@ -80,7 +80,7 @@ const copy = {
     faqTitle: 'Questions about the app',
     faqs: [
       ['What can I do with Zenqar?', 'Zenqar is designed for invoicing, bookkeeping workflows, cash flow visibility, reporting, expense awareness, and team collaboration in one place.'],
-      ['Can I verify invoices?', 'Yes. The landing page includes a prominent Verify invoice action so you can later connect it to your preferred verification route.'],
+      ['Can I verify invoices?', 'Yes. Enter the verification code from a Zenqar invoice to check its authenticity and current status.'],
       ['Does Zenqar support secure communication?', 'Yes. Zenqar is positioned as a secure business workspace where teams can coordinate around invoices, approvals, and finance operations.'],
       ['Can my team use it together?', 'Yes. Zenqar supports team access so finance, operations, and leadership can work together with role-aware visibility.'],
       ['Is it free?', 'YES !'],
@@ -403,7 +403,6 @@ export default function LandingClient() {
   const heroTextRef = useRef(null);
   const locale = useLocale() as keyof typeof copy;
   const t = copy[locale] || copy.en;
-  const heroT = copy.en;
 
   return (
     <div className={`page-shell ${t.dir === 'rtl' ? 'rtl' : ''}`} dir={t.dir}>
@@ -433,15 +432,15 @@ export default function LandingClient() {
       <main id="top">
         <section className="hero reveal">
           <div className="hero-copy" ref={heroTextRef}>
-            <div className="hero-kicker"><img src="/zenqar-icon.png" alt="" className="hero-kicker-icon" /><span>{heroT.heroKicker}</span></div>
-            <h1><VariableProximity label={heroT.heroTitle} className={'hero-variable'} fromFontVariationSettings="'wght' 500, 'opsz' 14" toFontVariationSettings="'wght' 1000, 'opsz' 40" containerRef={heroTextRef} radius={150} falloff='gaussian' /></h1>
-            <p>{heroT.heroBody}</p>
-            <div className="chip-row">{heroT.heroChips.map((chip) => <span key={chip}>{chip}</span>)}</div>
+            <div className="hero-kicker"><img src="/zenqar-icon.png" alt="" className="hero-kicker-icon" /><span>{t.heroKicker}</span></div>
+            <h1><VariableProximity label={t.heroTitle} className={'hero-variable'} fromFontVariationSettings="'wght' 500, 'opsz' 14" toFontVariationSettings="'wght' 1000, 'opsz' 40" containerRef={heroTextRef} radius={150} falloff='gaussian' /></h1>
+            <p>{t.heroBody}</p>
+            <div className="chip-row">{t.heroChips.map((chip) => <span key={chip}>{chip}</span>)}</div>
             <div className="cta-row">
               <BorderGlow className="cta-wrap"><Link className="cta-btn cta-primary" href="/signup">{t.nav.start}</Link></BorderGlow>
               <a className="cta-btn verify-cta" href="#verify">{t.verifyBtn}</a>
             </div>
-            <div className="proof-points">{heroT.proof.map((item) => <span key={item}>{item}</span>)}</div>
+            <div className="proof-points">{t.proof.map((item) => <span key={item}>{item}</span>)}</div>
           </div>
 
           <div className="hero-visual" id="dashboard">
@@ -453,9 +452,9 @@ export default function LandingClient() {
                 <div className="dashboard-mobile-view"><MobileDashboardMockup /></div>
               </div>
               <div className="laser-overlay"><LaserFlow color="#ff79c6" horizontalBeamOffset={0.54} verticalBeamOffset={0.02} flowSpeed={0.28} fogIntensity={0.64} horizontalSizing={0.75} verticalSizing={2.15} style={{ zIndex: 5 }} /></div>
-              <div className="hero-badge badge-left">{heroT.heroBadges[0]}</div>
-              <div className="hero-badge badge-right">{heroT.heroBadges[1]}</div>
-              <div className="hero-badge badge-bottom">{heroT.heroBadges[2]}</div>
+              <div className="hero-badge badge-left">{t.heroBadges[0]}</div>
+              <div className="hero-badge badge-right">{t.heroBadges[1]}</div>
+              <div className="hero-badge badge-bottom">{t.heroBadges[2]}</div>
             </div>
           </div>
         </section>
@@ -549,6 +548,10 @@ export default function LandingClient() {
           </BorderGlow>
         </section>
       </main>
+      <footer className="site-footer">
+        <p>© {new Date().getFullYear()} Zenqar. Free invoicing and bookkeeping for modern businesses.</p>
+        <p>AI document scanning engineering led by Robin-Kevin Vettik, with Robillionair and Xelvon AI Models.</p>
+      </footer>
       <AIChatBot />
     </div>
   )

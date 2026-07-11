@@ -1,6 +1,8 @@
 import 'server-only';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
+type ServerEnvironment = Record<string, string | undefined>;
+
 /**
  * Global Environment Helper for Cloudflare Workers (OpenNext)
  * This utility ensures that environment variables are correctly read from 
@@ -8,11 +10,11 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
  */
 
 export async function getServerEnv() {
-  let cfEnv = {};
+  let cfEnv: ServerEnvironment = {};
   try {
     const cf = await getCloudflareContext({ async: true });
-    if (cf && cf.env) cfEnv = cf.env;
-  } catch (e) {
+    if (cf && cf.env) cfEnv = cf.env as unknown as ServerEnvironment;
+  } catch {
     if (process.env.NODE_ENV === 'development') {
       console.warn('[getServerEnv] getCloudflareContext failed, falling back to process.env');
     }
@@ -21,11 +23,9 @@ export async function getServerEnv() {
   // Aggressively merge all possible environment variable sources.
   // Cloudflare Pages can inject secrets in various ways depending on the runtime context.
   return {
-    ...(globalThis as any),
-    ...(globalThis?.process?.env || {}),
-    ...(process?.env || {}),
+    ...(process.env || {}),
     ...cfEnv
-  } as any;
+  } as ServerEnvironment;
 }
 
 export async function getSupabaseUrl() {
@@ -45,11 +45,20 @@ export async function getSupabaseServiceRoleKey() {
 
 export async function getAdminSecret() {
   const env = await getServerEnv();
-  // Provide a safe fallback if Cloudflare environment bindings are completely stripped by OpenNext Server Actions
-  return env.ADMIN_SECRET || 'zenqar_admin_2026';
+  return env.ADMIN_SECRET;
 }
 
 export async function getAppUrl() {
   const env = await getServerEnv();
-  return env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  return env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'production' ? 'https://zenqar.com' : 'http://localhost:3000');
+}
+
+export async function getOpenRouterApiKey() {
+  const env = await getServerEnv();
+  return env.OPENROUTER_API_KEY;
+}
+
+export async function getOpenRouterModel() {
+  const env = await getServerEnv();
+  return env.OPENROUTER_MODEL || 'nvidia/nemotron-nano-12b-v2-vl:free';
 }

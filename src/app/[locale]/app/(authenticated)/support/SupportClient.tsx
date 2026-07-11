@@ -6,24 +6,40 @@ import {
   MessageSquare, 
   Send, 
   ShieldCheck, 
-  Clock, 
-  AlertCircle,
   HelpCircle,
   ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
-import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
+import Link from 'next/link';
+
+type SupportMessage = {
+  id: string;
+  business_id: string | null;
+  recipient_user_id: string | null;
+  sender_type: 'business' | 'user' | 'admin';
+  sender_user_id?: string | null;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+};
 
 export default function SupportClient() {
-  const t = useTranslations();
+  const locale = useLocale();
   const { activeBusiness } = useBusiness();
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
+
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+    }, 100);
+  };
 
   useEffect(() => {
     // Load initial messages
@@ -60,7 +76,7 @@ export default function SupportClient() {
         },
         async (payload) => {
           const { data: { user } } = await supabase.auth.getUser();
-          const msg = payload.new;
+          const msg = payload.new as SupportMessage;
           
           // Only show if it belongs to this business or this user directly
           const isForThisBusiness = activeBusiness && msg.business_id === activeBusiness.id;
@@ -77,16 +93,7 @@ export default function SupportClient() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeBusiness]);
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      scrollRef.current?.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-    }, 100);
-  };
+  }, [activeBusiness, supabase]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +102,9 @@ export default function SupportClient() {
     setSending(true);
     const { data: { user } } = await supabase.auth.getUser();
 
-    const payload: any = {
+    const payload: Omit<SupportMessage, 'id' | 'created_at'> = {
+      business_id: null,
+      recipient_user_id: null,
       sender_type: activeBusiness ? 'business' : 'user',
       message: newMessage,
       is_read: false,
@@ -251,18 +260,18 @@ export default function SupportClient() {
               Browse our guides to get the most out of Zenqar.
             </p>
             <div className="space-y-2">
-              <a href="#" className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
+              <Link href={`/${locale}/app/onboarding`} className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
                 <span className="text-sm text-white/70 group-hover:text-white">Getting Started</span>
                 <ExternalLink className="w-3 h-3 text-white/20 group-hover:text-zenqar-400" />
-              </a>
-              <a href="#" className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
+              </Link>
+              <Link href={`/${locale}/app/accounts`} className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
                 <span className="text-sm text-white/70 group-hover:text-white">Managing Wallets</span>
                 <ExternalLink className="w-3 h-3 text-white/20 group-hover:text-zenqar-400" />
-              </a>
-              <a href="#" className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
+              </Link>
+              <Link href={`/${locale}/app/settings`} className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-colors group">
                 <span className="text-sm text-white/70 group-hover:text-white">Security Tips</span>
                 <ExternalLink className="w-3 h-3 text-white/20 group-hover:text-zenqar-400" />
-              </a>
+              </Link>
             </div>
           </div>
         </div>

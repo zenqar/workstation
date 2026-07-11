@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "workstation",
-  "compatibility_date": "2024-09-23",
+  "compatibility_date": "2026-07-11",
   "compatibility_flags": [
     "nodejs_compat"
   ],
@@ -15,7 +15,8 @@
     "FX_FALLBACK_RATE": "1310",
     "NEXT_PUBLIC_SUPABASE_URL": "https://rdhflhsmftlncuiyrjdl.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_SoMOF0LHkZc6ZZFn6RlULA_wEXU-ank",
-    "NEXT_PUBLIC_APP_URL": "https://workstation.info-zenqar.workers.dev"
+    "NEXT_PUBLIC_APP_URL": "https://zenqar.com",
+    "OPENROUTER_MODEL": "nvidia/nemotron-nano-12b-v2-vl:free"
   },
   "observability": {
     "enabled": true

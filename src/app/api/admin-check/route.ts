@@ -4,6 +4,7 @@ import { debugAdminConfig } from '@/lib/supabase/admin';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  if (process.env.NODE_ENV === 'production') return new NextResponse(null, { status: 404 });
   try {
     const config = await debugAdminConfig();
     
@@ -18,10 +19,10 @@ export async function GET() {
       runtime: process.env.NEXT_RUNTIME || 'unknown',
       nodeVersion: process.version,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json({
       status: 'error',
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Admin diagnostics failed',
     }, { status: 500 });
   }
 }

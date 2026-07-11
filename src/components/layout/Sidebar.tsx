@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
@@ -31,7 +31,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
     { name: t('accounts'), href: `/${locale}/app/accounts`, icon: Wallet },
     { name: t('payments'), href: `/${locale}/app/payments`, icon: CreditCard },
     { name: t('expenses'), href: `/${locale}/app/expenses`, icon: Receipt },
-    // { name: t('reports'), href: `/${locale}/app/reports`, icon: BarChart3 }, // Not yet implemented
+    { name: t('reports'), href: `/${locale}/app/reports`, icon: BarChart3 },
     { name: t('support') || 'Support', href: `/${locale}/app/support`, icon: LifeBuoy },
     { name: t('settings'), href: `/${locale}/app/settings`, icon: Settings },
   ];

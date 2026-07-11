@@ -687,6 +687,17 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   }
 }
 
+.site-footer {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 40px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.44);
+  font-size: 12px;
+  line-height: 1.7;
+  text-align: center;
+}
+
 
 /* Better mobile header + dashboard fit */
 @media (max-width: 760px) {

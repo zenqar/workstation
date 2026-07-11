@@ -3,19 +3,13 @@ import { getServerEnv } from '@/lib/env/server';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: Request) {
+export async function GET() {
   // Restrict to development/staging only — never expose in production
-  const env = (await getServerEnv()) as any;
+  const env = await getServerEnv();
   const isProduction = (env.NODE_ENV || process.env.NODE_ENV) === 'production';
 
   if (isProduction) {
-    // In production, require a secret query param to allow diagnostics
-    const { searchParams } = new URL(request.url);
-    const token = searchParams.get('token');
-    const adminSecret = env.ADMIN_SECRET;
-    if (!adminSecret || token !== adminSecret) {
-      return NextResponse.json({ status: 'forbidden' }, { status: 403 });
-    }
+    return new NextResponse(null, { status: 404 });
   }
 
   try {
@@ -29,7 +23,7 @@ export async function GET(request: Request) {
         runtime: process.env.NEXT_RUNTIME || 'unknown',
       }
     });
-  } catch (error: any) {
+  } catch {
     return NextResponse.json({
       status: 'error',
       error: 'Diagnostics failed to run',

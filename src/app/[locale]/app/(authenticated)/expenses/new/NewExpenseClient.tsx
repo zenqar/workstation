@@ -1,21 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { createExpense } from '@/lib/actions/expenses';
-import { ArrowLeft, Save, Receipt } from 'lucide-react';
+import { ArrowLeft, Save, Receipt, ScanLine, LoaderCircle } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 
-export default function NewExpenseClient({ defaultBusinessId, accounts = [], contacts = [] }: any) {
+type ExpenseAccount = { id: string; name: string; currency: 'IQD' | 'USD'; balance: number };
+type ExpenseContact = { id: string; name: string; type: string };
+
+export default function NewExpenseClient({ accounts = [], contacts = [] }: { accounts?: ExpenseAccount[]; contacts?: ExpenseContact[] }) {
   const t = useTranslations();
   const router = useRouter();
   const locale = useLocale();
   const { activeBusiness } = useBusiness();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [scanMessage, setScanMessage] = useState('');
 
   const [form, setForm] = useState({
     account_id: '',
@@ -47,6 +52,36 @@ export default function NewExpenseClient({ defaultBusinessId, accounts = [], con
     } else {
       router.push(`/${locale}/app/expenses`);
       router.refresh();
+    }
+  };
+
+  const handleScan = async (file: File | undefined) => {
+    if (!file) return;
+    setScanning(true);
+    setError('');
+    setScanMessage('');
+    try {
+      const body = new FormData();
+      body.append('file', file);
+      const response = await fetch('/api/ai/scan-document', { method: 'POST', body });
+      const result = await response.json() as { data?: { supplier_name: string; invoice_number: string; issue_date: string; currency: 'IQD' | 'USD'; total: number; category: string; description: string; notes: string; confidence: number }; error?: string };
+      if (!response.ok || !result.data) throw new Error(result.error || 'The document could not be scanned.');
+      const scan = result.data;
+      setForm(current => ({
+        ...current,
+        category: scan.category,
+        description: scan.description,
+        amount: scan.total,
+        currency: scan.currency,
+        expense_date: scan.issue_date || current.expense_date,
+        note: [scan.supplier_name && `Supplier: ${scan.supplier_name}`, scan.invoice_number && `Invoice: ${scan.invoice_number}`, scan.notes].filter(Boolean).join(' · '),
+        account_id: current.account_id && accounts.some(account => account.id === current.account_id && account.currency === scan.currency) ? current.account_id : '',
+      }));
+      setScanMessage(`Scan complete (${Math.round(scan.confidence * 100)}% confidence). Review every field before saving.`);
+    } catch (scanError) {
+      setError(scanError instanceof Error ? scanError.message : 'The document could not be scanned.');
+    } finally {
+      setScanning(false);
     }
   };
 
@@ -82,6 +117,21 @@ export default function NewExpenseClient({ defaultBusinessId, accounts = [], con
               <h3 className="text-lg font-semibold text-white">Expense Details</h3>
               <p className="text-xs text-white/40">Record a business expense or purchase</p>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-zenqar-500/20 bg-zenqar-500/5 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-semibold text-white"><ScanLine className="h-4 w-4 text-zenqar-400" /> AI document scan</p>
+                <p className="mt-1 text-xs text-white/45">Upload a PDF or invoice image (max 8 MB). It is sent to your configured AI provider for extraction; Zenqar does not save an expense until you review and submit.</p>
+              </div>
+              <label className="btn-primary cursor-pointer whitespace-nowrap">
+                {scanning ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ScanLine className="h-4 w-4" />}
+                {scanning ? 'Scanning…' : 'Scan document'}
+                <input className="sr-only" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" disabled={scanning} onChange={event => void handleScan(event.target.files?.[0])} />
+              </label>
+            </div>
+            {scanMessage && <p className="mt-3 text-xs text-emerald-300" role="status">{scanMessage}</p>}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -140,7 +190,7 @@ export default function NewExpenseClient({ defaultBusinessId, accounts = [], con
               <select 
                 className="select-glass"
                 value={form.currency}
-                onChange={e => setForm({...form, currency: e.target.value as any})}
+                onChange={e => setForm({...form, currency: e.target.value as 'IQD' | 'USD'})}
                 required
               >
                 <option value="IQD">IQD (عراقي)</option>
@@ -157,11 +207,11 @@ export default function NewExpenseClient({ defaultBusinessId, accounts = [], con
                 required
               >
                 <option value="">{t('common.selectOption')}</option>
-                {accounts.filter((a: any) => a.currency === form.currency).map((acc: any) => (
-                  <option key={acc.id} value={acc.id}>{acc.name} ({formatCurrency(acc.balance, acc.currency)})</option>
+                {accounts.filter(account => account.currency === form.currency).map(account => (
+                  <option key={account.id} value={account.id}>{account.name} ({formatCurrency(account.balance, account.currency)})</option>
                 ))}
               </select>
-              {accounts.filter((a: any) => a.currency === form.currency).length === 0 && (
+              {accounts.filter(account => account.currency === form.currency).length === 0 && (
                 <p className="text-[10px] text-red-400 mt-1">No accounts found for {form.currency}</p>
               )}
             </div>
@@ -174,8 +224,8 @@ export default function NewExpenseClient({ defaultBusinessId, accounts = [], con
                 onChange={e => setForm({...form, contact_id: e.target.value})}
               >
                 <option value="">{t('common.optional')}</option>
-                {contacts.filter((c: any) => c.type !== 'customer').map((c: any) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                {contacts.filter(contact => contact.type !== 'customer').map(contact => (
+                  <option key={contact.id} value={contact.id}>{contact.name}</option>
                 ))}
               </select>
             </div>
