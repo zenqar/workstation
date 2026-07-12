@@ -33,6 +33,14 @@ const ContactSchema = z.object({
   notes:        z.string().nullable().optional(),
 });
 
+function contactErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return fallback;
+}
+
 export async function createContact(
   businessId: string,
   data: z.infer<typeof ContactSchema>
@@ -108,9 +116,9 @@ export async function createContact(
 
     revalidatePath('/[locale]/app/contacts', 'layout');
     return { data: { id: contact.id } };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[createContact] Runtime error:', err);
-    return { error: err.message || 'An unexpected error occurred' };
+    return { error: contactErrorMessage(err, 'An unexpected error occurred') };
   }
 }
 
@@ -139,9 +147,9 @@ export async function updateContact(
     revalidatePath(`/[locale]/app/contacts/${contactId}`, 'layout');
     revalidatePath('/[locale]/app/contacts', 'layout');
     return {};
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[updateContact]', err);
-    return { error: err.message };
+    return { error: contactErrorMessage(err, 'Could not update contact') };
   }
 }
 
@@ -161,9 +169,9 @@ export async function deleteContact(businessId: string, contactId: string): Prom
     
     revalidatePath('/[locale]/app/contacts', 'layout');
     return {};
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[deleteContact]', err);
-    return { error: err.message };
+    return { error: contactErrorMessage(err, 'Could not delete contact') };
   }
 }
 

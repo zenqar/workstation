@@ -1,6 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Building2, Search, AlertCircle, ShieldCheck, Clock, Activity, ChevronRight } from 'lucide-react';
-import { redirect } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { deleteBusinessNetwork } from './[id]/actions';

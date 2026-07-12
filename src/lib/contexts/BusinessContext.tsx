@@ -1,8 +1,8 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import type { Business, UserRole, BusinessMembership } from '@/lib/types';
-import { useRouter, usePathname } from 'next/navigation';
+import { createContext, useContext, useState, ReactNode } from 'react';
+import type { Business, UserRole } from '@/lib/types';
+import { useRouter } from 'next/navigation';
 
 interface UserBusiness {
   business: Business;
@@ -26,35 +26,20 @@ export function BusinessProvider({
   initialBusinesses: UserBusiness[];
 }) {
   const router = useRouter();
-  const [businesses, setBusinesses] = useState<UserBusiness[]>(initialBusinesses);
-  
-  // Try to get from localStorage, fallback to first active business
-  const getInitialActiveId = () => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('zenqar_active_business');
-      if (stored && initialBusinesses.some(b => b.business.id === stored)) {
-        return stored;
-      }
-    }
-    return initialBusinesses.length > 0 ? initialBusinesses[0].business.id : null;
-  };
-
-  const [activeBusinessId, setActiveBusinessIdState] = useState<string | null>(getInitialActiveId);
+  const businesses = initialBusinesses;
+  const [activeBusinessId, setActiveBusinessIdState] = useState<string | null>(
+    initialBusinesses[0]?.business.id ?? null
+  );
 
   const activeUserBusiness = businesses.find(b => b.business.id === activeBusinessId);
   const activeBusiness = activeUserBusiness?.business ?? null;
   const activeRole = activeUserBusiness?.role ?? null;
 
-  useEffect(() => {
-    if (activeBusinessId) {
-      localStorage.setItem('zenqar_active_business', activeBusinessId);
-    }
-  }, [activeBusinessId]);
-
   const setActiveBusinessId = (id: string) => {
+    if (!businesses.some(item => item.business.id === id) || id === activeBusinessId) return;
     setActiveBusinessIdState(id);
-    // When switching businesses, we might want to refresh the page or data
-    // For now, we just update the state. The layout/pages should react to the context change.
+    document.cookie = `zenqar_active_business=${encodeURIComponent(id)}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    router.refresh();
   };
 
   return (

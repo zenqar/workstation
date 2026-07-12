@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
+import { pickActiveMembership } from '@/lib/auth/active-business';
 import AccountDetailsClient from './AccountDetailsClient';
 import { getAccountWithBalance, getAccountTransactions } from '@/lib/actions/accounts';
 
@@ -19,25 +19,28 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
 
   if (!memberships || memberships.length === 0) redirect(getLocalizedPath(locale, '/signup'));
 
-  const businessId = memberships[0].business_id;
+  const businessId = (await pickActiveMembership(memberships))!.business_id;
 
-  try {
-    const [account, transactions] = await Promise.all([
+  const loadAccountData = async () => {
+    try {
+      return await Promise.all([
       getAccountWithBalance(businessId, id),
       getAccountTransactions(businessId, id)
-    ]);
+      ]);
+    } catch (error) {
+      console.error('[AccountDetailsPage] Error:', error);
+      notFound();
+    }
+  };
+  const [account, transactions] = await loadAccountData();
 
-    if (!account) notFound();
+  if (!account) notFound();
 
-    return (
-      <AccountDetailsClient 
-        account={account}
-        transactions={transactions}
-        businessId={businessId}
-      />
-    );
-  } catch (error) {
-    console.error('[AccountDetailsPage] Error:', error);
-    notFound();
-  }
+  return (
+    <AccountDetailsClient
+      account={account}
+      transactions={transactions}
+      businessId={businessId}
+    />
+  );
 }

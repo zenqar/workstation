@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
+import { pickActiveMembership } from '@/lib/auth/active-business';
 import InvoicesClient from './InvoicesClient';
 import { getInvoices } from '@/lib/actions/invoices';
 
@@ -19,7 +20,7 @@ export default async function InvoicesPage() {
 
   if (!memberships || memberships.length === 0) redirect(getLocalizedPath(locale, '/signup'));
 
-  const defaultBusinessId = memberships[0].business_id;
+  const defaultBusinessId = (await pickActiveMembership(memberships))!.business_id;
   const initialInvoices = await getInvoices(defaultBusinessId);
 
   return (

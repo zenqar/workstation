@@ -1,15 +1,22 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { ArrowLeft, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowLeft, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { adjustAccountBalance } from '@/lib/actions/accounts';
 import { useState } from 'react';
 import { Settings } from 'lucide-react';
+import type { Account, MoneyTransaction } from '@/lib/types';
 
-export default function AccountDetailsClient({ account, transactions, businessId }: any) {
+type AccountDetailsClientProps = {
+  account: Account & { balance: number };
+  transactions: MoneyTransaction[];
+  businessId: string;
+};
+
+export default function AccountDetailsClient({ account, transactions, businessId }: AccountDetailsClientProps) {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
@@ -78,7 +85,7 @@ export default function AccountDetailsClient({ account, transactions, businessId
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {transactions.map((tx: any) => (
+                  {transactions.map((tx) => (
                     <tr key={tx.id}>
                       <td className="text-xs text-white/60">{formatDate(tx.transaction_date)}</td>
                       <td>

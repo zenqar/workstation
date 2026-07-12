@@ -52,9 +52,15 @@ export async function deleteUserAccount(userId: string) {
     }
 
     revalidatePath('/admin/users');
-  } catch (err: any) {
-    if (err.digest?.includes('NEXT_REDIRECT')) throw err;
-    return { error: err.message };
+  } catch (err: unknown) {
+    if (
+      typeof err === 'object'
+      && err !== null
+      && 'digest' in err
+      && typeof err.digest === 'string'
+      && err.digest.includes('NEXT_REDIRECT')
+    ) throw err;
+    return { error: err instanceof Error ? err.message : 'Failed to delete user' };
   }
 
   redirect('/en/admin/users');

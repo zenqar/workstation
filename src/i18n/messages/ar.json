@@ -64,6 +64,12 @@
   },
   "nav": {
     "dashboard": "لوحة التحكم",
+    "documents": "مسح الفواتير",
+    "bills": "فواتير الموردين",
+    "sectionOverview": "نظرة عامة",
+    "sectionSales": "المبيعات",
+    "sectionMoney": "الأموال",
+    "sectionWorkspace": "مساحة العمل",
     "invoices": "الفواتير",
     "contacts": "جهات الاتصال",
     "catalog": "المنتجات والخدمات",

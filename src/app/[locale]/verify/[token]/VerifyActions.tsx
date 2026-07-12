@@ -5,7 +5,7 @@ import { ThumbsUp, Wallet, CheckCircle2 } from 'lucide-react';
 import { acceptInvoicePublic, claimPaymentPublic } from '@/lib/actions/invoices';
 import { useRouter } from 'next/navigation';
 
-export default function VerifyActions({ token, status, locale }: { token: string, status: string, locale: string }) {
+export default function VerifyActions({ token, status }: { token: string, status: string }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -49,7 +49,7 @@ export default function VerifyActions({ token, status, locale }: { token: string
           className="flex-1 py-4 rounded-2xl bg-zenqar-500 hover:bg-zenqar-400 text-white font-extrabold shadow-lg shadow-zenqar-500/20 transition-all flex items-center justify-center gap-2 group"
         >
           <Wallet className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-          I've Paid This Invoice
+          I’ve Paid This Invoice
         </button>
       )}
 

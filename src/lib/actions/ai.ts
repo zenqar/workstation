@@ -1,27 +1,13 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase/admin';
-
 export async function chatWithAI(message: string, history: { role: string, content: string }[] = []) {
   try {
+    // Kept in the public signature for clients that already send conversation
+    // context; the current deterministic fallback does not consume it.
+    void history;
     // In a real app, you'd call OpenAI/Anthropic/Gemini here.
     // For now, let's simulate a helpful multilingual assistant.
     // We can use the user's current session to personalize.
-    
-    const prompt = `You are the Zenqar Assistant. You help users manage their invoices, bookkeeping, and finance workflows.
-    You are professional, concise, and friendly.
-    You support English, Estonian, Kurdish (Sorani), and Arabic.
-    If the user asks in a specific language, respond in that language.
-    
-    Key features of Zenqar:
-    - Invoicing (Draft, Sent, Accepted, Paid)
-    - Multilingual Support
-    - Business Management
-    - Real-time Notifications
-    - Secure Chat for Teams
-    - FX Rates (USD to IQD with 10% street markup)
-    
-    User Message: ${message}`;
 
     // Simulate an AI response delay
     await new Promise(r => setTimeout(r, 1000));

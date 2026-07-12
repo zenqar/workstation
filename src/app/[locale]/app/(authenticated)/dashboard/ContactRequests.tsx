@@ -2,10 +2,21 @@
 
 import { useState } from 'react';
 import { handleContactRequest } from '@/lib/actions/connections';
-import { Check, X, UserPlus, ShieldCheck } from 'lucide-react';
+import { X, UserPlus, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export default function ContactRequests({ requests }: { requests: any[] }) {
+type ContactRequest = {
+  id: string;
+  sender_business: {
+    name: string;
+    legal_name?: string | null;
+    phone?: string | null;
+    city?: string | null;
+    country?: string | null;
+  } | null;
+};
+
+export default function ContactRequests({ requests }: { requests: ContactRequest[] }) {
   const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
 

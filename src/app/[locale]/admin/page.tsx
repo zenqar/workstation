@@ -1,13 +1,36 @@
-import { getTranslations } from 'next-intl/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { Shield, Users, Building2, Activity, Key, ChevronRight } from 'lucide-react';
-import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 
+type RecentInvoice = {
+  id: string;
+  business_id: string;
+  total: number | null;
+  currency: string;
+  created_at: string;
+  business: { name: string } | null;
+};
+
+type PendingBusiness = {
+  id: string;
+  name: string;
+  legal_name: string | null;
+  tax_id_number: string | null;
+  business_registration_number: string | null;
+  industry: string | null;
+  website: string | null;
+  created_at: string;
+};
+
+type BusinessSummary = {
+  id: string;
+  name: string;
+  created_at: string;
+};
+
 export default async function AdminDashboard(props: { params: Promise<{ locale: string }> }) {
   const { locale } = await props.params;
-  const t = await getTranslations();
   const supabase = await createAdminClient();
 
   // Get total users
@@ -15,7 +38,7 @@ export default async function AdminDashboard(props: { params: Promise<{ locale: 
   const totalUsers = usersError ? 0 : (users?.users.length || 0);
 
   // Get businesses
-  const { data: businesses, count: businessCount } = await supabase
+  const { count: businessCount } = await supabase
     .from('businesses')
     .select('id, name, created_at', { count: 'exact' })
     .order('created_at', { ascending: false })
@@ -26,17 +49,21 @@ export default async function AdminDashboard(props: { params: Promise<{ locale: 
     .from('invoices')
     .select('id, total, currency, created_at, business:business_id(name)')
     .order('created_at', { ascending: false })
-    .limit(5);
+    .limit(5)
+    .returns<RecentInvoice[]>();
 
   // Get businesses pending verification
   const { data: pendingBusinesses } = await supabase
     .from('businesses')
     .select('id, name, legal_name, tax_id_number, business_registration_number, industry, website, created_at')
     .eq('verification_status', 'pending')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .returns<PendingBusiness[]>();
 
   // Get duplicate business names
-  const { data: allBusinesses } = await supabase.from('businesses').select('id, name, created_at');
+  const { data: allBusinesses } = await supabase.from('businesses')
+    .select('id, name, created_at')
+    .returns<BusinessSummary[]>();
   const nameCounts = allBusinesses?.reduce((acc, b) => {
     const n = b.name.toLowerCase();
     acc[n] = (acc[n] || 0) + 1;
@@ -143,7 +170,7 @@ export default async function AdminDashboard(props: { params: Promise<{ locale: 
             <Link href={`/${locale}/admin/businesses`} className="text-xs text-zenqar-400 hover:underline">View All Businesses</Link>
           </div>
           <div className="space-y-4 flex-1">
-            {recentInvoices?.map((inv: any) => (
+            {recentInvoices?.map((inv) => (
               <Link href={`/${locale}/admin/businesses/${inv.business_id}`} key={inv.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/20 group-hover:text-zenqar-400 transition-colors">
@@ -182,7 +209,7 @@ export default async function AdminDashboard(props: { params: Promise<{ locale: 
               </div>
             </div>
             <div className="space-y-4">
-              {pendingBusinesses.map((b: any) => (
+              {pendingBusinesses.map((b) => (
                 <div key={b.id} className="flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 gap-4 group hover:bg-white/[0.08] transition-all">
                   <Link href={`/${locale}/admin/businesses/${b.id}`} className="flex-1 space-y-1">
                     <div className="flex items-center gap-2">
@@ -235,7 +262,7 @@ export default async function AdminDashboard(props: { params: Promise<{ locale: 
               <h2 className="text-lg font-semibold text-white">Flagged Businesses (Duplicate Names)</h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {flaggedBusinesses.map((b: any) => (
+              {flaggedBusinesses.map((b) => (
                 <Link href={`/${locale}/admin/businesses/${b.id}`} key={b.id} className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 transition-colors">
                   <p className="text-sm font-bold text-orange-400">{b.name}</p>
                   <div className="flex justify-between items-center mt-2">

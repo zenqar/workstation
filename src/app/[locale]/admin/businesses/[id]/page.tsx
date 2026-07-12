@@ -6,11 +6,9 @@ import {
   CreditCard, 
   ArrowLeft, 
   ShieldCheck, 
-  Clock, 
   MessageSquare,
   Send,
-  Trash2,
-  AlertCircle
+  Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -41,8 +39,6 @@ export default async function BusinessDetailsPage(props: { params: Promise<{ id:
   if (!business) notFound();
 
   const totalInvoiced = invoices?.reduce((sum, inv) => sum + Number(inv.total), 0) || 0;
-  const activeMembers = memberships?.filter(m => m.status === 'active').length || 0;
-
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center gap-4">
@@ -230,7 +226,7 @@ export default async function BusinessDetailsPage(props: { params: Promise<{ id:
             <p className="text-sm text-white/50 mb-6">
               Deleting a network is permanent. All wallets, transactions, and team access will be destroyed instantly.
             </p>
-            <DeleteBusinessButton businessId={id} businessName={business.name} />
+            <DeleteBusinessButton businessId={id} />
           </div>
 
           <div className="glass-card p-6 space-y-4">

@@ -4,6 +4,7 @@ import { BarChart3, CircleDollarSign, Download, Receipt, Scale } from 'lucide-re
 import { createClient } from '@/lib/supabase/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
 import { formatCurrency } from '@/lib/utils';
+import { pickActiveMembership } from '@/lib/auth/active-business';
 
 type Currency = 'IQD' | 'USD';
 type Totals = Record<Currency, number>;
@@ -16,7 +17,8 @@ export default async function ReportsPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect(getLocalizedPath(locale, '/login'));
 
-  const { data: membership } = await supabase.from('business_memberships').select('business_id').eq('user_id', user.id).eq('status', 'active').limit(1).maybeSingle();
+  const { data: memberships } = await supabase.from('business_memberships').select('business_id').eq('user_id', user.id).eq('status', 'active');
+  const membership = await pickActiveMembership(memberships);
   if (!membership) redirect(getLocalizedPath(locale, '/app/onboarding'));
 
   const start = new Date();

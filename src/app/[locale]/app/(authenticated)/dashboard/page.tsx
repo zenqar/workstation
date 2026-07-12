@@ -7,6 +7,7 @@ import DashboardClient from './DashboardClient';
 import { getIncomingContactRequests } from '@/lib/actions/connections';
 import { getLocale } from 'next-intl/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
+import { pickActiveMembership } from '@/lib/auth/active-business';
 
 export default async function DashboardPage() {
   const locale = await getLocale();
@@ -25,7 +26,7 @@ export default async function DashboardPage() {
     redirect(getLocalizedPath(locale, '/app/onboarding'));
   }
 
-  const defaultBusinessId = memberships[0].business_id;
+  const defaultBusinessId = (await pickActiveMembership(memberships))!.business_id;
 
   const [stats, invoices, expenses, incomingRequests] = await Promise.all([
     getDashboardStats(defaultBusinessId),

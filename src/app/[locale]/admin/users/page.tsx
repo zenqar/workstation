@@ -1,6 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin';
-import { Users, Search, AlertCircle, Key, MessageSquare } from 'lucide-react';
-import { redirect } from 'next/navigation';
+import { Users, Search, AlertCircle, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AdminUsersPage(props: { params: Promise<{ locale: string }>, searchParams: Promise<{ q?: string }> }) {

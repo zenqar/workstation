@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
+import { pickActiveMembership } from '@/lib/auth/active-business';
 import TransferFundsClient from './TransferFundsClient';
 import { getAccountsWithBalances } from '@/lib/actions/accounts';
 
@@ -19,8 +20,9 @@ export default async function TransferFundsPage() {
 
   if (!memberships || memberships.length === 0) redirect(getLocalizedPath(locale, '/signup'));
 
-  const defaultBusinessId = memberships[0].business_id;
-  const role = memberships[0].role;
+  const membership = (await pickActiveMembership(memberships))!;
+  const defaultBusinessId = membership.business_id;
+  const role = membership.role;
   
   if (!['owner', 'admin', 'accountant'].includes(role)) {
     redirect(getLocalizedPath(locale, '/app/accounts'));
@@ -30,7 +32,6 @@ export default async function TransferFundsPage() {
 
   return (
     <TransferFundsClient 
-      defaultBusinessId={defaultBusinessId}
       accounts={accounts}
     />
   );

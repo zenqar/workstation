@@ -1,10 +1,23 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, type RefObject } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 import './ScrollReveal.css';
 
 gsap.registerPlugin(ScrollTrigger);
+
+type ScrollRevealProps = {
+  children: string;
+  scrollContainerRef?: RefObject<HTMLElement | null>;
+  enableBlur?: boolean;
+  baseOpacity?: number;
+  baseRotation?: number;
+  blurStrength?: number;
+  containerClassName?: string;
+  textClassName?: string;
+  rotationEnd?: string;
+  wordAnimationEnd?: string;
+};
 
 const ScrollReveal = ({
   children,
@@ -17,12 +30,12 @@ const ScrollReveal = ({
   textClassName = '',
   rotationEnd = 'bottom bottom',
   wordAnimationEnd = 'bottom bottom'
-}: any) => {
-  const containerRef = useRef<any>(null);
+}: ScrollRevealProps) => {
+  const containerRef = useRef<HTMLHeadingElement>(null);
 
   const splitText = useMemo(() => {
     const text = typeof children === 'string' ? children : '';
-    return text.split(/(\s+)/).map((word: any, index: any) => {
+    return text.split(/(\s+)/).map((word, index) => {
       if (word.match(/^\s+$/)) return word;
       return (
         <span className="word" key={index}>

@@ -1,20 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { signOut } from '@/lib/actions/auth';
-import { LogOut, ChevronDown, Check, Building2, Menu } from 'lucide-react';
-import type { User } from '@supabase/supabase-js';
+import { LogOut, ChevronDown, Check, Building2, Menu, X } from 'lucide-react';
 import type { Profile } from '@/lib/types';
-import { cn } from '@/lib/utils';
 import Sidebar from './Sidebar';
 import { useParams } from 'next/navigation';
 import NotificationBell from './NotificationBell';
 import LanguageSwitcher from './LanguageSwitcher';
 
-export default function TopBar({ user, profile }: { user: User; profile: Profile | null }) {
+export default function TopBar({ profile }: { profile: Profile | null }) {
   const t = useTranslations('common');
   const { businesses, activeBusiness, setActiveBusinessId } = useBusiness();
   const [showBusinessDropdown, setShowBusinessDropdown] = useState(false);
@@ -22,13 +20,27 @@ export default function TopBar({ user, profile }: { user: User; profile: Profile
   const params = useParams();
   const locale = params.locale as string;
 
+  useEffect(() => {
+    if (!showMobileMenu && !showBusinessDropdown) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowMobileMenu(false);
+        setShowBusinessDropdown(false);
+      }
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [showMobileMenu, showBusinessDropdown]);
+
   return (
     <>
-      <header className="h-16 flex-shrink-0 border-b border-border bg-dark-bg/80 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-20">
+      <header className="app-chrome h-16 flex-shrink-0 border-b border-border bg-dark-bg/80 backdrop-blur-md flex items-center justify-between px-3 md:px-6 z-20">
         <div className="flex items-center gap-4">
           <button 
             className="md:hidden p-2 -ml-2 text-white/70 hover:text-white"
             onClick={() => setShowMobileMenu(true)}
+            aria-label="Open navigation"
+            aria-expanded={showMobileMenu}
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -37,17 +49,19 @@ export default function TopBar({ user, profile }: { user: User; profile: Profile
           <div className="relative">
             <button
               onClick={() => setShowBusinessDropdown(!showBusinessDropdown)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-colors"
+              className="flex min-w-0 items-center gap-2 px-2 sm:px-3 py-1.5 rounded-xl hover:bg-white/5 border border-transparent hover:border-white/10 transition-colors"
+              aria-haspopup="menu"
+              aria-expanded={showBusinessDropdown}
             >
               <Building2 className="w-4 h-4 text-white/50" />
-              <span className="text-sm font-bold text-white/90 font-outfit tracking-tight">
-                {activeBusiness?.name || 'Loading...'}
+              <span className="max-w-[110px] truncate text-sm font-bold text-white/90 font-outfit tracking-tight sm:max-w-[220px]">
+                {activeBusiness?.name || 'Select business'}
               </span>
               <ChevronDown className="w-4 h-4 text-white/50" />
             </button>
 
             {showBusinessDropdown && (
-              <div className="absolute top-full left-0 mt-1 w-64 glass-card-elevated border border-white/10 py-2 z-50 animate-in shadow-xl">
+              <div className="absolute top-full start-0 mt-1 w-64 glass-card-elevated border border-white/10 py-2 z-50 animate-in shadow-xl" role="menu">
                 <div className="px-3 pb-2 mb-2 border-b border-white/10">
                   <p className="text-xs font-medium text-white/40 uppercase tracking-wider">Your Businesses</p>
                 </div>
@@ -99,13 +113,14 @@ export default function TopBar({ user, profile }: { user: User; profile: Profile
 
       {/* Mobile Menu Overlay */}
       {showMobileMenu && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
+        <div className="app-chrome md:hidden fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <div 
             className="fixed inset-0 bg-black/60 backdrop-blur-sm" 
             onClick={() => setShowMobileMenu(false)}
           />
           <div className="relative w-64 max-w-[80%] h-full bg-dark-bg border-r border-white/10 shadow-2xl flex flex-col animate-slide-in">
-            <Sidebar profile={profile} />
+            <button onClick={() => setShowMobileMenu(false)} className="absolute end-3 top-3 z-10 rounded-lg p-2 text-white/50 hover:bg-white/10 hover:text-white" aria-label="Close navigation"><X className="h-5 w-5" /></button>
+            <Sidebar profile={profile} onNavigate={() => setShowMobileMenu(false)} />
           </div>
         </div>
       )}

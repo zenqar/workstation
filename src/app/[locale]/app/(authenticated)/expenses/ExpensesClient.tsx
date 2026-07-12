@@ -5,35 +5,42 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { getExpenses } from '@/lib/actions/expenses';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Receipt, Search } from 'lucide-react';
+import { Plus, Receipt, Search, Paperclip, ScanLine } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import type { Expense } from '@/lib/types';
 
-export default function ExpensesClient({ defaultBusinessId, initialExpenses }: any) {
+type ExpensesClientProps = {
+  defaultBusinessId: string;
+  initialExpenses: Expense[];
+};
+
+export default function ExpensesClient({ defaultBusinessId, initialExpenses }: ExpensesClientProps) {
   const t = useTranslations();
   const { activeBusiness, activeRole } = useBusiness();
-  const [expenses, setExpenses] = useState(initialExpenses);
-  const [loading, setLoading] = useState(false);
+  const [expenseState, setExpenseState] = useState({
+    businessId: defaultBusinessId,
+    expenses: initialExpenses,
+  });
   const [search, setSearch] = useState('');
   const locale = useLocale();
+  const activeBusinessId = activeBusiness?.id;
+  const loading = Boolean(activeBusinessId && expenseState.businessId !== activeBusinessId);
+  const expenses = loading ? [] : expenseState.expenses;
 
   useEffect(() => {
-    if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
-      let isMounted = true;
-      setLoading(true);
-      getExpenses(activeBusiness.id).then((newExpenses) => {
-        if (isMounted) {
-          setExpenses(newExpenses);
-          setLoading(false);
-        }
-      });
-      return () => { isMounted = false; };
-    }
-  }, [activeBusiness, defaultBusinessId]);
+    if (!activeBusinessId || activeBusinessId === expenseState.businessId) return;
+    let isMounted = true;
+    getExpenses(activeBusinessId).then((newExpenses) => {
+      if (isMounted) {
+        setExpenseState({ businessId: activeBusinessId, expenses: newExpenses as Expense[] });
+      }
+    });
+    return () => { isMounted = false; };
+  }, [activeBusinessId, expenseState.businessId]);
 
-  const filteredExpenses = expenses.filter((e: any) => 
-    e.description.toLowerCase().includes(search.toLowerCase()) ||
-    (e.contact?.name && e.contact.name.toLowerCase().includes(search.toLowerCase()))
+  const filteredExpenses = expenses.filter((expense) =>
+    expense.description.toLowerCase().includes(search.toLowerCase()) ||
+    Boolean(expense.contact?.name?.toLowerCase().includes(search.toLowerCase()))
   );
 
   if (!activeBusiness) return <div className="animate-pulse text-white/50">{t('common.loading')}</div>;
@@ -43,10 +50,10 @@ export default function ExpensesClient({ defaultBusinessId, initialExpenses }: a
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-2xl font-bold text-white tracking-tight">{t('expenses.title')}</h1>
         {activeRole && ['owner', 'admin', 'accountant', 'staff'].includes(activeRole) && (
-          <Link href={`/${locale}/app/expenses/new`} className="btn-primary">
-            <Plus className="w-4 h-4" />
-            <span>{t('expenses.newExpense')}</span>
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/${locale}/app/documents`} className="btn-primary"><ScanLine className="h-4 w-4" /><span>Scan document</span></Link>
+            <Link href={`/${locale}/app/expenses/new`} className="btn-secondary"><Plus className="w-4 h-4" /><span>{t('expenses.newExpense')}</span></Link>
+          </div>
         )}
       </div>
 
@@ -75,10 +82,11 @@ export default function ExpensesClient({ defaultBusinessId, initialExpenses }: a
                     <th>{t('expenses.category')}</th>
                     <th>{t('expenses.paidFrom')}</th>
                     <th className="text-right">{t('common.amount')}</th>
+                    <th><span className="sr-only">Document</span></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredExpenses.map((exp: any) => (
+                  {filteredExpenses.map((exp) => (
                     <tr key={exp.id}>
                       <td className="text-white/70">{formatDate(exp.expense_date)}</td>
                       <td>
@@ -95,6 +103,17 @@ export default function ExpensesClient({ defaultBusinessId, initialExpenses }: a
                         <span className="font-medium tabular-nums text-red-400">
                           -{formatCurrency(exp.amount, exp.currency)}
                         </span>
+                      </td>
+                      <td className="text-right">
+                        {exp.receipt_url && (
+                          <a
+                            href={exp.receipt_url.startsWith('http') ? exp.receipt_url : `/api/documents/${exp.receipt_url}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex rounded-lg p-2 text-white/40 hover:bg-white/5 hover:text-white"
+                            aria-label="Open original receipt"
+                          ><Paperclip className="h-4 w-4" /></a>
+                        )}
                       </td>
                     </tr>
                   ))}

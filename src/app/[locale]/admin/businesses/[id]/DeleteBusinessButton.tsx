@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Trash2, AlertTriangle } from 'lucide-react';
 import { deleteBusinessNetwork } from './actions';
 
-export default function DeleteBusinessButton({ businessId, businessName }: { businessId: string, businessName: string }) {
+export default function DeleteBusinessButton({ businessId }: { businessId: string }) {
   const [step, setStep] = useState(0); // 0 = idle, 1 = confirm, 2 = deleting
 
   const handleDelete = async () => {

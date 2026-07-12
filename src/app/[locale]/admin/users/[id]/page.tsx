@@ -1,19 +1,12 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { 
-  Users, 
   Building2, 
   MessageSquare, 
   ArrowLeft, 
   Send,
-  Trash2,
-  Key,
-  ShieldCheck,
   Activity,
-  FileText,
-  CreditCard,
   History,
   ExternalLink,
-  Search,
   Clock
 } from 'lucide-react';
 import Link from 'next/link';

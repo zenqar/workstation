@@ -5,6 +5,7 @@ import { getLocalizedPath } from '@/lib/utils/locale';
 import NewExpenseClient from './NewExpenseClient';
 import { getAccountsWithBalances } from '@/lib/actions/accounts';
 import { getContacts } from '@/lib/actions/contacts';
+import { pickActiveMembership } from '@/lib/auth/active-business';
 
 export default async function NewExpensePage() {
   const locale = await getLocale();
@@ -20,8 +21,9 @@ export default async function NewExpensePage() {
 
   if (!memberships || memberships.length === 0) redirect(getLocalizedPath(locale, '/signup'));
 
-  const defaultBusinessId = memberships[0].business_id;
-  const role = memberships[0].role;
+  const membership = (await pickActiveMembership(memberships))!;
+  const defaultBusinessId = membership.business_id;
+  const role = membership.role;
   
   if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) {
     redirect(getLocalizedPath(locale, '/app/expenses'));
@@ -36,6 +38,7 @@ export default async function NewExpensePage() {
     <NewExpenseClient 
       accounts={accounts}
       contacts={contacts}
+      defaultBusinessId={defaultBusinessId}
     />
   );
 }

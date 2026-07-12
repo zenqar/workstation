@@ -7,31 +7,40 @@ import { getInvoices } from '@/lib/actions/invoices';
 import { formatCurrency, formatDate, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
 import { Plus, FileText, Search } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import type { Contact, Invoice } from '@/lib/types';
 
-export default function InvoicesClient({ defaultBusinessId, initialInvoices = [] }: any) {
+type InvoiceListItem = Omit<Invoice, 'contact'> & { contact?: Contact | null };
+
+type InvoicesClientProps = {
+  defaultBusinessId: string;
+  initialInvoices?: InvoiceListItem[];
+};
+
+export default function InvoicesClient({ defaultBusinessId, initialInvoices = [] }: InvoicesClientProps) {
   const t = useTranslations();
   const { activeBusiness, activeRole } = useBusiness();
-  const [invoices, setInvoices] = useState(initialInvoices || []);
-  const [loading, setLoading] = useState(false);
+  const [invoiceState, setInvoiceState] = useState({
+    businessId: defaultBusinessId,
+    invoices: initialInvoices,
+  });
   const [search, setSearch] = useState('');
   const locale = useLocale();
+  const activeBusinessId = activeBusiness?.id;
+  const loading = Boolean(activeBusinessId && invoiceState.businessId !== activeBusinessId);
+  const invoices = loading ? [] : invoiceState.invoices;
 
   useEffect(() => {
-    if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
-      let isMounted = true;
-      setLoading(true);
-      getInvoices(activeBusiness.id).then((newInvoices) => {
-        if (isMounted) {
-          setInvoices(newInvoices);
-          setLoading(false);
-        }
-      });
-      return () => { isMounted = false; };
-    }
-  }, [activeBusiness, defaultBusinessId]);
+    if (!activeBusinessId || activeBusinessId === invoiceState.businessId) return;
+    let isMounted = true;
+    getInvoices(activeBusinessId).then((newInvoices) => {
+      if (isMounted) {
+        setInvoiceState({ businessId: activeBusinessId, invoices: newInvoices as InvoiceListItem[] });
+      }
+    });
+    return () => { isMounted = false; };
+  }, [activeBusinessId, invoiceState.businessId]);
 
-  const filteredInvoices = (invoices || []).filter((inv: any) => 
+  const filteredInvoices = invoices.filter((inv) =>
     inv.invoice_number.toLowerCase().includes(search.toLowerCase()) ||
     (inv.contact?.name && inv.contact.name.toLowerCase().includes(search.toLowerCase())) ||
     (inv.custom_customer_name && inv.custom_customer_name.toLowerCase().includes(search.toLowerCase()))
@@ -80,7 +89,7 @@ export default function InvoicesClient({ defaultBusinessId, initialInvoices = []
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredInvoices.map((inv: any) => (
+                  {filteredInvoices.map((inv) => (
                     <tr key={inv.id}>
                       <td>
                         <Link href={`/${locale}/app/invoices/${inv.id}`} className="font-medium text-white hover:text-zenqar-400 transition-colors">

@@ -2,6 +2,27 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { MessageSquare, Building2, ChevronRight, Clock, Users } from 'lucide-react';
 import Link from 'next/link';
 
+type SupportMessage = {
+  id: string;
+  business_id: string | null;
+  recipient_user_id: string | null;
+  sender_type: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  businesses: { id: string; name: string } | null;
+  auth_users: { id: string; email: string } | null;
+};
+
+type SupportConversation = {
+  id: string;
+  title: string;
+  isUser: boolean;
+  link: string;
+  lastMessage: SupportMessage;
+  unreadCount: number;
+};
+
 export default async function AdminSupportInbox(props: { params: Promise<{ locale: string }> }) {
   const { locale } = await props.params;
   const admin = await createAdminClient();
@@ -10,7 +31,8 @@ export default async function AdminSupportInbox(props: { params: Promise<{ local
   const { data: messages } = await admin
     .from('support_messages')
     .select('*, businesses(id, name), auth_users:recipient_user_id(id, email)')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .returns<SupportMessage[]>();
 
   // Group messages by conversation (Business or Direct User)
   const conversationsMap = messages?.reduce((acc, msg) => {
@@ -32,7 +54,7 @@ export default async function AdminSupportInbox(props: { params: Promise<{ local
       }
     }
     return acc;
-  }, {} as Record<string, any>);
+  }, {} as Record<string, SupportConversation>);
 
   const conversations = Object.values(conversationsMap || {});
 
@@ -54,7 +76,7 @@ export default async function AdminSupportInbox(props: { params: Promise<{ local
               <p className="text-white/40">No support conversations found.</p>
             </div>
           ) : (
-            conversations.map((conv: any) => (
+            conversations.map((conv) => (
               <Link 
                 key={conv.id} 
                 href={conv.link}

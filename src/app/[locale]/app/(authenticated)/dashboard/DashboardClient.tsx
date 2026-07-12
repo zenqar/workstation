@@ -6,12 +6,28 @@ import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { getDashboardStats } from '@/lib/actions/businesses';
 import { getInvoices } from '@/lib/actions/invoices';
 import { getExpenses } from '@/lib/actions/expenses';
-import { formatCurrency, formatDate, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
-import { Wallet, TrendingDown, TrendingUp, AlertCircle, ArrowRight, Plus } from 'lucide-react';
+import { formatCurrency, formatDate, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
+import { Wallet, TrendingDown, TrendingUp, ArrowRight, Plus, ScanLine, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import WelcomeTour from '@/components/WelcomeTour';
 import ContactRequests from './ContactRequests';
+import type { Contact, Expense, Invoice } from '@/lib/types';
+
+type DashboardStats = Awaited<ReturnType<typeof getDashboardStats>>;
+type DashboardInvoice = Invoice & { contact: Pick<Contact, 'id' | 'name' | 'company_name'> | null };
+type DashboardExpense = Expense & {
+  account?: { id: string; name: string; currency: string } | null;
+  contact?: Pick<Contact, 'id' | 'name'> | null;
+};
+type IncomingRequest = React.ComponentProps<typeof ContactRequests>['requests'][number];
+
+type DashboardClientProps = {
+  defaultBusinessId: string;
+  initialStats: DashboardStats;
+  initialInvoices: DashboardInvoice[];
+  initialExpenses: DashboardExpense[];
+  incomingRequests?: IncomingRequest[];
+};
 
 export default function DashboardClient({
   defaultBusinessId,
@@ -19,38 +35,42 @@ export default function DashboardClient({
   initialInvoices,
   initialExpenses,
   incomingRequests = []
-}: any) {
+}: DashboardClientProps) {
   const t = useTranslations();
-  const { activeBusiness } = useBusiness();
-  const [stats, setStats] = useState(initialStats);
-  const [invoices, setInvoices] = useState(initialInvoices);
-  const [expenses, setExpenses] = useState(initialExpenses);
-  const [loading, setLoading] = useState(false);
+  const { activeBusiness, activeRole } = useBusiness();
+  const [dashboardState, setDashboardState] = useState({
+    businessId: defaultBusinessId,
+    stats: initialStats,
+    invoices: initialInvoices,
+    expenses: initialExpenses,
+  });
   const locale = useLocale();
+  const activeBusinessId = activeBusiness?.id;
+  const loading = Boolean(activeBusinessId && dashboardState.businessId !== activeBusinessId);
+  const { stats, invoices, expenses } = dashboardState;
 
   useEffect(() => {
     // If the active business is different from the default one used on the server,
     // fetch the new data for the active business.
-    if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
-      let isMounted = true;
-      setLoading(true);
-      
-      Promise.all([
-        getDashboardStats(activeBusiness.id),
-        getInvoices(activeBusiness.id),
-        getExpenses(activeBusiness.id)
-      ]).then(([newStats, newInvoices, newExpenses]) => {
-        if (isMounted) {
-          setStats(newStats);
-          setInvoices(newInvoices.slice(0, 5));
-          setExpenses(newExpenses.slice(0, 5));
-          setLoading(false);
-        }
-      });
+    if (!activeBusinessId || activeBusinessId === dashboardState.businessId) return;
+    let isMounted = true;
+    Promise.all([
+      getDashboardStats(activeBusinessId),
+      getInvoices(activeBusinessId),
+      getExpenses(activeBusinessId)
+    ]).then(([newStats, newInvoices, newExpenses]) => {
+      if (isMounted) {
+        setDashboardState({
+          businessId: activeBusinessId,
+          stats: newStats,
+          invoices: newInvoices.slice(0, 5) as DashboardInvoice[],
+          expenses: newExpenses.slice(0, 5) as DashboardExpense[],
+        });
+      }
+    });
 
-      return () => { isMounted = false; };
-    }
-  }, [activeBusiness, defaultBusinessId]);
+    return () => { isMounted = false; };
+  }, [activeBusinessId, dashboardState.businessId]);
 
   if (!activeBusiness) return <div className="animate-pulse text-white/50">{t('common.loading')}</div>;
 
@@ -66,22 +86,38 @@ export default function DashboardClient({
         <div className="flex flex-wrap gap-2">
           <Link href={`/${locale}/app/invoices/new`} className="btn-primary">
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('dashboard.newInvoice')}</span>
+            <span>{t('dashboard.newInvoice')}</span>
           </Link>
           <Link href={`/${locale}/app/contacts/new`} className="btn-secondary">
             <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('dashboard.addContact')}</span>
+            <span>{t('dashboard.addContact')}</span>
           </Link>
           <Link href={`/${locale}/app/accounts/transfer`} className="btn-secondary">
             <TrendingUp className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('dashboard.transferFunds')}</span>
+            <span>{t('dashboard.transferFunds')}</span>
           </Link>
           <Link href={`/${locale}/app/expenses/new`} className="btn-secondary">
             <TrendingDown className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('dashboard.addExpense')}</span>
+            <span>{t('dashboard.addExpense')}</span>
           </Link>
         </div>
       </div>
+
+      {activeRole && ['owner', 'admin', 'accountant', 'staff'].includes(activeRole) && <Link
+        href={`/${locale}/app/documents`}
+        className="group flex flex-col gap-4 overflow-hidden rounded-2xl border border-zenqar-500/25 bg-gradient-to-r from-zenqar-500/15 via-violet-500/10 to-transparent p-5 transition-all hover:border-zenqar-400/45 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div className="flex items-start gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-zenqar-500/20 ring-1 ring-zenqar-400/25">
+            <ScanLine className="h-6 w-6 text-zenqar-300" />
+          </div>
+          <div>
+            <p className="flex items-center gap-2 font-semibold text-white">Digitize a paper invoice <Sparkles className="h-4 w-4 text-amber-300" /></p>
+            <p className="mt-1 max-w-2xl text-sm text-white/50">Upload a photo or PDF. AI extracts the supplier, total, date, currency, and category so you only review and save.</p>
+          </div>
+        </div>
+        <span className="btn-primary whitespace-nowrap">Scan invoice <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" /></span>
+      </Link>}
 
       {loading ? (
         <div className="h-64 flex items-center justify-center text-white/40">{t('common.loading')}</div>
@@ -169,7 +205,7 @@ export default function DashboardClient({
                 {invoices.length > 0 ? (
                   <table className="data-table">
                     <tbody>
-                      {invoices.map((inv: any) => (
+                      {invoices.map((inv) => (
                         <tr key={inv.id}>
                           <td className="w-1/3">
                             <Link href={`/${locale}/app/invoices/${inv.id}`} className="font-medium text-white hover:text-zenqar-400 transition-colors">
@@ -217,7 +253,7 @@ export default function DashboardClient({
                 {expenses.length > 0 ? (
                   <table className="data-table">
                     <tbody>
-                      {expenses.map((exp: any) => (
+                      {expenses.map((exp) => (
                         <tr key={exp.id}>
                           <td className="w-1/2">
                             <div className="font-medium text-white">{exp.description}</div>

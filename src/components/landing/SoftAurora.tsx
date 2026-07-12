@@ -2,7 +2,7 @@ import { Renderer, Program, Mesh, Triangle } from 'ogl';
 import { useEffect, useRef } from 'react';
 import './SoftAurora.css';
 
-function hexToVec3(hex: any) {
+function hexToVec3(hex: string): [number, number, number] {
   const h = hex.replace('#', '');
   return [
     parseInt(h.slice(0, 2), 16) / 255,
@@ -159,8 +159,23 @@ export default function SoftAurora({
   colorSpeed = 1.0,
   enableMouseInteraction = true,
   mouseInfluence = 0.25
-}: any) {
-  const containerRef = useRef<any>(null);
+}: {
+  speed?: number;
+  scale?: number;
+  brightness?: number;
+  color1?: string;
+  color2?: string;
+  noiseFrequency?: number;
+  noiseAmplitude?: number;
+  bandHeight?: number;
+  bandSpread?: number;
+  octaveDecay?: number;
+  layerOffset?: number;
+  colorSpeed?: number;
+  enableMouseInteraction?: boolean;
+  mouseInfluence?: number;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -169,11 +184,10 @@ export default function SoftAurora({
     const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
 
-    let program: any;
-    let currentMouse = [0.5, 0.5];
-    let targetMouse = [0.5, 0.5];
+    const currentMouse: [number, number] = [0.5, 0.5];
+    let targetMouse: [number, number] = [0.5, 0.5];
 
-    function handleMouseMove(e: any) {
+    function handleMouseMove(e: MouseEvent) {
       const rect = gl.canvas.getBoundingClientRect();
       targetMouse = [
         (e.clientX - rect.left) / rect.width,
@@ -185,17 +199,8 @@ export default function SoftAurora({
       targetMouse = [0.5, 0.5];
     }
 
-    function resize() {
-      renderer.setSize(container.offsetWidth, container.offsetHeight);
-      if (program) {
-        program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height];
-      }
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
     const geometry = new Triangle(gl);
-    program = new Program(gl, {
+    const program = new Program(gl, {
       vertex: vertexShader,
       fragment: fragmentShader,
       uniforms: {
@@ -219,6 +224,13 @@ export default function SoftAurora({
       }
     });
 
+    function resize() {
+      renderer.setSize(container.offsetWidth, container.offsetHeight);
+      program.uniforms.uResolution.value = [gl.canvas.width, gl.canvas.height, gl.canvas.width / gl.canvas.height];
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
     const mesh = new Mesh(gl, { geometry, program });
     container.appendChild(gl.canvas);
 
@@ -227,9 +239,9 @@ export default function SoftAurora({
       gl.canvas.addEventListener('mouseleave', handleMouseLeave);
     }
 
-    let animationFrameId: any;
+    let animationFrameId: number;
 
-    function update(time: any) {
+    function update(time: number) {
       animationFrameId = requestAnimationFrame(update);
       program.uniforms.uTime.value = time * 0.001;
 

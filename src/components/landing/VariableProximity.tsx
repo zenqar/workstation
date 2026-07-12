@@ -1,10 +1,23 @@
-import { forwardRef, useMemo, useRef, useEffect } from 'react';
+import { forwardRef, useMemo, useRef, useEffect, type HTMLAttributes, type RefObject } from 'react';
 import { motion } from 'motion/react';
 import './VariableProximity.css';
 
-function useAnimationFrame(callback: any) {
+type Position = { x: number; y: number };
+type Falloff = 'linear' | 'exponential' | 'gaussian';
+type FontAxis = { axis: string; fromValue: number; toValue: number };
+
+type VariableProximityProps = Omit<HTMLAttributes<HTMLSpanElement>, 'children'> & {
+  label: string;
+  fromFontVariationSettings: string;
+  toFontVariationSettings: string;
+  containerRef: RefObject<HTMLElement | null>;
+  radius?: number;
+  falloff?: Falloff;
+};
+
+function useAnimationFrame(callback: () => void) {
   useEffect(() => {
-    let frameId: any;
+    let frameId: number;
     const loop = () => {
       callback();
       frameId = requestAnimationFrame(loop);
@@ -14,11 +27,11 @@ function useAnimationFrame(callback: any) {
   }, [callback]);
 }
 
-function useMousePositionRef(containerRef: any) {
-  const positionRef = useRef({ x: 0, y: 0 });
+function useMousePositionRef(containerRef: RefObject<HTMLElement | null>) {
+  const positionRef = useRef<Position>({ x: 0, y: 0 });
 
   useEffect(() => {
-    const updatePosition = (x: any, y: any) => {
+    const updatePosition = (x: number, y: number) => {
       if (containerRef?.current) {
         const rect = containerRef.current.getBoundingClientRect();
         positionRef.current = { x: x - rect.left, y: y - rect.top };
@@ -27,9 +40,10 @@ function useMousePositionRef(containerRef: any) {
       }
     };
 
-    const handleMouseMove = (ev: any) => updatePosition(ev.clientX, ev.clientY);
-    const handleTouchMove = (ev: any) => {
+    const handleMouseMove = (ev: MouseEvent) => updatePosition(ev.clientX, ev.clientY);
+    const handleTouchMove = (ev: TouchEvent) => {
       const touch = ev.touches[0];
+      if (!touch) return;
       updatePosition(touch.clientX, touch.clientY);
     };
 
@@ -44,7 +58,7 @@ function useMousePositionRef(containerRef: any) {
   return positionRef;
 }
 
-const VariableProximity = forwardRef((props: any, ref) => {
+const VariableProximity = forwardRef<HTMLSpanElement, VariableProximityProps>((props, ref) => {
   const {
     label,
     fromFontVariationSettings,
@@ -58,18 +72,17 @@ const VariableProximity = forwardRef((props: any, ref) => {
     ...restProps
   } = props;
 
-  const letterRefs = useRef<any>([]);
-  const interpolatedSettingsRef = useRef<any>([]);
+  const letterRefs = useRef<Array<HTMLSpanElement | null>>([]);
   const mousePositionRef = useMousePositionRef(containerRef);
-  const lastPositionRef = useRef<any>({ x: null, y: null });
+  const lastPositionRef = useRef<{ x: number | null; y: number | null }>({ x: null, y: null });
 
   const parsedSettings = useMemo(() => {
-    const parseSettings = (settingsStr: any) =>
-      new Map(
+    const parseSettings = (settingsStr: string) =>
+      new Map<string, number>(
         settingsStr
           .split(',')
-          .map((s: any) => s.trim())
-          .map((s: any) => {
+          .map((s) => s.trim())
+          .map((s): [string, number] => {
             const [name, value] = s.split(' ');
             return [name.replace(/["']/g, ''), parseFloat(value)];
           })
@@ -78,16 +91,16 @@ const VariableProximity = forwardRef((props: any, ref) => {
     const fromSettings = parseSettings(fromFontVariationSettings);
     const toSettings = parseSettings(toFontVariationSettings);
 
-    return Array.from(fromSettings.entries()).map(([axis, fromValue]: any) => ({
+    return Array.from(fromSettings.entries()).map(([axis, fromValue]): FontAxis => ({
       axis,
       fromValue,
       toValue: toSettings.get(axis) ?? fromValue
     }));
   }, [fromFontVariationSettings, toFontVariationSettings]);
 
-  const calculateDistance = (x1: any, y1: any, x2: any, y2: any) => Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+  const calculateDistance = (x1: number, y1: number, x2: number, y2: number) => Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 
-  const calculateFalloff = (distance: any) => {
+  const calculateFalloff = (distance: number) => {
     const norm = Math.min(Math.max(1 - distance / radius, 0), 1);
     switch (falloff) {
       case 'exponential':
@@ -109,7 +122,7 @@ const VariableProximity = forwardRef((props: any, ref) => {
     }
     lastPositionRef.current = { x, y };
 
-    letterRefs.current.forEach((letterRef: any, index: any) => {
+    letterRefs.current.forEach((letterRef) => {
       if (!letterRef) return;
 
       const rect = letterRef.getBoundingClientRect();
@@ -130,13 +143,12 @@ const VariableProximity = forwardRef((props: any, ref) => {
 
       const falloffValue = calculateFalloff(distance);
       const newSettings = parsedSettings
-        .map(({ axis, fromValue, toValue }: any) => {
-          const interpolatedValue = (fromValue as any) + ((toValue as any) - (fromValue as any)) * falloffValue;
+        .map(({ axis, fromValue, toValue }) => {
+          const interpolatedValue = fromValue + (toValue - fromValue) * falloffValue;
           return `'${axis}' ${interpolatedValue}`;
         })
         .join(', ');
 
-      interpolatedSettingsRef.current[index] = newSettings;
       letterRef.style.fontVariationSettings = newSettings;
     });
   });
@@ -152,9 +164,9 @@ const VariableProximity = forwardRef((props: any, ref) => {
       style={{ display: 'inline', ...style }}
       {...restProps}
     >
-      {words.map((word: any, wordIndex: any) => (
+      {words.map((word, wordIndex) => (
         <span key={wordIndex} style={{ display: 'inline-block', whiteSpace: 'nowrap' }}>
-          {word.split('').map((letter: any) => {
+          {word.split('').map((letter) => {
             const currentLetterIndex = letterIndex++;
             return (
               <motion.span
@@ -164,7 +176,7 @@ const VariableProximity = forwardRef((props: any, ref) => {
                 }}
                 style={{
                   display: 'inline-block',
-                  fontVariationSettings: interpolatedSettingsRef.current[currentLetterIndex]
+                  fontVariationSettings: fromFontVariationSettings
                 }}
                 aria-hidden="true"
               >

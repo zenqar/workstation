@@ -4,32 +4,43 @@ import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { getAccountsWithBalances } from '@/lib/actions/accounts';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import { Plus, Wallet, ArrowRightLeft } from 'lucide-react';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
-import { useParams } from 'next/navigation';
+import type { Account } from '@/lib/types';
 
-export default function AccountsClient({ defaultBusinessId, initialAccounts = [] }: any) {
+type AccountWithBalance = Account & { balance: number };
+
+type AccountsClientProps = {
+  defaultBusinessId: string;
+  initialAccounts?: AccountWithBalance[];
+};
+
+export default function AccountsClient({ defaultBusinessId, initialAccounts = [] }: AccountsClientProps) {
   const t = useTranslations();
   const { activeBusiness, activeRole } = useBusiness();
-  const [accounts, setAccounts] = useState(initialAccounts || []);
-  const [loading, setLoading] = useState(false);
+  const [accountState, setAccountState] = useState({
+    businessId: defaultBusinessId,
+    accounts: initialAccounts,
+  });
   const locale = useLocale();
+  const activeBusinessId = activeBusiness?.id;
+  const loading = Boolean(activeBusinessId && accountState.businessId !== activeBusinessId);
+  const accounts = loading ? [] : accountState.accounts;
 
   useEffect(() => {
-    if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
-      let isMounted = true;
-      setLoading(true);
-      getAccountsWithBalances(activeBusiness.id).then((newAccounts) => {
-        if (isMounted) {
-          setAccounts(newAccounts);
-          setLoading(false);
-        }
-      });
-      return () => { isMounted = false; };
-    }
-  }, [activeBusiness, defaultBusinessId]);
+    if (!activeBusinessId || activeBusinessId === accountState.businessId) return;
+    let isMounted = true;
+    getAccountsWithBalances(activeBusinessId).then((newAccounts) => {
+      if (isMounted) {
+        setAccountState({
+          businessId: activeBusinessId,
+          accounts: newAccounts as AccountWithBalance[],
+        });
+      }
+    });
+    return () => { isMounted = false; };
+  }, [activeBusinessId, accountState.businessId]);
 
   if (!activeBusiness) return <div className="animate-pulse text-white/50">{t('common.loading')}</div>;
 
@@ -58,7 +69,7 @@ export default function AccountsClient({ defaultBusinessId, initialAccounts = []
         <div className="h-64 flex items-center justify-center text-white/40">{t('common.loading')}</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(accounts || []).map((acc: any) => (
+          {accounts.map((acc) => (
             <Link key={acc.id} href={`/${locale}/app/accounts/${acc.id}`}>
               <div className="glass-card p-6 flex flex-col h-full hover:border-zenqar-500/50 transition-colors group cursor-pointer">
                 <div className="flex items-center justify-between mb-6">

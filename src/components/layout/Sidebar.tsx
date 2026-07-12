@@ -14,28 +14,41 @@ import {
   Receipt, 
   PackageOpen,
   BarChart3, 
+  ScanLine,
+  FileClock,
   Settings,
   LifeBuoy
 } from 'lucide-react';
 import type { Profile } from '@/lib/types';
 
-export default function Sidebar({ profile }: { profile: Profile | null }) {
+export default function Sidebar({ profile, onNavigate }: { profile: Profile | null; onNavigate?: () => void }) {
   const pathname = usePathname();
   const locale = useLocale();
   const t = useTranslations('nav');
-  const { activeBusiness } = useBusiness();
+  const { activeBusiness, activeRole } = useBusiness();
+  const canBookkeep = !!activeRole && ['owner', 'admin', 'accountant', 'staff'].includes(activeRole);
 
   const navigation = [
-    { name: t('dashboard'), href: `/${locale}/app/dashboard`, icon: LayoutDashboard },
-    { name: t('invoices'), href: `/${locale}/app/invoices`, icon: FileText },
-    { name: t('contacts'), href: `/${locale}/app/contacts`, icon: Users },
-    { name: t('catalog'), href: `/${locale}/app/catalog`, icon: PackageOpen },
-    { name: t('accounts'), href: `/${locale}/app/accounts`, icon: Wallet },
-    { name: t('payments'), href: `/${locale}/app/payments`, icon: CreditCard },
-    { name: t('expenses'), href: `/${locale}/app/expenses`, icon: Receipt },
-    { name: t('reports'), href: `/${locale}/app/reports`, icon: BarChart3 },
-    { name: t('support') || 'Support', href: `/${locale}/app/support`, icon: LifeBuoy },
-    { name: t('settings'), href: `/${locale}/app/settings`, icon: Settings },
+    { label: t('sectionOverview'), items: [
+      { name: t('dashboard'), href: `/${locale}/app/dashboard`, icon: LayoutDashboard },
+      ...(canBookkeep ? [{ name: t('documents'), href: `/${locale}/app/documents`, icon: ScanLine, featured: true }] : []),
+    ]},
+    { label: t('sectionSales'), items: [
+      { name: t('invoices'), href: `/${locale}/app/invoices`, icon: FileText },
+      { name: t('contacts'), href: `/${locale}/app/contacts`, icon: Users },
+      { name: t('catalog'), href: `/${locale}/app/catalog`, icon: PackageOpen },
+    ]},
+    { label: t('sectionMoney'), items: [
+      { name: t('expenses'), href: `/${locale}/app/expenses`, icon: Receipt },
+      { name: t('bills'), href: `/${locale}/app/bills`, icon: FileClock },
+      { name: t('accounts'), href: `/${locale}/app/accounts`, icon: Wallet },
+      { name: t('payments'), href: `/${locale}/app/payments`, icon: CreditCard },
+      { name: t('reports'), href: `/${locale}/app/reports`, icon: BarChart3 },
+    ]},
+    { label: t('sectionWorkspace'), items: [
+      { name: t('support') || 'Support', href: `/${locale}/app/support`, icon: LifeBuoy },
+      { name: t('settings'), href: `/${locale}/app/settings`, icon: Settings },
+    ]},
   ];
 
   return (
@@ -56,15 +69,22 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto pb-4">
-        {navigation.map((item) => {
+      <nav className="flex-1 px-4 space-y-5 overflow-y-auto pb-4" aria-label="Main navigation">
+        {navigation.map((section) => (
+          <div key={section.label}>
+            <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/25">{section.label}</p>
+            <div className="space-y-1">
+            {section.items.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.name}
               href={item.href}
+              onClick={onNavigate}
+              aria-current={isActive ? 'page' : undefined}
               className={cn(
                 'nav-item group',
+                item.featured && !isActive && 'border border-zenqar-500/20 bg-zenqar-500/[0.07]',
                 isActive && 'active'
               )}
             >
@@ -75,7 +95,10 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
               <span className="truncate">{item.name}</span>
             </Link>
           );
-        })}
+            })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* User profile brief */}
@@ -89,7 +112,7 @@ export default function Sidebar({ profile }: { profile: Profile | null }) {
               {profile?.full_name || 'User'}
             </span>
             <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-white/30 truncate">
-              {activeBusiness?.name || 'Loading...'}
+              {activeBusiness?.name || 'No business selected'}
             </span>
           </div>
         </div>

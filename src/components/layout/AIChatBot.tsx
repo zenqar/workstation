@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot, Sparkles, User } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, Sparkles } from 'lucide-react';
 import { chatWithAI } from '@/lib/actions/ai';
 import { cn } from '@/lib/utils';
 import { useLocale } from 'next-intl';
 
+type ChatMessage = { role: 'assistant' | 'user'; content: string };
+
 export default function AIChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<any[]>([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'assistant', content: 'Hello! I am your Zenqar AI assistant. How can I help you today?' }
   ]);
   const [loading, setLoading] = useState(false);
@@ -39,7 +41,7 @@ export default function AIChatBot() {
       } else if (res.error) {
         setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again later.' }]);
       }
-    } catch (err) {
+    } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Connection lost. Please check your internet.' }]);
     } finally {
       setLoading(false);
@@ -47,7 +49,7 @@ export default function AIChatBot() {
   };
 
   return (
-    <div className={cn("fixed bottom-6 z-[100]", isRtl ? "left-6" : "right-6")} dir={isRtl ? 'rtl' : 'ltr'}>
+    <div className={cn("app-chrome fixed bottom-6 z-[100]", isRtl ? "left-6" : "right-6")} dir={isRtl ? 'rtl' : 'ltr'}>
       {/* Chat Window */}
       {isOpen && (
         <div className="absolute bottom-20 right-0 w-[350px] sm:w-[400px] h-[500px] bg-slate-950/95 glass-card-elevated flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 shadow-2xl border-white/10">
@@ -64,7 +66,7 @@ export default function AIChatBot() {
                 </span>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/10 rounded-md transition-colors text-white/40 hover:text-white">
+            <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/10 rounded-md transition-colors text-white/40 hover:text-white" aria-label="Close AI assistant">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -121,6 +123,7 @@ export default function AIChatBot() {
       {/* Floating Button */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
+        aria-label={isOpen ? 'Close AI assistant' : 'Open AI assistant'}
         className={cn(
           "w-14 h-14 rounded-full flex items-center justify-center shadow-glow transition-all duration-300 group",
           isOpen ? "bg-white/10 rotate-90" : "bg-primary-gradient hover:scale-110 active:scale-95"

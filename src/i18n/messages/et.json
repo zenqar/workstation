@@ -64,6 +64,12 @@
   },
   "nav": {
     "dashboard": "Armatuurlaud",
+    "documents": "Skaneeri arveid",
+    "bills": "Ostuarved",
+    "sectionOverview": "Ülevaade",
+    "sectionSales": "Müük",
+    "sectionMoney": "Raha",
+    "sectionWorkspace": "Tööruum",
     "invoices": "Arved",
     "contacts": "Kontaktid",
     "catalog": "Tooted ja teenused",

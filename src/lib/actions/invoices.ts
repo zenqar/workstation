@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { ActionResult, Invoice, InvoiceFormData } from '@/lib/types';
+import type { ActionResult, InvoiceFormData, InvoiceStatus } from '@/lib/types';
 import { z } from 'zod';
 import { notify } from './notifications';
 
@@ -80,7 +80,7 @@ export async function createInvoice(
   businessId: string,
   data: InvoiceFormData
 ): Promise<ActionResult<{ id: string }>> {
-  const { supabase, user, role } = await requireBusinessUser(businessId);
+  const { user, role } = await requireBusinessUser(businessId);
 
   if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) {
     return { error: 'You do not have permission to create invoices' };
@@ -513,7 +513,7 @@ export async function payIncomingInvoice(
 // Get Invoices (list)
 // ============================================================
 
-export async function getInvoices(businessId: string, status?: string) {
+export async function getInvoices(businessId: string, status?: InvoiceStatus) {
   try {
     const { role } = await requireBusinessUser(businessId);
     if (!role) return [];
@@ -539,7 +539,7 @@ export async function getInvoices(businessId: string, status?: string) {
       .order('created_at', { ascending: false });
 
     if (status) {
-      query = query.eq('status', status as any);
+      query = query.eq('status', status);
     }
 
     const { data, error } = await query;
@@ -568,6 +568,7 @@ export async function getInvoice(businessId: string, invoiceId: string) {
       .from('invoices')
       .select(`
         *,
+        business:businesses(id, name, legal_name, logo_url, email, phone, website, address_line1, address_line2, city, country, tax_number, business_registration_number),
         contact:contacts(*),
         invoice_items(*)
       `)
@@ -584,7 +585,19 @@ export async function getInvoice(businessId: string, invoiceId: string) {
       return null;
     }
 
-    return data;
+    const paymentAccountIds = Array.isArray(data.payment_account_ids) ? data.payment_account_ids : [];
+    const { data: paymentAccounts } = paymentAccountIds.length
+      ? await admin.from('accounts')
+          .select('id, name, account_type, currency, display_detail, bank_name')
+          .eq('business_id', data.business_id)
+          .in('id', paymentAccountIds)
+      : { data: [] };
+
+    return {
+      ...data,
+      invoice_items: [...(data.invoice_items || [])].sort((left, right) => left.sort_order - right.sort_order),
+      payment_accounts: paymentAccounts || [],
+    };
   } catch (err) {
     console.error('[getInvoice] runtime error:', err);
     return null;
@@ -631,6 +644,9 @@ export async function acceptInvoicePublic(token: string): Promise<ActionResult> 
 }
 
 export async function claimPaymentPublic(token: string, note?: string): Promise<ActionResult> {
+  // Retain the optional note argument for compatibility with existing public
+  // clients until payment-claim notes have a dedicated persistence column.
+  void note;
   const admin = await createAdminClient();
   const { data: invoice, error: fetchError } = await admin
     .from('invoices')

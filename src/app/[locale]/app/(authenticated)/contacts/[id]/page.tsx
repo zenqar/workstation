@@ -3,6 +3,12 @@ import { redirect, notFound } from 'next/navigation';
 import ContactDetailsClient from './ContactDetailsClient';
 import { getContact } from '@/lib/actions/contacts';
 import { getLocalizedPath } from '@/lib/utils/locale';
+import { pickActiveMembership } from '@/lib/auth/active-business';
+import type { Business, Invoice } from '@/lib/types';
+
+type ContactInvoice = Pick<Invoice, 'id' | 'business_id' | 'invoice_number' | 'status' | 'total' | 'currency' | 'issue_date'> & {
+  business?: Pick<Business, 'name'> | null;
+};
 
 export default async function ContactPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { id, locale } = await params;
@@ -18,29 +24,30 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
 
   if (!memberships || memberships.length === 0) redirect(getLocalizedPath(locale, '/signup'));
 
-  const businessId = memberships[0].business_id;
+  const businessId = (await pickActiveMembership(memberships))!.business_id;
 
-  try {
-    const contact = await getContact(businessId, id);
-    if (!contact) notFound();
+  const loadContactData = async () => {
+    try {
+      const contact = await getContact(businessId, id);
+      if (!contact) notFound();
 
     // Fetch invoices for this contact
     // 1. Invoices issued BY me TO them
     // 2. Invoices issued BY them TO me (if connected)
     
-    let invoices: any[] = [];
+      let invoices: ContactInvoice[] = [];
     
     // Outgoing
-    const { data: outgoing } = await supabase
+      const { data: outgoing } = await supabase
       .from('invoices')
       .select('*, business:businesses(name)')
       .eq('contact_id', id)
       .eq('business_id', businessId);
       
-    invoices = [...(outgoing || [])];
+      invoices = [...(outgoing || [])] as ContactInvoice[];
     
     // Incoming (if connected)
-    if (contact.connected_business_id) {
+      if (contact.connected_business_id) {
       // Find the contact in their business that represents US
       const { data: reverseContact } = await supabase
         .from('contacts')
@@ -59,25 +66,28 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
           
         if (incoming) {
           console.log(`[ContactPage] Found ${incoming.length} incoming invoices`);
-          invoices = [...invoices, ...incoming];
+          invoices = [...invoices, ...incoming] as ContactInvoice[];
         }
       } else {
         console.log(`[ContactPage] No reverse contact found for business ${businessId} in ${contact.connected_business_id}`);
       }
+      }
+
+      invoices.sort((a, b) => new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime());
+      return { contact, invoices };
+    } catch (error) {
+      console.error('[ContactDetailsPage] Error:', error);
+      notFound();
     }
+  };
+  const { contact, invoices } = await loadContactData();
 
-    invoices.sort((a, b) => new Date(b.issue_date).getTime() - new Date(a.issue_date).getTime());
-
-    return (
-      <ContactDetailsClient 
-        contact={contact}
-        invoices={invoices || []}
-        businessId={businessId}
-        currentUserId={user.id}
-      />
-    );
-  } catch (error) {
-    console.error('[ContactDetailsPage] Error:', error);
-    notFound();
-  }
+  return (
+    <ContactDetailsClient
+      contact={contact}
+      invoices={invoices}
+      businessId={businessId}
+      currentUserId={user.id}
+    />
+  );
 }

@@ -1,34 +1,47 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { Bell, BellRing, UserPlus, Check, X, MessageSquare, Receipt, AlertCircle } from 'lucide-react';
+import { useCallback, useEffect, useState, useRef } from 'react';
+import { Bell, UserPlus, Receipt, AlertCircle } from 'lucide-react';
 import { getIncomingContactRequests, handleContactRequest } from '@/lib/actions/connections';
 import { getNotifications, markAsRead } from '@/lib/actions/notifications';
 import { cn, formatDate } from '@/lib/utils';
-import { useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { useBusiness } from '@/lib/contexts/BusinessContext';
 
 const PING_SOUND_URL = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3';
 
+type NotificationItem = {
+  id: string;
+  type: string;
+  title?: string;
+  message?: string;
+  link?: string | null;
+  is_read?: boolean;
+  is_db?: boolean;
+  created_at: string;
+  sender_business?: { name?: string } | null;
+};
+
 export default function NotificationBell() {
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { activeBusiness } = useBusiness();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const playPing = () => {
+  const playPing = useCallback(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio(PING_SOUND_URL);
     }
     audioRef.current.play().catch(e => console.log('Audio play blocked by browser', e));
-  };
+  }, []);
 
-  const showBrowserNotification = (title: string, body: string, link?: string) => {
+  const showBrowserNotification = useCallback((title: string, body: string, link?: string) => {
     if (!("Notification" in window)) return;
     
     if (Notification.permission === "granted") {
@@ -45,63 +58,52 @@ export default function NotificationBell() {
     } else if (Notification.permission !== "denied") {
       Notification.requestPermission();
     }
-  };
+  }, [router]);
 
-  const fetchNotifications = async () => {
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // Fetch business ID from profile/membership
-    const { data: membership } = await supabase
-      .from('business_memberships')
-      .select('business_id')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .maybeSingle();
-
-    if (!membership) return;
+  const fetchNotifications = useCallback(async () => {
+    if (!activeBusiness) return;
 
     const [dbNotifs, contactRequests] = await Promise.all([
-      getNotifications(membership.business_id),
+      getNotifications(activeBusiness.id),
       getIncomingContactRequests()
     ]);
 
     const combined = [
       ...(contactRequests || []).map(c => ({ ...c, type: 'contact_request' })),
       ...(dbNotifs || []).map(n => ({ ...n, is_db: true }))
-    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    ] as NotificationItem[];
+    combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     
     setNotifications(combined);
-  };
+  }, [activeBusiness]);
 
   useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-    fetchNotifications();
+    if (!activeBusiness) return;
+    const initialFetch = window.setTimeout(() => void fetchNotifications(), 0);
 
     const supabase = createClient();
     
     const channel = supabase
-      .channel('notifications_changes')
+      .channel(`notifications_${activeBusiness.id}`)
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
-        table: 'notifications' 
-      }, (payload: any) => {
+        table: 'notifications',
+        filter: `business_id=eq.${activeBusiness.id}`,
+      }, (payload: { new: { title?: string; message?: string; link?: string } }) => {
         fetchNotifications();
         playPing();
         if (payload.new) {
-          showBrowserNotification(payload.new.title, payload.new.message, payload.new.link);
+          showBrowserNotification(payload.new.title || 'Zenqar notification', payload.new.message || '', payload.new.link);
         }
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      window.clearTimeout(initialFetch);
     };
-  }, []);
+  }, [activeBusiness, fetchNotifications, playPing, showBrowserNotification]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -130,6 +132,8 @@ export default function NotificationBell() {
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Notifications"
+        aria-expanded={isOpen}
         className={cn(
           "relative p-2 rounded-xl transition-all group",
           isOpen ? "bg-white/10 text-white" : "hover:bg-white/5 text-white/60 hover:text-white"
@@ -144,7 +148,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 glass-card shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 border-white/10">
+        <div className="absolute end-0 mt-2 w-80 glass-card shadow-2xl p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 border-white/10">
           <div className="px-3 py-2 border-b border-white/5 mb-2 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-white">Notifications</h3>
             <div className="flex items-center gap-2">
@@ -166,7 +170,7 @@ export default function NotificationBell() {
             {notifications.filter(n => !n.is_read).length === 0 ? (
               <div className="p-4 text-center text-xs text-white/40 italic">No new notifications</div>
             ) : (
-              notifications.filter(n => !n.is_read).map((notif: any) => (
+              notifications.filter(n => !n.is_read).map((notif) => (
                 <div key={notif.id}>
                   {notif.type === 'contact_request' ? (
                     <div className="p-3 rounded-xl bg-white/5 border border-white/5 hover:border-zenqar-500/30 transition-colors">

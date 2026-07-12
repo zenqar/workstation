@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { createAccount } from '@/lib/actions/accounts';
 import { ArrowLeft, Save, Wallet } from 'lucide-react';
 import Link from 'next/link';
+import type { AccountType, CurrencyCode } from '@/lib/types';
 
-export default function NewAccountClient({ defaultBusinessId }: { defaultBusinessId: string }) {
+export default function NewAccountClient() {
   const t = useTranslations();
   const router = useRouter();
   const locale = useLocale();
@@ -96,7 +97,7 @@ export default function NewAccountClient({ defaultBusinessId }: { defaultBusines
               <select 
                 className="select-glass"
                 value={form.account_type}
-                onChange={e => setForm({...form, account_type: e.target.value as any})}
+                onChange={e => setForm({...form, account_type: e.target.value as AccountType})}
                 required
               >
                 <option value="cash">{t('accounts.types.cash')}</option>
@@ -111,7 +112,7 @@ export default function NewAccountClient({ defaultBusinessId }: { defaultBusines
               <select 
                 className="select-glass"
                 value={form.currency}
-                onChange={e => setForm({...form, currency: e.target.value as any})}
+                onChange={e => setForm({...form, currency: e.target.value as CurrencyCode})}
                 required
               >
                 <option value="IQD">IQD (عراقي)</option>

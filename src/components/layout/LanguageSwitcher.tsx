@@ -2,8 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useLocale } from 'next-intl';
-import { useRouter, usePathname } from '@/i18n/routing';
-import { Globe, Check, ChevronDown } from 'lucide-react';
+import { useRouter, usePathname, type Locale } from '@/i18n/routing';
+import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const LANGUAGES = [
@@ -11,7 +11,7 @@ const LANGUAGES = [
   { code: 'ar', name: 'العربية', flag: '🇮🇶' },
   { code: 'ku', name: 'Kurdî', flag: '☀️' },
   { code: 'et', name: 'Eesti', flag: '🇪🇪' },
-];
+] as const;
 
 export default function LanguageSwitcher() {
   const locale = useLocale();
@@ -32,8 +32,8 @@ export default function LanguageSwitcher() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const switchLanguage = (newLocale: string) => {
-    router.replace(pathname, { locale: newLocale as any });
+  const switchLanguage = (newLocale: Locale) => {
+    router.replace(pathname, { locale: newLocale });
     setIsOpen(false);
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { createInvoice } from '@/lib/actions/invoices';
@@ -10,8 +10,41 @@ import { getCatalogItems } from '@/lib/actions/catalog';
 import { Plus, Trash2, ArrowLeft, Save, PackagePlus } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import type { BusinessContext, CatalogItem, Contact, CurrencyCode, InvoiceFormData } from '@/lib/types';
 
-export default function NewInvoiceClient({ defaultBusinessId, initialContacts = [], initialContext, initialCatalog = [] }: any) {
+type NewInvoiceClientProps = {
+  defaultBusinessId: string;
+  initialContacts?: Contact[];
+  initialContext: BusinessContext | null;
+  initialCatalog?: CatalogItem[];
+};
+
+type InvoiceDraftForm = {
+  customer_mode: 'existing' | 'custom';
+  contact_id: string;
+  custom_customer_name: string;
+  custom_customer_type: 'individual' | 'business';
+  save_to_contacts: boolean;
+  currency: CurrencyCode;
+  issue_date: string;
+  due_date: string;
+  discount_percent: number;
+  tax_rate: number;
+  notes: string;
+  internal_notes: string;
+  is_external: boolean;
+  external_source: string;
+  external_id: string;
+  payment_account_ids: string[];
+};
+
+type InvoicePayload = InvoiceFormData & {
+  is_external: boolean;
+  external_source: string | null;
+  external_id: string | null;
+};
+
+export default function NewInvoiceClient({ defaultBusinessId, initialContacts = [], initialContext, initialCatalog = [] }: NewInvoiceClientProps) {
   const t = useTranslations();
   const router = useRouter();
   const locale = useLocale();
@@ -19,7 +52,6 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
   const [contacts, setContacts] = useState(initialContacts || []);
   const [catalog, setCatalog] = useState(initialCatalog || []);
   const [selectedCatalogId, setSelectedCatalogId] = useState('');
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,13 +65,13 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
     return '';
   };
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<InvoiceDraftForm>({
     customer_mode: 'existing' as 'existing' | 'custom',
     contact_id: '',
     custom_customer_name: '',
     custom_customer_type: 'individual' as 'individual' | 'business',
     save_to_contacts: false,
-    currency: initialContext?.settings?.default_currency || 'IQD',
+    currency: initialContext?.business.default_currency || 'IQD',
     issue_date: new Date().toISOString().split('T')[0],
     due_date: getInitialDueDate(),
     discount_percent: 0,
@@ -73,7 +105,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
   const total = taxable + taxAmount;
 
   const addCatalogItem = () => {
-    const catalogItem = catalog.find((item: any) => item.id === selectedCatalogId);
+    const catalogItem = catalog.find((item) => item.id === selectedCatalogId);
     if (!catalogItem) return;
     const line = {
       description: catalogItem.description ? `${catalogItem.name} — ${catalogItem.description}` : catalogItem.name,
@@ -99,11 +131,27 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
     setSaving(true);
     setError('');
 
-    const res = await createInvoice(activeBusiness.id, {
-      ...form,
-      due_date: form.due_date || undefined,
-      items: validItems
-    } as any);
+    const payload: InvoicePayload = {
+      customer_mode: form.customer_mode,
+      contact_id: form.customer_mode === 'existing' ? form.contact_id || null : null,
+      custom_customer_name: form.customer_mode === 'custom' ? form.custom_customer_name || null : null,
+      custom_customer_type: form.customer_mode === 'custom' ? form.custom_customer_type : null,
+      save_to_contacts: form.save_to_contacts,
+      currency: form.currency,
+      issue_date: form.issue_date,
+      due_date: form.due_date || null,
+      payment_terms: null,
+      discount_percent: form.discount_percent,
+      tax_rate: form.tax_rate,
+      notes: form.notes || null,
+      internal_notes: form.internal_notes || null,
+      items: validItems,
+      payment_account_ids: form.payment_account_ids,
+      is_external: form.is_external,
+      external_source: form.external_source || null,
+      external_id: form.external_id || null,
+    };
+    const res = await createInvoice(activeBusiness.id, payload);
 
     if (res?.error) {
       setError(res.error);
@@ -170,8 +218,8 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
                   onChange={e => setForm({...form, contact_id: e.target.value})}
                 >
                   <option value="">{t('invoices.selectCustomer')}</option>
-                  {contacts.filter((c: any) => c.type !== 'supplier').map((c: any) => (
-                    <option key={c.id} value={c.id}>{c.name} {c.company_name ? `(${c.company_name})` : ''}</option>
+                  {contacts.filter((contact) => contact.type !== 'supplier').map((contact) => (
+                    <option key={contact.id} value={contact.id}>{contact.name} {contact.company_name ? `(${contact.company_name})` : ''}</option>
                   ))}
                 </select>
               ) : (
@@ -216,7 +264,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
             <select 
               className="select-glass"
               value={form.currency}
-              onChange={e => setForm({...form, currency: e.target.value})}
+              onChange={e => setForm({...form, currency: e.target.value as CurrencyCode})}
               required
             >
               <option value="IQD">IQD (عراقي)</option>
@@ -293,7 +341,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
 
         <div className="glass-card overflow-hidden">
           <div className="p-5 border-b border-white/5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><h3 className="font-semibold text-white">{t('invoices.lineItems')}</h3><p className="mt-1 text-xs text-white/35">Choose a saved product or service, or enter a custom line below.</p></div><div className="flex flex-col gap-2 sm:flex-row"><select value={selectedCatalogId} onChange={event => setSelectedCatalogId(event.target.value)} className="select-glass min-w-64"><option value="">Add from products & services…</option>{catalog.filter((item: any) => item.currency === form.currency).map((item: any) => <option key={item.id} value={item.id}>{item.name} · {Number(item.sales_price).toLocaleString()} {item.currency}</option>)}</select><button type="button" disabled={!selectedCatalogId} onClick={addCatalogItem} className="btn-secondary disabled:opacity-40"><PackagePlus className="h-4 w-4" /> Add</button></div></div>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><h3 className="font-semibold text-white">{t('invoices.lineItems')}</h3><p className="mt-1 text-xs text-white/35">Choose a saved product or service, or enter a custom line below.</p></div><div className="flex flex-col gap-2 sm:flex-row"><select value={selectedCatalogId} onChange={event => setSelectedCatalogId(event.target.value)} className="select-glass min-w-64"><option value="">Add from products & services…</option>{catalog.filter((item) => item.currency === form.currency).map((item) => <option key={item.id} value={item.id}>{item.name} · {Number(item.sales_price).toLocaleString()} {item.currency}</option>)}</select><button type="button" disabled={!selectedCatalogId} onClick={addCatalogItem} className="btn-secondary disabled:opacity-40"><PackagePlus className="h-4 w-4" /> Add</button></div></div>
           </div>
           <div className="p-0 overflow-x-auto">
             <table className="data-table w-full">
@@ -400,7 +448,7 @@ export default function NewInvoiceClient({ defaultBusinessId, initialContacts = 
             <p className="text-xs text-white/40 mb-4">Choose which accounts to show as payment instructions on this invoice.</p>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {(initialContext?.accounts || []).map((acc: any) => (
+              {(initialContext?.accounts || []).map((acc) => (
                 <label key={acc.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors group">
                   <div className="relative flex items-center justify-center w-5 h-5 rounded border border-white/20 bg-black/20 group-hover:border-zenqar-400 transition-colors">
                     <input 

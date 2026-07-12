@@ -1,15 +1,27 @@
 'use client';
 
 import { useTranslations, useLocale } from 'next-intl';
-import { ArrowLeft, User, Mail, Phone, MapPin, FileText, Trash2, ShieldCheck, Clock } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, FileText, Trash2, ShieldCheck, Clock } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { formatCurrency, formatDate, cn, INVOICE_STATUS_COLORS } from '@/lib/utils';
 import { deleteContact } from '@/lib/actions/contacts';
 import { useState } from 'react';
 import ContactChat from './ContactChat';
+import type { Business, Contact, Invoice } from '@/lib/types';
 
-export default function ContactDetailsClient({ contact, invoices, businessId, currentUserId }: any) {
+type ContactInvoice = Pick<Invoice, 'id' | 'business_id' | 'invoice_number' | 'status' | 'total' | 'currency' | 'issue_date'> & {
+  business?: Pick<Business, 'name'> | null;
+};
+
+type ContactDetailsClientProps = {
+  contact: Contact;
+  invoices: ContactInvoice[];
+  businessId: string;
+  currentUserId: string;
+};
+
+export default function ContactDetailsClient({ contact, invoices, businessId, currentUserId }: ContactDetailsClientProps) {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
@@ -152,7 +164,7 @@ export default function ContactDetailsClient({ contact, invoices, businessId, cu
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                      {invoices.map((inv: any) => (
+                      {invoices.map(inv => (
                         <tr key={inv.id}>
                           <td>
                             <div className="flex items-center gap-2">
@@ -188,8 +200,12 @@ export default function ContactDetailsClient({ contact, invoices, businessId, cu
           ) : (
             <ContactChat 
               contactId={contact.id}
+              contactName={contact.name}
+              businessId={businessId}
+              connectedBusinessId={contact.connected_business_id ?? null}
               currentUserId={currentUserId}
-              connectedUserId={contact.connected_user_id}
+              connectedUserId={contact.connected_user_id ?? null}
+              connectionStatus={contact.connection_status ?? null}
             />
           )}
         </div>

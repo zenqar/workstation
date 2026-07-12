@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { forgotPassword } from '@/lib/actions/auth';
 import { Mail, ArrowLeft } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 
 export default function ForgotPasswordPage() {

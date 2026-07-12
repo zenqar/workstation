@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import NewContactClient from './NewContactClient';
 import { getLocale } from 'next-intl/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
+import { pickActiveMembership } from '@/lib/auth/active-business';
 
 export default async function NewContactPage() {
   const locale = await getLocale();
@@ -18,16 +19,12 @@ export default async function NewContactPage() {
 
   if (!memberships || memberships.length === 0) redirect(getLocalizedPath(locale, '/signup'));
 
-  const defaultBusinessId = memberships[0].business_id;
-  const role = memberships[0].role;
+  const membership = (await pickActiveMembership(memberships))!;
+  const role = membership.role;
   
   if (!['owner', 'admin', 'accountant', 'staff'].includes(role)) {
     redirect(getLocalizedPath(locale, '/app/contacts'));
   }
 
-  return (
-    <NewContactClient 
-      defaultBusinessId={defaultBusinessId}
-    />
-  );
+  return <NewContactClient />;
 }

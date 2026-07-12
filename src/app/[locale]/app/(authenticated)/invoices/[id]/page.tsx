@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
-import { getLocale } from 'next-intl/server';
 import { getLocalizedPath } from '@/lib/utils/locale';
 import InvoiceDetailsClient from './InvoiceDetailsClient';
 import { getInvoice } from '@/lib/actions/invoices';
 import { getAccountsWithBalances } from '@/lib/actions/accounts';
 import { getBusinessContext } from '@/lib/actions/businesses';
+import { pickActiveMembership } from '@/lib/auth/active-business';
+import { getAppUrl } from '@/lib/env/server';
 
 export default async function InvoicePage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { id, locale } = await params;
@@ -21,27 +22,33 @@ export default async function InvoicePage({ params }: { params: Promise<{ locale
 
   if (!memberships || memberships.length === 0) redirect(getLocalizedPath(locale, '/signup'));
 
-  const businessId = memberships[0].business_id;
+  const businessId = (await pickActiveMembership(memberships))!.business_id;
 
-  try {
-    const [invoice, accounts, businessContext] = await Promise.all([
-      getInvoice(businessId, id),
-      getAccountsWithBalances(businessId),
-      getBusinessContext(businessId)
-    ]);
+  const loadInvoiceData = async () => {
+    try {
+      return await Promise.all([
+        getInvoice(businessId, id),
+        getAccountsWithBalances(businessId),
+        getBusinessContext(businessId),
+        getAppUrl(),
+      ]);
+    } catch (error) {
+      console.error('[InvoiceDetailsPage] Error:', error);
+      notFound();
+    }
+  };
+  const [invoice, accounts, businessContext, appUrl] = await loadInvoiceData();
 
-    if (!invoice) notFound();
+  if (!invoice) notFound();
 
-    return (
-      <InvoiceDetailsClient 
-        invoice={invoice}
-        accounts={accounts}
-        businessId={businessId}
-        fxRate={businessContext?.fxRate || 1310}
-      />
-    );
-  } catch (error) {
-    console.error('[InvoiceDetailsPage] Error:', error);
-    notFound();
-  }
+  return (
+    <InvoiceDetailsClient
+      invoice={invoice}
+      accounts={accounts}
+      businessId={businessId}
+      fxRate={businessContext?.fxRate || 1310}
+      business={invoice.business || businessContext?.business}
+      verificationUrl={`${appUrl}/${locale}/verify/${invoice.verification_token}`}
+    />
+  );
 }

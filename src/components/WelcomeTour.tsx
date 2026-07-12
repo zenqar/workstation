@@ -137,7 +137,7 @@ export default function WelcomeTour() {
     return (
       <button
         onClick={() => { setStep(0); setVisible(true); }}
-        className="fixed bottom-6 right-6 z-40 w-10 h-10 rounded-full bg-zenqar-600 hover:bg-zenqar-500 shadow-glow flex items-center justify-center text-white transition-all hover:scale-110"
+        className="app-chrome fixed bottom-24 end-6 z-40 w-10 h-10 rounded-full bg-zenqar-600 hover:bg-zenqar-500 shadow-glow flex items-center justify-center text-white transition-all hover:scale-110"
         title="Show tips & tour"
       >
         <Lightbulb className="w-4 h-4" />
@@ -153,13 +153,13 @@ export default function WelcomeTour() {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+        className="app-chrome fixed inset-0 bg-black/50 backdrop-blur-sm z-[105]"
         onClick={dismiss}
         aria-hidden="true"
       />
 
       {/* Tour card */}
-      <div className="fixed bottom-6 right-6 z-50 w-full max-w-sm animate-in">
+      <div className="app-chrome fixed bottom-6 end-6 z-[110] w-full max-w-sm animate-in">
         <div className="glass-card p-6 relative overflow-hidden shadow-2xl">
           <div className="mouse-light" />
 

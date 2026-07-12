@@ -64,6 +64,12 @@
   },
   "nav": {
     "dashboard": "داشبۆرد",
+    "documents": "سکانکردنی پسووڵەکان",
+    "bills": "پسووڵەی دابینکەرەکان",
+    "sectionOverview": "پوختە",
+    "sectionSales": "فرۆشتن",
+    "sectionMoney": "پارە",
+    "sectionWorkspace": "شوێنی کار",
     "invoices": "پسووڵەکان",
     "contacts": "پەیوەندیەکان",
     "catalog": "بەرهەم و خزمەتگوزارییەکان",

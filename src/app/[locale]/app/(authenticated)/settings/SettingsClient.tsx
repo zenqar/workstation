@@ -4,25 +4,62 @@ import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { getBusinessContext, getTeamMembers, updateBusiness, updateBusinessSettings, inviteTeamMember, submitVerificationRequest } from '@/lib/actions/businesses';
-import { Building2, Users, FileText, Globe, Save, Mail, UserPlus, ShieldCheck, AlertCircle, Clock } from 'lucide-react';
+import { Building2, Users, FileText, Globe, Save, UserPlus, ShieldCheck, AlertCircle, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
+import type { Business, BusinessContext, BusinessMembership, BusinessSettings, Profile } from '@/lib/types';
 
-export default function SettingsClient({ defaultBusinessId, initialContext, initialTeam, user, profile }: any) {
+type TeamMember = BusinessMembership & {
+  profile?: Pick<Profile, 'id' | 'full_name' | 'email'> | null;
+};
+type BusinessForm = Pick<Business, 'name'> & Partial<Pick<Business, 'legal_name' | 'email' | 'phone'>>;
+type SettingsForm = Omit<BusinessSettings, 'id' | 'business_id' | 'created_at' | 'updated_at'>;
+
+type SettingsClientProps = {
+  defaultBusinessId: string;
+  initialContext: BusinessContext | null;
+  initialTeam: TeamMember[];
+};
+
+function toBusinessForm(context: BusinessContext | null): BusinessForm {
+  return {
+    name: context?.business.name || '',
+    legal_name: context?.business.legal_name || null,
+    email: context?.business.email || null,
+    phone: context?.business.phone || null,
+  };
+}
+
+function toSettingsForm(context: BusinessContext | null): SettingsForm {
+  const settings = context?.settings;
+  return {
+    invoice_due_days: settings?.invoice_due_days ?? 30,
+    invoice_footer_note: settings?.invoice_footer_note ?? null,
+    invoice_tax_label: settings?.invoice_tax_label ?? 'Tax',
+    invoice_tax_rate: settings?.invoice_tax_rate ?? 0,
+    show_tax_on_invoice: settings?.show_tax_on_invoice ?? false,
+    show_discount_on_invoice: settings?.show_discount_on_invoice ?? true,
+    payout_bank_name: settings?.payout_bank_name ?? null,
+    payout_account_name: settings?.payout_account_name ?? null,
+    payout_account_number: settings?.payout_account_number ?? null,
+    payout_iban: settings?.payout_iban ?? null,
+    payout_swift: settings?.payout_swift ?? null,
+    payout_notes: settings?.payout_notes ?? null,
+  };
+}
+
+export default function SettingsClient({ defaultBusinessId, initialContext, initialTeam }: SettingsClientProps) {
   const t = useTranslations();
-  const router = useRouter();
   const { activeBusiness, activeRole } = useBusiness();
   const [context, setContext] = useState(initialContext || null);
   const [team, setTeam] = useState(initialTeam || []);
-  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('business');
 
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
   // Forms state
-  const [bizForm, setBizForm] = useState(initialContext?.business || {});
-  const [setForm, setSetForm] = useState(initialContext?.settings || {});
+  const [bizForm, setBizForm] = useState<BusinessForm>(() => toBusinessForm(initialContext));
+  const [setForm, setSetForm] = useState<SettingsForm>(() => toSettingsForm(initialContext));
   const [verificationForm, setVerificationForm] = useState({
     legal_name: initialContext?.business?.legal_name || initialContext?.business?.name || '',
     tax_id_number: initialContext?.business?.tax_id_number || '',
@@ -37,15 +74,14 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
   useEffect(() => {
     if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
       let isMounted = true;
-      setLoading(true);
       Promise.all([
         getBusinessContext(activeBusiness.id),
         getTeamMembers(activeBusiness.id)
       ]).then(([newCtx, newTeam]) => {
         if (isMounted) {
           setContext(newCtx);
-          setBizForm(newCtx?.business || {});
-          setSetForm(newCtx?.settings || {});
+          setBizForm(toBusinessForm(newCtx));
+          setSetForm(toSettingsForm(newCtx));
           setVerificationForm({
             legal_name: newCtx?.business?.legal_name || newCtx?.business?.name || '',
             tax_id_number: newCtx?.business?.tax_id_number || '',
@@ -55,7 +91,6 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
             website: newCtx?.business?.website || '',
           });
           setTeam(newTeam);
-          setLoading(false);
         }
       });
       return () => { isMounted = false; };
@@ -85,7 +120,7 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
       // Refresh context
       const newCtx = await getBusinessContext(activeBusiness.id);
       setContext(newCtx);
-      setBizForm(newCtx?.business || {});
+      setBizForm(toBusinessForm(newCtx));
     }
     setSaving(false);
   };
@@ -369,12 +404,12 @@ export default function SettingsClient({ defaultBusinessId, initialContext, init
                       </tr>
                     </thead>
                     <tbody>
-                      {team.map((member: any) => (
+                      {team.map((member) => (
                         <tr key={member.id}>
                           <td>
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-medium text-white/80">
-                                {member.profile?.full_name?.charAt(0).toUpperCase() || member.email.charAt(0).toUpperCase()}
+                                {member.profile?.full_name?.charAt(0).toUpperCase() || member.email?.charAt(0).toUpperCase() || '?'}
                               </div>
                               <span className="font-medium text-white">{member.profile?.full_name || '—'}</span>
                             </div>

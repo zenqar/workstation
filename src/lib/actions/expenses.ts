@@ -30,8 +30,16 @@ const ExpenseSchema = z.object({
   currency:     z.enum(['IQD', 'USD']),
   expense_date: z.string(),
   note:         z.string().nullable().optional(),
-  receipt_url:  z.string().nullable().optional(),
+  receipt_url:  z.string().max(500).nullable().optional(),
 });
+
+function expenseErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return fallback;
+}
 
 export async function createExpense(
   businessId: string,
@@ -49,6 +57,26 @@ export async function createExpense(
 
     const d = parsed.data;
     const admin = await createAdminClient();
+
+    const { data: account } = await admin
+      .from('accounts')
+      .select('id, currency, is_active')
+      .eq('id', d.account_id)
+      .eq('business_id', businessId)
+      .maybeSingle();
+    if (!account || !account.is_active) return { error: 'Select an active account from this business.' };
+    if (account.currency !== d.currency) return { error: `The selected account uses ${account.currency}, not ${d.currency}.` };
+
+    if (d.contact_id) {
+      const { data: contact } = await admin
+        .from('contacts')
+        .select('id')
+        .eq('id', d.contact_id)
+        .eq('business_id', businessId)
+        .maybeSingle();
+      if (!contact) return { error: 'The selected supplier does not belong to this business.' };
+    }
+
     const { data: expenseId, error } = await admin.rpc('record_expense', {
       p_business_id:  businessId,
       p_account_id:   d.account_id,
@@ -69,9 +97,9 @@ export async function createExpense(
     revalidatePath('/[locale]/app/accounts', 'layout');
     revalidatePath('/[locale]/app/dashboard', 'layout');
     return { data: { id: expenseId } };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[createExpense]', err);
-    return { error: err.message };
+    return { error: expenseErrorMessage(err, 'Could not create expense') };
   }
 }
 
@@ -114,8 +142,8 @@ export async function deleteExpense(businessId: string, expenseId: string): Prom
     revalidatePath('/[locale]/app/expenses', 'layout');
     revalidatePath('/[locale]/app/dashboard', 'layout');
     return {};
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[deleteExpense]', err);
-    return { error: err.message };
+    return { error: expenseErrorMessage(err, 'Could not delete expense') };
   }
 }

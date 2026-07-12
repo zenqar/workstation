@@ -64,6 +64,12 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "documents": "Scan invoices",
+    "bills": "Supplier bills",
+    "sectionOverview": "Overview",
+    "sectionSales": "Sales",
+    "sectionMoney": "Money",
+    "sectionWorkspace": "Workspace",
     "invoices": "Invoices",
     "contacts": "Contacts",
     "catalog": "Products & Services",

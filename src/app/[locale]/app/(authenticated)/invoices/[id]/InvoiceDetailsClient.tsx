@@ -1,14 +1,40 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { issueInvoice, cancelInvoice, recordPayment, payIncomingInvoice } from '@/lib/actions/invoices';
-import { ArrowLeft, CheckCircle, XCircle, DollarSign, Download, Printer, Share2, Plus, Trash2, Wallet, ThumbsUp } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, DollarSign, Download, Share2, Plus, Trash2, Wallet, ThumbsUp } from 'lucide-react';
 import Link from 'next/link';
-import { formatCurrency, formatDate, INVOICE_STATUS_LABELS, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
+import { formatCurrency, formatDate, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
+import QRCode from 'react-qr-code';
+import Image from 'next/image';
+import type { Account, Business, Contact, Invoice, InvoiceItem } from '@/lib/types';
 
-export default function InvoiceDetailsClient({ invoice, accounts, businessId, fxRate }: any) {
+type InvoiceBusiness = Pick<
+  Business,
+  'id' | 'name' | 'legal_name' | 'logo_url' | 'email' | 'phone' | 'website' | 'address_line1' | 'address_line2' | 'city' | 'country' | 'tax_number' | 'business_registration_number'
+>;
+type PaymentAccount = Pick<Account, 'id' | 'name' | 'account_type' | 'currency' | 'display_detail' | 'bank_name'>;
+type InvoiceWithDetails = Omit<Invoice, 'contact'> & {
+  business?: InvoiceBusiness | null;
+  contact?: Contact | null;
+  invoice_items: InvoiceItem[];
+  payment_accounts: PaymentAccount[];
+};
+type AccountWithBalance = Account & { balance: number };
+type PaymentEntry = { account_id: string; amount: number };
+
+type InvoiceDetailsClientProps = {
+  invoice: InvoiceWithDetails;
+  accounts: AccountWithBalance[];
+  businessId: string;
+  fxRate: number;
+  business?: InvoiceBusiness | null;
+  verificationUrl: string;
+};
+
+export default function InvoiceDetailsClient({ invoice, accounts, businessId, fxRate, business, verificationUrl }: InvoiceDetailsClientProps) {
   const t = useTranslations();
   const router = useRouter();
   const locale = useLocale();
@@ -36,10 +62,13 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId, fx
     setPaymentForm({ ...paymentForm, payments: newPayments });
   };
 
-  const updatePaymentEntry = (index: number, field: string, value: any) => {
-    const newPayments = [...paymentForm.payments];
-    newPayments[index] = { ...newPayments[index], [field]: value };
-    setPaymentForm({ ...paymentForm, payments: newPayments });
+  const updatePaymentEntry = <Field extends keyof PaymentEntry>(index: number, field: Field, value: PaymentEntry[Field]) => {
+    setPaymentForm(current => ({
+      ...current,
+      payments: current.payments.map((entry, entryIndex) => (
+        entryIndex === index ? { ...entry, [field]: value } : entry
+      )),
+    }));
   };
 
   const handleIssue = async () => {
@@ -88,7 +117,7 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId, fx
   };
 
   const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/${locale}/verify/${invoice.verification_token}`;
+    const shareUrl = verificationUrl;
     try {
       if (navigator.share) {
         await navigator.share({
@@ -106,8 +135,8 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId, fx
   };
 
   return (
-    <div className="space-y-6 pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="invoice-page space-y-6 pb-20">
+      <div className="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link href={`/${locale}/app/invoices`} className="p-2 rounded-xl hover:bg-white/5 transition-colors text-white/60 hover:text-white">
             <ArrowLeft className="w-5 h-5" />
@@ -161,7 +190,7 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId, fx
               className="btn-primary"
             >
               <Wallet className="w-4 h-4" />
-              <span>I've Paid This</span>
+              <span>I&apos;ve Paid This</span>
             </button>
           )}
           {['issued', 'sent', 'accepted', 'payment_claimed', 'partially_paid'].includes(invoice.status) && (
@@ -178,7 +207,7 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId, fx
           )}
           <button onClick={handlePrint} className="btn-secondary whitespace-nowrap" title={t('common.print')}>
             <Download className="w-4 h-4" />
-            <span>Download PDF / Print</span>
+            <span>Print / Save PDF</span>
           </button>
           <button onClick={handleShare} className="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all" title={t('common.share')}>
             <Share2 className="w-4 h-4" />
@@ -212,7 +241,29 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId, fx
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="glass-card overflow-hidden">
+          <div className="invoice-document glass-card overflow-hidden print-exact">
+            <div className="invoice-print-header">
+              <div className="invoice-print-brand">
+                {business?.logo_url ? <Image src={business.logo_url} alt="" width={42} height={42} unoptimized className="invoice-print-logo-image" /> : <div className="invoice-print-logo">Z</div>}
+                <div>
+                  <p className="invoice-print-business">{business?.legal_name || business?.name || 'Zenqar'}</p>
+                  <p className="invoice-print-muted">{[business?.address_line1, business?.city, business?.country].filter(Boolean).join(', ')}</p>
+                  <p className="invoice-print-muted">{[business?.email, business?.phone].filter(Boolean).join(' · ')}</p>
+                  <p className="invoice-print-muted">{[business?.website, business?.tax_number && `Tax: ${business.tax_number}`].filter(Boolean).join(' · ')}</p>
+                </div>
+              </div>
+              <div className="invoice-print-title">
+                <p>INVOICE</p>
+                <strong>{invoice.invoice_number}</strong>
+                <span className={`invoice-print-status invoice-print-status-${invoice.status}`}>{invoice.status.replace('_', ' ')}</span>
+              </div>
+            </div>
+            <div className="invoice-print-meta">
+              <div><span>Bill to</span><strong>{invoice.contact?.company_name || invoice.contact?.name || invoice.custom_customer_name || 'Customer'}</strong></div>
+              <div><span>Invoice date</span><strong>{formatDate(invoice.issue_date)}</strong></div>
+              <div><span>Due date</span><strong>{invoice.due_date ? formatDate(invoice.due_date) : 'On receipt'}</strong></div>
+              <div><span>Amount due</span><strong>{formatCurrency(Math.max(0, invoice.total - (invoice.amount_paid || 0)), invoice.currency)}</strong></div>
+            </div>
             <div className="p-6 border-b border-white/5 flex justify-between items-start">
               <div className="space-y-4">
                 <div>
@@ -255,7 +306,7 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId, fx
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {invoice.invoice_items?.map((item: any) => (
+                  {invoice.invoice_items?.map((item) => (
                     <tr key={item.id}>
                       <td className="text-white">{item.description}</td>
                       <td className="text-right tabular-nums">{item.quantity}</td>
@@ -293,17 +344,28 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId, fx
                 </div>
               </div>
             </div>
+            {(invoice.payment_account_ids?.length > 0) && (
+              <div className="invoice-print-payment">
+                <p>Payment details</p>
+                {(invoice.payment_accounts || []).map((account) => (
+                  <div key={account.id}><strong>{account.name}</strong> — {[account.bank_name, account.display_detail, account.currency].filter(Boolean).join(' · ')}</div>
+                ))}
+              </div>
+            )}
+            {invoice.notes && <div className="invoice-print-notes"><strong>Notes</strong><p>{invoice.notes}</p></div>}
+            <div className="invoice-print-verification"><QRCode value={verificationUrl} size={58} bgColor="transparent" fgColor="#241c38" /><div><strong>Verify this invoice</strong><span>{verificationUrl}</span></div></div>
+            <div className="invoice-print-footer">Created with Zenqar · Secure digital invoicing and bookkeeping</div>
           </div>
 
           {invoice.notes && (
-            <div className="glass-card p-6">
+            <div className="no-print glass-card p-6">
               <h4 className="text-sm font-semibold text-white/60 mb-2 uppercase tracking-wider">{t('common.notes')}</h4>
               <p className="text-white/80 text-sm whitespace-pre-wrap">{invoice.notes}</p>
             </div>
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="no-print space-y-6">
           <div className="glass-card p-6 space-y-4">
             <h4 className="text-sm font-semibold text-white mb-2 uppercase tracking-wider">Dates & Terms</h4>
             <div className="space-y-4">
@@ -328,7 +390,7 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId, fx
             <div className="glass-card p-6 space-y-4">
               <h4 className="text-sm font-semibold text-white mb-2 uppercase tracking-wider">Payment Instructions</h4>
               <div className="space-y-3">
-                {accounts.filter((a: any) => invoice.payment_account_ids.includes(a.id)).map((acc: any) => (
+                {(invoice.payment_accounts || []).map((acc) => (
                   <div key={acc.id} className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
                     <p className="text-[10px] uppercase font-bold text-zenqar-400">{acc.name}</p>
                     {acc.bank_name && <p className="text-xs text-white font-medium">{acc.bank_name}</p>}
@@ -378,7 +440,7 @@ export default function InvoiceDetailsClient({ invoice, accounts, businessId, fx
                         required
                       >
                         <option value="">Select Account</option>
-                        {accounts.filter((a: any) => a.currency === invoice.currency).map((acc: any) => (
+                        {accounts.filter((account) => account.currency === invoice.currency).map((acc) => (
                           <option key={acc.id} value={acc.id}>{acc.name} ({formatCurrency(acc.balance, acc.currency)})</option>
                         ))}
                       </select>

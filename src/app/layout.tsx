@@ -1,5 +1,6 @@
 import './globals.css';
 import { Inter, Noto_Kufi_Arabic, Outfit } from 'next/font/google';
+import { getLocale } from 'next-intl/server';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -20,9 +21,11 @@ const notoKufi = Noto_Kufi_Arabic({
   weight: ['400', '500', '600', '700'],
 });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+  const isRtl = locale === 'ar' || locale === 'ku';
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} dir={isRtl ? 'rtl' : 'ltr'} suppressHydrationWarning>
       <body className={`${inter.variable} ${outfit.variable} ${notoKufi.variable} antialiased`}>
         {children}
       </body>

@@ -7,34 +7,48 @@ import { getPayments } from '@/lib/actions/payments';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, CreditCard, Search } from 'lucide-react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import type { Account, Contact, Invoice, Payment } from '@/lib/types';
 
-export default function PaymentsClient({ defaultBusinessId, initialPayments }: any) {
+type PaymentListItem = Omit<Payment, 'account' | 'invoice'> & {
+  account?: Pick<Account, 'id' | 'name' | 'currency'> | null;
+  invoice?: Pick<Invoice, 'id' | 'invoice_number' | 'contact_id'> & {
+    contact?: Pick<Contact, 'id' | 'name'> | null;
+  } | null;
+};
+
+type PaymentsClientProps = {
+  defaultBusinessId: string;
+  initialPayments: PaymentListItem[];
+};
+
+export default function PaymentsClient({ defaultBusinessId, initialPayments }: PaymentsClientProps) {
   const t = useTranslations();
   const { activeBusiness, activeRole } = useBusiness();
-  const [payments, setPayments] = useState(initialPayments);
-  const [loading, setLoading] = useState(false);
+  const [paymentState, setPaymentState] = useState({
+    businessId: defaultBusinessId,
+    payments: initialPayments,
+  });
   const [search, setSearch] = useState('');
   const locale = useLocale();
+  const activeBusinessId = activeBusiness?.id;
+  const loading = Boolean(activeBusinessId && paymentState.businessId !== activeBusinessId);
+  const payments = loading ? [] : paymentState.payments;
 
   useEffect(() => {
-    if (activeBusiness && activeBusiness.id !== defaultBusinessId) {
-      let isMounted = true;
-      setLoading(true);
-      getPayments(activeBusiness.id).then((newPayments) => {
-        if (isMounted) {
-          setPayments(newPayments);
-          setLoading(false);
-        }
-      });
-      return () => { isMounted = false; };
-    }
-  }, [activeBusiness, defaultBusinessId]);
+    if (!activeBusinessId || activeBusinessId === paymentState.businessId) return;
+    let isMounted = true;
+    getPayments(activeBusinessId).then((newPayments) => {
+      if (isMounted) {
+        setPaymentState({ businessId: activeBusinessId, payments: newPayments as PaymentListItem[] });
+      }
+    });
+    return () => { isMounted = false; };
+  }, [activeBusinessId, paymentState.businessId]);
 
-  const filteredPayments = payments.filter((p: any) => 
-    (p.reference && p.reference.toLowerCase().includes(search.toLowerCase())) ||
-    (p.invoice?.invoice_number && p.invoice.invoice_number.toLowerCase().includes(search.toLowerCase())) ||
-    (p.invoice?.contact?.name && p.invoice.contact.name.toLowerCase().includes(search.toLowerCase()))
+  const filteredPayments = payments.filter((payment) =>
+    Boolean(payment.reference?.toLowerCase().includes(search.toLowerCase())) ||
+    Boolean(payment.invoice?.invoice_number?.toLowerCase().includes(search.toLowerCase())) ||
+    Boolean(payment.invoice?.contact?.name?.toLowerCase().includes(search.toLowerCase()))
   );
 
   if (!activeBusiness) return <div className="animate-pulse text-white/50">{t('common.loading')}</div>;
@@ -80,7 +94,7 @@ export default function PaymentsClient({ defaultBusinessId, initialPayments }: a
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPayments.map((p: any) => (
+                  {filteredPayments.map((p) => (
                     <tr key={p.id}>
                       <td className="text-white/70">{formatDate(p.payment_date)}</td>
                       <td>

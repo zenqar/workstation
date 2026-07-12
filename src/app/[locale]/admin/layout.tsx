@@ -4,6 +4,9 @@ import { Shield, Home, LogOut, Building2, Users, MessageSquare, ScrollText } fro
 import { getLocalizedPath } from '@/lib/utils/locale';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { PRIVATE_ROUTE_METADATA } from '@/lib/seo/private';
+
+export const metadata = PRIVATE_ROUTE_METADATA;
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();

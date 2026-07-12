@@ -330,6 +330,12 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   justify-content: space-between;
   gap: 18px;
 }
+.chat-main-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
 .chat-shield {
   padding: 8px 12px;
   border-radius: 999px;
@@ -337,6 +343,22 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   background: rgba(113,228,174,.1);
   color: #a4efca;
   border: 1px solid rgba(113,228,174,.18);
+}
+.chat-call-control {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #f4f1ff;
+  background: linear-gradient(135deg, rgba(139,125,255,.24), rgba(255,102,217,.18));
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 8px 24px rgba(49,38,98,.24);
+}
+.chat-call-control svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
 }
 .chat-bubbles { display: grid; gap: 14px; }
 .bubble {
@@ -356,6 +378,42 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   max-width: 100%;
   background: linear-gradient(135deg, rgba(255,102,217,.12), rgba(103,215,255,.08));
 }
+.voice-note {
+  width: min(330px, 78%);
+  max-width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  line-height: 1;
+}
+.voice-note-play {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(255,255,255,.13);
+}
+.voice-note-play svg { width: 17px; height: 17px; fill: currentColor; }
+.voice-note-content { min-width: 0; display: grid; gap: 7px; }
+.voice-note-content strong { font-size: 11px; color: #eeeaff; font-weight: 600; }
+.voice-wave {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  overflow: hidden;
+}
+.voice-wave > span {
+  width: 3px;
+  min-width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff, #baabff);
+  opacity: .88;
+}
+.voice-note time { color: #c7c0e8; font-size: 11px; font-variant-numeric: tabular-nums; }
 .decrypted-on { color: #f6f8ff; }
 .decrypted-off { color: #7f89b6; }
 .verify-card { border-radius: 28px; }
@@ -533,6 +591,16 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   nav { order: 3; width: 100%; justify-content: center; flex-wrap: wrap; }
   .brand-link { width: 100%; justify-content: center; }
   .chat-ui { grid-template-columns: 1fr; }
+  .chat-sidebar {
+    grid-template-columns: repeat(4, minmax(190px, 1fr));
+    overflow-x: auto;
+    border-right: 0;
+    border-inline-end: 0;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    scrollbar-width: thin;
+  }
+  .chat-sidebar > .chat-side-title { grid-column: 1 / -1; }
+  .chat-contact { min-width: 190px; }
   .dashboard-body { grid-template-columns: 1fr; }
   .dashboard-sidebar { grid-template-columns: repeat(4, 1fr); border-right: 0; border-bottom: 1px solid rgba(255,255,255,.06); }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -556,6 +624,8 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   .brand-wordmark { height: 24px; }
   .brand-link { min-width: auto; }
   .bubble { max-width: 100%; }
+  .chat-main-top { align-items: center; flex-wrap: wrap; }
+  .voice-note { width: min(320px, 100%); }
 }
 
 
@@ -685,6 +755,19 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   .hero-dashboard-shell {
     padding: 6px !important;
   }
+}
+.lang-select-wrap { display: none; }
+.lang-select {
+  min-width: 64px;
+  height: 40px;
+  padding: 0 26px 0 12px;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  border-radius: 999px;
+  background: rgba(255,255,255,.07) !important;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .site-footer {
@@ -938,6 +1021,22 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   }
 }
 
+/* Final compact-header overrides: a single native language control leaves
+   enough room for readable, touch-friendly auth actions on narrow devices. */
+@media (max-width: 760px) {
+  .lang-toggle-buttons { display: none !important; }
+  .lang-select-wrap { display: block !important; }
+  .lang-select { min-width: 58px; height: 40px; }
+  .site-header .header-btn { min-height: 40px !important; padding: 8px 10px !important; font-size: 11px !important; }
+}
+
+@media (max-width: 360px) {
+  .site-header { grid-template-columns: auto 1fr !important; }
+  .site-header .header-actions { gap: 4px !important; }
+  .site-header .header-btn { padding-inline: 8px !important; font-size: 10px !important; }
+  .lang-select { min-width: 54px; padding-inline: 9px 22px; }
+}
+
 
 /* Dedicated mobile dashboard + tighter mobile header */
 .dashboard-mobile-view { display: none; }
@@ -1168,8 +1267,9 @@ p { color: var(--muted); font-size: 1.05rem; line-height: 1.72; max-width: 62ch;
   }
 
   .header-btn {
-    padding: 6px 7px !important;
-    font-size: 9px !important;
+    min-height: 40px !important;
+    padding: 8px !important;
+    font-size: 10px !important;
   }
 
   .mobile-stat-grid {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Key, ShieldCheck, Trash2, AlertCircle } from 'lucide-react';
+import { Key, ShieldCheck, AlertCircle } from 'lucide-react';
 import { toggleAdminStatus, deleteUserAccount } from '../actions';
 import { cn } from '@/lib/utils';
 

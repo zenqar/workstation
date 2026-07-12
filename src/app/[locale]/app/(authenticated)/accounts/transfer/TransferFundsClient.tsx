@@ -1,15 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { transferFunds } from '@/lib/actions/accounts';
-import { ArrowLeft, ArrowRightLeft, Save } from 'lucide-react';
+import { ArrowLeft, ArrowRightLeft } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
+import type { Account } from '@/lib/types';
 
-export default function TransferFundsClient({ defaultBusinessId, accounts = [] }: any) {
+type TransferFundsClientProps = {
+  accounts?: Array<Account & { balance: number }>;
+};
+
+export default function TransferFundsClient({ accounts = [] }: TransferFundsClientProps) {
   const t = useTranslations();
   const router = useRouter();
   const locale = useLocale();
@@ -57,7 +62,7 @@ export default function TransferFundsClient({ defaultBusinessId, accounts = [] }
     }
   };
 
-  const filteredToAccounts = accounts.filter((acc: any) => acc.id !== form.from_account_id);
+  const filteredToAccounts = accounts.filter((acc) => acc.id !== form.from_account_id);
 
   if (!activeBusiness) return <div className="animate-pulse text-white/50">{t('common.loading')}</div>;
 
@@ -96,13 +101,13 @@ export default function TransferFundsClient({ defaultBusinessId, accounts = [] }
                   className="input-glass"
                   value={form.from_account_id}
                   onChange={e => {
-                    const acc = accounts.find((a: any) => a.id === e.target.value);
+                    const acc = accounts.find((account) => account.id === e.target.value);
                     setForm({...form, from_account_id: e.target.value, currency: acc?.currency || form.currency});
                   }}
                   required
                 >
                   <option value="">{t('common.selectOption')}</option>
-                  {accounts.map((acc: any) => (
+                  {accounts.map((acc) => (
                     <option key={acc.id} value={acc.id}>{acc.name} ({formatCurrency(acc.balance, acc.currency)})</option>
                   ))}
                 </select>
@@ -117,7 +122,7 @@ export default function TransferFundsClient({ defaultBusinessId, accounts = [] }
                   required
                 >
                   <option value="">{t('common.selectOption')}</option>
-                  {filteredToAccounts.map((acc: any) => (
+                  {filteredToAccounts.map((acc) => (
                     <option key={acc.id} value={acc.id}>{acc.name} ({formatCurrency(acc.balance, acc.currency)})</option>
                   ))}
                 </select>

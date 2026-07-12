@@ -27,6 +27,14 @@ const AccountSchema = z.object({
   opening_date:    z.string().optional().default(() => new Date().toISOString().split('T')[0]),
 });
 
+function accountErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message;
+  }
+  return fallback;
+}
+
 export async function createAccount(businessId: string, data: z.infer<typeof AccountSchema>): Promise<ActionResult<{ id: string }>> {
   try {
     const { user, role } = await requireBusinessUser(businessId);
@@ -46,9 +54,9 @@ export async function createAccount(businessId: string, data: z.infer<typeof Acc
     }
     revalidatePath('/[locale]/app/accounts', 'layout');
     return { data: { id: account.id } };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[createAccount] Runtime error:', err);
-    return { error: err.message || 'An unexpected error occurred' };
+    return { error: accountErrorMessage(err, 'An unexpected error occurred') };
   }
 }
 
@@ -67,9 +75,9 @@ export async function updateAccount(businessId: string, accountId: string, data:
     revalidatePath(`/[locale]/app/accounts/${accountId}`, 'layout');
     revalidatePath('/[locale]/app/accounts', 'layout');
     return {};
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[updateAccount]', err);
-    return { error: err.message };
+    return { error: accountErrorMessage(err, 'Could not update account') };
   }
 }
 
@@ -106,7 +114,7 @@ export async function getAccountsWithBalances(businessId: string) {
 
     const admin = await createAdminClient();
     const { data: accounts, error } = await admin
-      .from('accounts').select('*').eq('business_id', businessId).order('name');
+      .from('accounts').select('*').eq('business_id', businessId).eq('is_active', true).order('name');
     
     if (error) { console.error('[getAccountsWithBalances] error:', error); return []; }
 
@@ -188,8 +196,8 @@ export async function adjustAccountBalance(
     revalidatePath('/app/accounts');
     revalidatePath(`/app/accounts/${accountId}`);
     return {};
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[adjustAccountBalance]', err);
-    return { error: err.message };
+    return { error: accountErrorMessage(err, 'Could not adjust account balance') };
   }
 }

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { signIn } from '@/lib/actions/auth';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
-import { useParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 
 export default function LoginPage() {

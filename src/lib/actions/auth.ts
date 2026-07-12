@@ -3,7 +3,6 @@
 import { redirect } from 'next/navigation';
 import { isRedirectError } from 'next/dist/client/components/redirect-error';
 import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
 import type { ActionResult } from '@/lib/types';
 import { z } from 'zod';
 import { getLocale } from 'next-intl/server';
@@ -91,10 +90,16 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
       redirect(getLocalizedPath(locale, '/app/onboarding'));
     }
 
-  } catch (e: any) {
+  } catch (e: unknown) {
     if (isRedirectError(e)) throw e;
     console.error('[Signup] Unexpected Error:', e);
-    const errorMessage = typeof e === 'string' ? e : (e?.message || e?.error_description || 'An unexpected error occurred during signup');
+    let errorMessage = 'An unexpected error occurred during signup';
+    if (typeof e === 'string') errorMessage = e;
+    else if (e instanceof Error) errorMessage = e.message;
+    else if (typeof e === 'object' && e !== null) {
+      if ('message' in e && typeof e.message === 'string') errorMessage = e.message;
+      else if ('error_description' in e && typeof e.error_description === 'string') errorMessage = e.error_description;
+    }
     return { error: String(errorMessage) };
   }
 

@@ -1,10 +1,25 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { formatCurrency, formatDate, INVOICE_STATUS_COLORS } from '@/lib/utils';
 import { getTranslations } from 'next-intl/server';
-import { CheckCircle2, XCircle, Building2, Receipt, ShieldCheck, ThumbsUp, Wallet } from 'lucide-react';
-import { acceptInvoicePublic, claimPaymentPublic } from '@/lib/actions/invoices';
+import { CheckCircle2, XCircle, Receipt, ShieldCheck } from 'lucide-react';
 import VerifyActions from './VerifyActions';
 import Link from 'next/link';
+
+type InvoiceItem = {
+  id: string;
+  description: string;
+  quantity: number;
+  unit_price: number;
+};
+
+type PaymentAccount = {
+  id: string;
+  name: string;
+  currency: string;
+  bank_name: string | null;
+  display_detail: string | null;
+  account_type: string;
+};
 
 export default async function VerifyInvoicePage({ params }: { params: Promise<{ token: string; locale: string }> }) {
   const { token, locale } = await params;
@@ -12,28 +27,13 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
 
   const supabase = await createAdminClient();
   
-  // Try searching by verification_token first
-  let { data: invoice, error } = await supabase
+  const { data: invoice } = await supabase
     .from('invoices')
     .select('*, business:businesses(*), contact:contacts(*), invoice_items(*)')
     .eq('verification_token', token)
-    .single();
+    .maybeSingle();
 
-  // If not found, try searching by invoice_number (case-insensitive) as a fallback
-  if (!invoice) {
-    const { data: fallbackInvoice } = await supabase
-      .from('invoices')
-      .select('*, business:businesses(*), contact:contacts(*), invoice_items(*)')
-      .ilike('invoice_number', token)
-      .limit(1)
-      .single();
-    
-      if (fallbackInvoice) {
-        invoice = fallbackInvoice;
-      }
-    }
-
-    let paymentAccounts: any[] = [];
+    let paymentAccounts: PaymentAccount[] = [];
     let fxRate = 1310;
 
     if (invoice?.payment_account_ids?.length > 0) {
@@ -41,7 +41,7 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
         supabase.from('accounts').select('*').in('id', invoice.payment_account_ids),
         supabase.from('fx_rate_snapshots').select('rate').order('fetched_at', { ascending: false }).limit(1).maybeSingle()
       ]);
-      paymentAccounts = accsRes.data || [];
+      paymentAccounts = (accsRes.data || []) as PaymentAccount[];
       fxRate = fxRes.data?.rate || 1310;
     }
 
@@ -132,7 +132,7 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {invoice.invoice_items.map((item: any) => (
+                    {invoice.invoice_items.map((item: InvoiceItem) => (
                       <tr key={item.id}>
                         <td className="py-3 text-white">{item.description}</td>
                         <td className="py-3 text-right text-white/70">{item.quantity}</td>
@@ -180,7 +180,7 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
                 <div className="pt-8 border-t border-white/10">
                   <h3 className="text-[10px] font-black text-white/40 mb-4 uppercase tracking-[0.2em]">Payment Instructions</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {paymentAccounts.map((acc: any) => (
+                    {paymentAccounts.map((acc) => (
                       <div key={acc.id} className="relative overflow-hidden p-4 rounded-2xl bg-white/[0.03] border border-white/10 group hover:border-zenqar-500/50 transition-all duration-300">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-zenqar-500/5 blur-[40px] rounded-full -mr-12 -mt-12 group-hover:bg-zenqar-500/10 transition-colors" />
                         <div className="relative z-10 space-y-3">
@@ -203,7 +203,6 @@ export default async function VerifyInvoicePage({ params }: { params: Promise<{ 
               <VerifyActions 
                 token={token}
                 status={invoice.status}
-                locale={locale}
               />
             </div>
           </div>

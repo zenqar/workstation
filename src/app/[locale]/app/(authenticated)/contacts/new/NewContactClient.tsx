@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { useBusiness } from '@/lib/contexts/BusinessContext';
 import { createContact } from '@/lib/actions/contacts';
 import { ArrowLeft, Save, User } from 'lucide-react';
 import Link from 'next/link';
+import type { ContactType } from '@/lib/types';
 
-export default function NewContactClient({ defaultBusinessId }: { defaultBusinessId: string }) {
+export default function NewContactClient() {
   const t = useTranslations();
   const router = useRouter();
   const locale = useLocale();
@@ -97,7 +98,7 @@ export default function NewContactClient({ defaultBusinessId }: { defaultBusines
                   <select 
                     className="select-glass"
                     value={form.type}
-                    onChange={e => setForm({...form, type: e.target.value as any})}
+                    onChange={e => setForm({...form, type: e.target.value as ContactType})}
                     required
                   >
                     <option value="customer">{t('contacts.customer')}</option>

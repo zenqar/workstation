@@ -8,6 +8,8 @@ import { getLocalizedPath } from './lib/utils/locale';
 
 const intlMiddleware = createMiddleware(routing);
 
+// OpenNext Cloudflare 1.20 does not yet support Next 16's Node-runtime Proxy.
+// Keep Edge Middleware until the adapter adds Proxy support.
 export const runtime = 'experimental-edge';
 
 // Routes that don't require Supabase authentication
