@@ -50,6 +50,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const locale = getLocaleFromPathname(pathname);
 
+  // Supabase email templates use this locale-neutral endpoint. It must reach
+  // the Route Handler directly instead of being localized by next-intl.
+  if (pathname === '/auth/confirm') {
+    return NextResponse.next();
+  }
+
   // 1. Admin Authorization Check (Cookie-based as per user preference)
   // This allows reaching /admin without a Supabase session if they have the secret.
   if (isAdminPath(pathname)) {

@@ -156,6 +156,39 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
 }
 
 // ============================================================
+// Magic Link Sign In
+// ============================================================
+
+export async function signInWithMagicLink(formData: FormData): Promise<ActionResult> {
+  const currentLocale = await getLocale();
+  const formLocale = formData.get('locale') as string;
+  const locale = formLocale || currentLocale;
+  const email = formData.get('email') as string;
+
+  if (!email || !z.string().email().safeParse(email).success) {
+    return { error: 'Please enter a valid email address' };
+  }
+
+  const supabase = await createClient();
+  const { getAppUrl } = await import('@/lib/env/server');
+  const appUrl = await getAppUrl();
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${appUrl}/${locale}/auth/callback`,
+      shouldCreateUser: false,
+    },
+  });
+
+  if (error) {
+    console.error('[MagicLink] Auth Error:', error);
+    return { error: error.message || 'Unable to send sign-in link' };
+  }
+
+  return { data: undefined };
+}
+
+// ============================================================
 // Sign Out
 // ============================================================
 

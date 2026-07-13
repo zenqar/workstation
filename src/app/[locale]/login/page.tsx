@@ -2,23 +2,33 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { signIn } from '@/lib/actions/auth';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { signIn, signInWithMagicLink } from '@/lib/actions/auth';
+import { Eye, EyeOff, LogIn, Mail } from 'lucide-react';
 import { useLocale } from 'next-intl';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [magicLink, setMagicLink] = useState(false);
   const locale = useLocale();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError('');
+    setMessage('');
     setLoading(true);
-    const result = await signIn(new FormData(e.currentTarget));
+    const result = magicLink
+      ? await signInWithMagicLink(new FormData(e.currentTarget))
+      : await signIn(new FormData(e.currentTarget));
     if (result?.error) {
       setError(result.error);
+      setLoading(false);
+      return;
+    }
+    if (magicLink) {
+      setMessage('Check your email for a secure sign-in link.');
       setLoading(false);
     }
   }
@@ -44,6 +54,12 @@ export default function LoginPage() {
             </div>
           )}
 
+          {message && (
+            <div className="px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm">
+              {message}
+            </div>
+          )}
+
           <div className="flex flex-col gap-1.5">
             <label className="text-sm text-white/60 font-medium">Email</label>
             <input
@@ -56,7 +72,7 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
+          {!magicLink && <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <label className="text-sm text-white/60 font-medium">Password</label>
               <Link href={`/${locale}/forgot-password`} className="text-xs text-zenqar-400 hover:text-zenqar-300 transition-colors">
@@ -80,15 +96,34 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-          </div>
+          </div>}
 
           <button type="submit" disabled={loading} className="btn-primary w-full mt-1">
             {loading ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : (
-              <LogIn className="w-4 h-4" />
+              magicLink ? <Mail className="w-4 h-4" /> : <LogIn className="w-4 h-4" />
             )}
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? (magicLink ? 'Sending link...' : 'Signing in...') : (magicLink ? 'Email me a sign-in link' : 'Sign In')}
+          </button>
+
+          <div className="flex items-center gap-3 text-xs text-white/30" aria-hidden="true">
+            <span className="h-px flex-1 bg-white/10" />
+            <span>or</span>
+            <span className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => {
+              setMagicLink((current) => !current);
+              setError('');
+              setMessage('');
+            }}
+            className="w-full rounded-xl border border-white/10 px-4 py-3 text-sm font-medium text-white/70 transition-colors hover:border-white/20 hover:bg-white/5 hover:text-white disabled:opacity-50"
+          >
+            {magicLink ? 'Use password instead' : 'Use a magic link instead'}
           </button>
         </form>
 
