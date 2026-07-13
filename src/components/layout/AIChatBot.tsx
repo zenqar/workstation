@@ -108,9 +108,15 @@ export default function AIChatBot() {
               </div>
               <div>
                 <h2 className="text-sm font-bold leading-none text-white">Zenqar Assistant</h2>
-                <span className="mt-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-zenqar-400">
-                  <Sparkles className="h-2.5 w-2.5" /> Gemma 4 · OpenRouter
-                </span>
+                <a
+                  href="https://robillionair.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-zenqar-400 transition-colors hover:text-zenqar-300"
+                  title="Powered by Xelvon XPT from Robillionair, using Tencent Hy3 through OpenRouter"
+                >
+                  <Sparkles className="h-2.5 w-2.5" /> Powered by Xelvon XPT · Robillionair
+                </a>
               </div>
             </div>
             <div className="flex items-center gap-1">

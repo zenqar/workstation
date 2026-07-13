@@ -45,7 +45,7 @@ export async function getSupabaseServiceRoleKey() {
 
 export async function getAdminSecret() {
   const env = await getServerEnv();
-  return env.ADMIN_SECRET;
+  return env.ADMIN_SECRET?.trim();
 }
 
 export async function getAppUrl() {
@@ -66,5 +66,5 @@ export async function getOpenRouterModel() {
 
 export async function getOpenRouterChatModel() {
   const env = await getServerEnv();
-  return env.OPENROUTER_CHAT_MODEL || 'google/gemma-4-31b-it:free';
+  return env.OPENROUTER_CHAT_MODEL || 'tencent/hy3:free';
 }

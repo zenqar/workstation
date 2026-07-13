@@ -23,7 +23,10 @@ export default async function AdminLoginPage(props: {
     const cleanSecret = secret.trim();
 
     if (!expectedSecret) {
-      redirect(getLocalizedPath(formLocale, `/admin/login?error=Server configuration error: ADMIN_SECRET not set`));
+      const error = encodeURIComponent(
+        'ADMIN_SECRET is missing from the active Worker. Add it under Worker Settings → Variables and Secrets, then deploy it.',
+      );
+      redirect(getLocalizedPath(formLocale, `/admin/login?error=${error}`));
     }
 
     if (!secret) {
@@ -45,7 +48,7 @@ export default async function AdminLoginPage(props: {
     const cookieStore = await cookies();
     cookieStore.set('zenqar_admin_verified', sessionToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_APP_URL?.startsWith('https'),
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 1 week
       path: '/',
