@@ -7,6 +7,12 @@
   ],
   "keep_vars": true,
   "main": ".open-next/worker.js",
+  "routes": [
+    {
+      "pattern": "zenqar.com",
+      "custom_domain": true
+    }
+  ],
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
