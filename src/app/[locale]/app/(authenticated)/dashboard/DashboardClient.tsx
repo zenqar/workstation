@@ -9,7 +9,6 @@ import { getExpenses } from '@/lib/actions/expenses';
 import { formatCurrency, formatDate, INVOICE_STATUS_COLORS, cn } from '@/lib/utils';
 import { Wallet, TrendingDown, TrendingUp, ArrowRight, Plus, ScanLine, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import WelcomeTour from '@/components/WelcomeTour';
 import ContactRequests from './ContactRequests';
 import type { Contact, Expense, Invoice } from '@/lib/types';
 
@@ -278,8 +277,6 @@ export default function DashboardClient({
         </>
       )}
 
-      {/* Welcome tour — shows on first visit, dismissible */}
-      <WelcomeTour />
     </div>
   );
 }

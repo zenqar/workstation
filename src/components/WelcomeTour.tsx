@@ -119,6 +119,15 @@ export default function WelcomeTour() {
     }
   }, []);
 
+  useEffect(() => {
+    const openTour = () => {
+      setStep(0);
+      setVisible(true);
+    };
+    window.addEventListener('zenqar:open-product-tour', openTour);
+    return () => window.removeEventListener('zenqar:open-product-tour', openTour);
+  }, []);
+
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, '1');
     setVisible(false);

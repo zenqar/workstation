@@ -1,18 +1,26 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Bot, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Bot, MessageSquare, Minus, Send, Sparkles, X } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import { chatWithAI } from '@/lib/actions/ai';
 import { cn } from '@/lib/utils';
-import { useLocale } from 'next-intl';
 
 type ChatMessage = { role: 'assistant' | 'user'; content: string };
 
+const HIDDEN_STORAGE_KEY = 'zenqar_ai_assistant_hidden';
+const OPEN_ASSISTANT_EVENT = 'zenqar:open-ai-assistant';
+
 export default function AIChatBot() {
+  const [isReady, setIsReady] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'assistant', content: 'Hello! I am your Zenqar AI assistant. How can I help you today?' }
+    {
+      role: 'assistant',
+      content: 'Hello! I’m your Zenqar Assistant. Ask me how to scan a supplier invoice, create an invoice, record a payment, or use any Zenqar tool.',
+    },
   ]);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -20,117 +28,195 @@ export default function AIChatBot() {
   const isRtl = locale === 'ar' || locale === 'ku';
 
   useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setIsDismissed(localStorage.getItem(HIDDEN_STORAGE_KEY) === '1');
+      setIsReady(true);
+    });
+
+    const openAssistant = () => {
+      localStorage.removeItem(HIDDEN_STORAGE_KEY);
+      setIsDismissed(false);
+      setIsOpen(true);
+    };
+
+    window.addEventListener(OPEN_ASSISTANT_EVENT, openAssistant);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener(OPEN_ASSISTANT_EVENT, openAssistant);
+    };
+  }, []);
+
+  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, loading]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  function dismissAssistant() {
+    localStorage.setItem(HIDDEN_STORAGE_KEY, '1');
+    setIsOpen(false);
+    setIsDismissed(true);
+  }
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     if (!message.trim() || loading) return;
 
-    const userMsg = message.trim();
+    const userMessage = message.trim();
     setMessage('');
-    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setMessages((current) => [...current, { role: 'user', content: userMessage }]);
     setLoading(true);
 
     try {
-      const res = await chatWithAI(userMsg, messages);
-      if (res.response) {
-        setMessages(prev => [...prev, { role: 'assistant', content: res.response }]);
-      } else if (res.error) {
-        setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again later.' }]);
-      }
+      const result = await chatWithAI(userMessage, messages, locale);
+      setMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content: result.response || result.error || 'Zenqar AI could not answer right now. Please try again.',
+        },
+      ]);
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Connection lost. Please check your internet.' }]);
+      setMessages((current) => [
+        ...current,
+        { role: 'assistant', content: 'Connection lost. Please check your internet and try again.' },
+      ]);
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  if (!isReady || isDismissed) return null;
 
   return (
-    <div className={cn("app-chrome fixed bottom-6 z-[100]", isRtl ? "left-6" : "right-6")} dir={isRtl ? 'rtl' : 'ltr'}>
-      {/* Chat Window */}
+    <div
+      className={cn('app-chrome fixed bottom-4 z-[100] sm:bottom-6', isRtl ? 'left-4 sm:left-6' : 'right-4 sm:right-6')}
+      dir={isRtl ? 'rtl' : 'ltr'}
+    >
       {isOpen && (
-        <div className="absolute bottom-20 right-0 w-[350px] sm:w-[400px] h-[500px] bg-slate-950/95 glass-card-elevated flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300 shadow-2xl border-white/10">
-          {/* Header */}
-          <div className="p-4 border-b border-white/5 bg-black/40 flex items-center justify-between">
+        <section
+          className={cn(
+            'absolute bottom-20 flex h-[min(500px,calc(100vh-7rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4 duration-300',
+            isRtl ? 'left-0' : 'right-0',
+          )}
+          aria-label="Zenqar AI assistant"
+        >
+          <header className="flex items-center justify-between border-b border-white/5 bg-black/40 p-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary-gradient flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-gradient shadow-glow">
+                <Bot className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white leading-none">Zenqar Assistant</h3>
-                <span className="text-[10px] text-zenqar-400 font-bold uppercase tracking-widest flex items-center gap-1 mt-1">
-                  <Sparkles className="w-2 h-2" /> AI Powered
+                <h2 className="text-sm font-bold leading-none text-white">Zenqar Assistant</h2>
+                <span className="mt-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-zenqar-400">
+                  <Sparkles className="h-2.5 w-2.5" /> Gemma 4 · OpenRouter
                 </span>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} className="p-1 hover:bg-white/10 rounded-md transition-colors text-white/40 hover:text-white" aria-label="Close AI assistant">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="rounded-lg p-2 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Minimize AI assistant"
+                title="Minimize"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={dismissAssistant}
+                className="rounded-lg p-2 text-white/40 transition-colors hover:bg-red-500/15 hover:text-red-300"
+                aria-label="Hide AI assistant completely"
+                title="Hide assistant — reopen it from the sidebar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </header>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar" ref={scrollRef}>
-            {messages.map((msg, i) => (
-              <div key={i} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
-                <div className={cn(
-                  "max-w-[85%] p-3 rounded-2xl text-sm",
-                  msg.role === 'user' 
-                    ? "bg-zenqar-600 text-white rounded-br-none shadow-lg" 
-                    : "bg-slate-900/90 border border-white/10 text-white rounded-bl-none shadow-md"
-                )}>
-                  {msg.content}
+          <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto p-4" ref={scrollRef} aria-live="polite">
+            {messages.map((chatMessage, index) => (
+              <div key={`${chatMessage.role}-${index}`} className={cn('flex', chatMessage.role === 'user' ? 'justify-end' : 'justify-start')}>
+                <div
+                  className={cn(
+                    'max-w-[88%] whitespace-pre-wrap rounded-2xl p-3 text-sm leading-relaxed shadow-md',
+                    chatMessage.role === 'user'
+                      ? 'rounded-br-md bg-zenqar-600 text-white'
+                      : 'rounded-bl-md border border-white/10 bg-slate-900/90 text-white/90',
+                  )}
+                >
+                  {chatMessage.content}
                 </div>
               </div>
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-slate-900/90 border border-white/10 p-3 rounded-2xl rounded-bl-none">
+                <div className="rounded-2xl rounded-bl-md border border-white/10 bg-slate-900/90 p-3" aria-label="Zenqar AI is responding">
                   <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce [animation-delay:0.2s]" />
-                    <div className="w-1.5 h-1.5 rounded-full bg-white/20 animate-bounce [animation-delay:0.4s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/25" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/25 [animation-delay:0.2s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white/25 [animation-delay:0.4s]" />
                   </div>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Input */}
-          <form onSubmit={handleSubmit} className="p-4 border-t border-white/5 bg-black/60">
+          <form onSubmit={handleSubmit} className="border-t border-white/5 bg-black/60 p-4">
             <div className="relative">
-              <input 
+              <input
                 type="text"
-                placeholder="Ask anything..."
+                placeholder="Ask about Zenqar…"
                 value={message}
-                onChange={e => setMessage(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 pr-12 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-zenqar-500/50 transition-colors"
+                onChange={(event) => setMessage(event.target.value)}
+                maxLength={4_000}
+                className={cn(
+                  'w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-zenqar-500/50 focus:outline-none',
+                  isRtl ? 'pl-12' : 'pr-12',
+                )}
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={!message.trim() || loading}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-zenqar-500 text-white disabled:opacity-50 disabled:bg-white/10 transition-all"
+                aria-label="Send message"
+                className={cn(
+                  'absolute top-1/2 -translate-y-1/2 rounded-lg bg-zenqar-500 p-2 text-white transition-all disabled:bg-white/10 disabled:opacity-50',
+                  isRtl ? 'left-2' : 'right-2',
+                )}
               >
-                <Send className="w-4 h-4" />
+                <Send className="h-4 w-4" />
               </button>
             </div>
+            <p className="mt-2 text-center text-[10px] text-white/30">Review financial guidance before acting on it.</p>
           </form>
-        </div>
+        </section>
       )}
 
-      {/* Floating Button */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label={isOpen ? 'Close AI assistant' : 'Open AI assistant'}
-        className={cn(
-          "w-14 h-14 rounded-full flex items-center justify-center shadow-glow transition-all duration-300 group",
-          isOpen ? "bg-white/10 rotate-90" : "bg-primary-gradient hover:scale-110 active:scale-95"
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen((current) => !current)}
+          aria-label={isOpen ? 'Minimize AI assistant' : 'Open AI assistant'}
+          className={cn(
+            'group flex h-14 w-14 items-center justify-center rounded-full shadow-glow transition-all duration-300',
+            isOpen ? 'rotate-90 bg-white/10' : 'bg-primary-gradient hover:scale-110 active:scale-95',
+          )}
+        >
+          {isOpen ? <Minus className="h-6 w-6 text-white" /> : <MessageSquare className="h-6 w-6 text-white group-hover:animate-pulse" />}
+        </button>
+        {!isOpen && (
+          <button
+            type="button"
+            onClick={dismissAssistant}
+            aria-label="Hide AI assistant completely"
+            title="Hide assistant"
+            className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border border-white/15 bg-slate-900 text-white/60 shadow-lg transition-colors hover:bg-red-500 hover:text-white"
+          >
+            <X className="h-3 w-3" />
+          </button>
         )}
-      >
-        {isOpen ? <X className="text-white w-6 h-6" /> : <MessageSquare className="text-white w-6 h-6 group-hover:animate-pulse" />}
-      </button>
+      </div>
     </div>
   );
 }

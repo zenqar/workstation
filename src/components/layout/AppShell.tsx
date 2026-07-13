@@ -7,6 +7,7 @@ import { VoiceCallProvider } from '@/lib/contexts/VoiceCallContext';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import AIChatBot from './AIChatBot';
+import WelcomeTour from '@/components/WelcomeTour';
 
 interface AppShellProps {
   currentUserId: string;
@@ -41,6 +42,7 @@ export default function AppShell({ currentUserId, profile, businesses, children 
           </main>
         </div>
         <AIChatBot />
+        <WelcomeTour />
         </div>
       </VoiceCallProvider>
     </BusinessProvider>

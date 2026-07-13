@@ -63,3 +63,8 @@ export async function getOpenRouterModel() {
   const env = await getServerEnv();
   return env.OPENROUTER_MODEL || 'nvidia/nemotron-nano-12b-v2-vl:free';
 }
+
+export async function getOpenRouterChatModel() {
+  const env = await getServerEnv();
+  return env.OPENROUTER_CHAT_MODEL || 'google/gemma-4-31b-it:free';
+}

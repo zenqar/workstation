@@ -17,7 +17,9 @@ import {
   ScanLine,
   FileClock,
   Settings,
-  LifeBuoy
+  LifeBuoy,
+  Bot,
+  Lightbulb,
 } from 'lucide-react';
 import type { Profile } from '@/lib/types';
 
@@ -99,6 +101,34 @@ export default function Sidebar({ profile, onNavigate }: { profile: Profile | nu
             </div>
           </div>
         ))}
+
+        <div>
+          <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white/25">Help tools</p>
+          <div className="space-y-1">
+            <button
+              type="button"
+              onClick={() => {
+                window.dispatchEvent(new Event('zenqar:open-ai-assistant'));
+                onNavigate?.();
+              }}
+              className="nav-item group w-full text-left"
+            >
+              <Bot className="h-5 w-5 flex-shrink-0 text-zenqar-400" />
+              <span className="truncate">Zenqar AI</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                window.dispatchEvent(new Event('zenqar:open-product-tour'));
+                onNavigate?.();
+              }}
+              className="nav-item group w-full text-left"
+            >
+              <Lightbulb className="h-5 w-5 flex-shrink-0 text-yellow-400" />
+              <span className="truncate">Product tour</span>
+            </button>
+          </div>
+        </div>
       </nav>
 
       {/* User profile brief */}
