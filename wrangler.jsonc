@@ -28,7 +28,6 @@
   },
   "secrets": {
     "required": [
-      "ADMIN_SECRET",
       "SUPABASE_SERVICE_ROLE_KEY",
       "OPENROUTER_API_KEY"
     ]
